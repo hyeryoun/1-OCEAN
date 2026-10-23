@@ -58,3 +58,42 @@ document.querySelectorAll('#menu a').forEach(a =>
   else centerRoute();
   window.addEventListener('resize',centerRoute);
 })();
+
+/* 모바일: 작은 도판(방사형 지도·FIG 지도)은 탭하면 크게 보기 */
+(function(){
+  var mq = matchMedia('(max-width:760px)');
+  var targets = document.querySelectorAll('.gsc-wrap, .fig');
+  targets.forEach(function(box){
+    var svg = box.querySelector('svg');
+    if (!svg || svg.querySelectorAll('text').length < 10) return;
+    box.classList.add('oc-zoomable');
+    var hint = document.createElement('p');
+    hint.className = 'oc-zoom-hint';
+    hint.textContent = (document.documentElement.lang === 'en') ? 'Tap to enlarge' : '탭하면 크게 볼 수 있어요';
+    box.appendChild(hint);
+    box.addEventListener('click', function(e){
+      if (!mq.matches || e.target.closest('a,button')) return;
+      var ov = document.createElement('div');
+      ov.className = 'oc-zoom';
+      ov.setAttribute('role', 'dialog');
+      ov.innerHTML = '<button class="oc-zoom-x" aria-label="닫기">✕</button><div class="oc-zoom-pane"></div>';
+      var holder = document.createElement('div');
+      holder.className = box.className.replace('oc-zoomable', '') + ' oc-zoom-body';
+      var c = svg.cloneNode(true); c.removeAttribute('id');
+      holder.appendChild(c);
+      ov.querySelector('.oc-zoom-pane').appendChild(holder);
+      document.body.appendChild(ov);
+      document.body.style.overflow = 'hidden';
+      var pane = ov.querySelector('.oc-zoom-pane');
+      pane.scrollLeft = (pane.scrollWidth - pane.clientWidth) / 2;
+      function close(){ ov.remove(); document.body.style.overflow = ''; }
+      ov.querySelector('.oc-zoom-x').addEventListener('click', close);
+    });
+  });
+})();
+
+/* 모바일: 다섯 단계 탭 끝까지 밀면 흐림 표시 제거 */
+document.querySelectorAll('.tabs-oc').forEach(function(t){
+  function f(){ t.classList.toggle('at-end', t.scrollLeft + t.clientWidth >= t.scrollWidth - 4); }
+  t.addEventListener('scroll', f, {passive:true}); f();
+});

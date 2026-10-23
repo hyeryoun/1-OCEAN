@@ -1352,3 +1352,24 @@ h1 em,h2 em{background:none;font-style:italic;color:var(--ocean-blue)}
   .slides .stopbtn[data-slide="3"] .t,.slides .stopbtn[data-slide="4"] .t{left:auto;right:calc(50% + 12px);top:-14px;text-align:right}
   .slides .stopbtn.on[data-slide="3"] .t,.slides .stopbtn.on[data-slide="4"] .t{right:calc(50% + 26px);top:-18px}
 }
+
+/* ── 모바일 최적화 (2026-10) ── */
+.oc-zoom-hint{display:none}
+@media (max-width:760px){
+  .oc-zoomable{cursor:zoom-in}
+  .oc-zoom-hint{display:block;margin:10px 0 0;text-align:center;font-size:12px;color:var(--muted,#5B7690);letter-spacing:.02em}
+  .oc-zoom-hint::before{content:"⤢ "}
+  .oc-zoom{position:fixed;inset:0;z-index:9999;background:rgba(6,32,56,.94);display:flex;flex-direction:column}
+  .oc-zoom-x{align-self:flex-end;margin:12px 14px 6px;width:40px;height:40px;border-radius:50%;border:0;background:#fff;color:#0B3D66;font-size:18px;line-height:40px;cursor:pointer}
+  .oc-zoom-pane{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px 16px 24px}
+  .oc-zoom-body{width:640px!important;max-width:none!important;min-width:640px!important;margin:0!important;background:#fff;border-radius:14px;padding:16px!important}
+  .oc-zoom-body svg{width:100%!important;height:auto!important;min-width:0!important}
+  .oc-zoom-body .oc-zoom-hint{display:none}
+  /* 다섯 단계 탭: 옆으로 더 있다는 표시 */
+  .tabs-oc{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+  .tabs-oc.at-end{-webkit-mask-image:none;mask-image:none}
+  /* 정책 연표: 옆으로 밀어 보기 안내 */
+  .pl .scroll{position:relative}
+  .pl .board:has(.scroll)::before{content:"← 옆으로 밀어서 연도별로 보기 →";display:block;padding:10px 14px 0;font-size:12px;color:#5B7690}
+  html[lang=en] .pl .board:has(.scroll)::before{content:"← Swipe to see all years →"}
+}
