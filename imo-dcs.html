@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · IMO DCS 대시보드</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="description" content="IMO DCS 데이터로 보는 국제 선대의 연료·배출·효율. 연도 스크러버로 2019–2024를 항해합니다.">
+
+<!-- ═══════════════════════════════════════════════
+  ✏️ 수정 가이드 (imo-dcs.html)
+  · 모든 수치는 스크립트 상단 DCS 객체에 연도별로 들어 있습니다.
+    ⚠️ 현재 값은 규모 참고용 【예시 데이터】입니다.
+    매년 IMO MEPC의 DCS 집계 보고를 페이지 하단 "데이터 반입" 패널로
+    반입하거나, 아래 DCS 객체를 직접 교체하세요.
+  · ships(척)·fuelMt(백만 t)·co2Mt·mix(연료 비중 %)·cii(A–E %)
+═══════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* 연도 스크러버: 항로 위를 움직이는 배 */
+.scrub{background:var(--chart-bg);border:1px solid var(--line);border-radius:12px;padding:26px 30px 18px;margin-bottom:30px}
+.scrub svg{width:100%;height:auto;display:block}
+.scrub input{width:100%;accent-color:var(--navy);margin-top:6px}
+.scrub .yrs{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted)}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:20px}
+.kpi .v{font-family:var(--serif);font-size:32px;font-weight:700;color:var(--navy);line-height:1.15}
+.kpi .v small{font-size:14px;font-family:var(--mono);color:var(--gold)}
+.kpi .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted);margin-top:4px}
+.kpi .d{font-family:var(--mono);font-size:11px;margin-top:6px}
+.kpi .d.up{color:var(--navy)} .kpi .d.dn{color:var(--teal)}
+/* 연료 탱크 */
+.tanks{display:flex;gap:18px;align-items:flex-end;justify-content:space-around}
+.tank{text-align:center;flex:1;max-width:96px}
+.tank .vessel{height:150px;border:2px solid var(--navy);border-radius:8px 8px 14px 14px;position:relative;overflow:hidden;background:var(--white)}
+.tank .fill{position:absolute;left:0;right:0;bottom:0;background:var(--navy);transition:height .6s ease}
+.tank:nth-child(2) .fill{background:var(--teal)}
+.tank:nth-child(3) .fill{background:var(--gold)}
+.tank:nth-child(4) .fill{background:#8FA6BC}
+.tank .pct{position:absolute;left:0;right:0;top:8px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--navy)}
+.tank .tl{font-size:12px;font-weight:700;color:var(--navy);margin-top:8px;word-break:keep-all}
+/* CII 와플: 100척 = 100점 */
+.waffle{display:grid;grid-template-columns:repeat(20,1fr);gap:5px;max-width:460px}
+.waffle span{aspect-ratio:1;border-radius:50%;transition:background .4s}
+.wleg{display:flex;gap:16px;font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:14px;flex-wrap:wrap}
+.wleg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.cA{background:var(--teal)} .cB{background:#7CC1B8} .cC{background:var(--gold)} .cD{background:#B9C6D2} .cE{background:var(--navy)}
+/* 선대 성장 스텝 */
+.growth{display:flex;gap:8px;align-items:flex-end;height:110px}
+.growth .g{flex:1;background:var(--card);border:1px solid var(--line);border-radius:6px 6px 0 0;position:relative;transition:background .3s}
+.growth .g.on{background:var(--navy)}
+.growth .g .gl{position:absolute;top:-20px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted)}
+@media(max-width:860px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{position:relative}
+.kpi .ex{position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;padding:2px 6px;border-radius:3px;background:#FBF3E4;color:#8a6d1f;border:1px solid var(--gold)}
+.waffle span.cN{background:var(--line)}
+</style>
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="index.html">Home</a>
+      <a href="story.html">Story</a>
+      <a href="policy.html">Policy</a>
+      <a href="insight.html">Insight</a>
+      <a href="project.html">Project</a>
+      <a class="active" aria-current="page" href="tool.html">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="page-hero" style="padding-bottom:30px">
+  <div class="wrap">
+    <p class="eyebrow" data-i="dc-eye">Tool · IMO DCS Dashboard · Stage 01 규칙</p>
+    <h1 data-i="dc-h1">세계 선대는 지금 <em>몇 등급</em>인가.</h1>
+    <p class="lede" data-i="dc-lede">IMO 데이터수집제도(DCS)의 공개 집계값(MEPC 연차 보고)으로 보는 국제 선대입니다. 아래 항로에서 연도를 끌면 전체 화면이 그 해로 이동합니다. ⚠️ 현재 수치는 자리표시용 예시이며, 매년 공개 보고서를 반입해 갱신하도록 설계되어 있습니다.</p>
+  </div>
+</div>
+
+<section style="padding-top:40px">
+  <div class="wrap">
+
+    <!-- ── 연도 스크러버: 항로 위의 배 ── -->
+    <div class="scrub reveal">
+      <svg viewBox="0 0 640 66" aria-hidden="true">
+        <line x1="16" y1="44" x2="624" y2="44" stroke="var(--gold)" stroke-width="2.5" stroke-dasharray="7 6" stroke-linecap="round"/>
+        <g id="shipmark" transform="translate(16,0)">
+          <path d="M -14 40 L 14 40 L 9 48 L -9 48 Z" fill="var(--navy)"/>
+          <rect x="3" y="30" width="8" height="10" fill="var(--teal)" rx="1"/>
+          <text id="shipyear" x="0" y="22" text-anchor="middle" font-family="var(--mono)" font-size="13" font-weight="700" fill="var(--navy)">2019</text>
+        </g>
+      </svg>
+      <input id="yr" type="range" min="0" max="5" value="5" step="1" aria-label="연도 선택">
+      <div class="yrs"><span>2019</span><span>2020</span><span>2021</span><span>2022</span><span>2023</span><span>2024</span></div>
+    </div>
+
+    <!-- ── KPI ── -->
+    <div class="kpis reveal">
+      <div class="kpi"><span class="ex">예시 데이터</span><div class="v"><span id="k-ships">–</span><small> 척</small></div><div class="k">보고 선박 수 (≥5,000 GT)</div><div class="d" id="d-ships"></div></div>
+      <div class="kpi"><span class="ex">예시 데이터</span><div class="v"><span id="k-fuel">–</span><small> Mt</small></div><div class="k">연간 연료 소비</div><div class="d" id="d-fuel"></div></div>
+      <div class="kpi"><span class="ex">예시 데이터</span><div class="v"><span id="k-co2">–</span><small> Mt</small></div><div class="k">연간 CO₂ 배출</div><div class="d" id="d-co2"></div></div>
+      <div class="kpi"><span class="ex">예시 데이터</span><div class="v"><span id="k-eff">–</span><small> g/t·nm</small></div><div class="k">평균 탄소집약도 (AER)</div><div class="d" id="d-eff"></div></div>
+    </div>
+
+    <div class="grid two">
+      <!-- ── 연료 믹스 탱크 ── -->
+      <div class="calc reveal" style="margin-bottom:0">
+        <h3 style="font-size:18px">연료 믹스 · 벙커 탱크</h3>
+        <p class="sub" style="margin-bottom:18px">탱크의 수위가 그 해 연료 비중입니다.</p>
+        <div class="tanks" id="tanks"></div>
+      </div>
+
+      <!-- ── CII 와플 ── -->
+      <div class="calc reveal" style="margin-bottom:0">
+        <h3 style="font-size:18px">CII 등급 분포 · 100척의 선대</h3>
+        <p class="sub" style="margin-bottom:18px">점 하나가 세계 선대의 1%입니다. 연도를 움직이면 선대가 등급 사이를 이동합니다.</p>
+        <div class="waffle" id="waffle" role="img" aria-label="CII 등급 분포 와플 차트"></div>
+        <div class="wleg">
+          <span><i class="cA"></i>A <b id="w-A">–</b></span><span><i class="cB"></i>B <b id="w-B">–</b></span>
+          <span><i class="cC"></i>C <b id="w-C">–</b></span><span><i class="cD"></i>D <b id="w-D">–</b></span>
+          <span><i class="cE"></i>E <b id="w-E">–</b></span>
+        </div>
+        <p class="io-note" style="margin-top:12px" id="w-note"></p>
+      </div>
+    </div>
+
+    <!-- ── 선대 성장 ── -->
+    <div class="calc reveal" style="margin-top:22px">
+      <h3 style="font-size:18px">선대 성장 <span id="g-range">2019–2024</span></h3>
+      <p class="sub" style="margin-bottom:26px">막대를 클릭해도 연도가 이동합니다. 짙은 막대가 현재 보고 있는 해입니다.</p>
+      <div class="growth" id="growth"></div>
+      <div class="yrs" id="g-yrs" style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px"><span>2019</span><span>2020</span><span>2021</span><span>2022</span><span>2023</span><span>2024</span></div>
+    </div>
+
+    <!-- ═══════════ 데이터 반입: 매년 갱신 워크플로 ═══════════ -->
+    <div class="calc reveal" id="import" style="margin-top:22px">
+      <h3 style="font-size:18px">데이터 반입 · 매년 이렇게 갱신합니다</h3>
+      <p class="sub" style="margin-bottom:16px">
+        ① IMO의 연간 DCS 집계 보고(MEPC 문서)를 Claude 대화에 업로드하고, 아래 <b>추출 프롬프트</b>를 붙여넣습니다.
+        ② Claude가 돌려준 JSON을 아래 상자에 붙여넣고 <b>적용</b>을 누르면 대시보드가 그 자리에서 갱신됩니다.
+        ③ <b>저장용 코드 복사</b>로 받은 블록을 이 파일의 DCS 객체와 교체하면 영구 반영됩니다.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn btn-ghost" id="promptbtn" style="padding:9px 16px;font-size:13px">① 추출 프롬프트 복사</button>
+        <button class="btn btn-primary" id="applybtn" style="padding:9px 16px;font-size:13px">② 붙여넣은 JSON 적용</button>
+        <button class="btn btn-ghost" id="savebtn" style="padding:9px 16px;font-size:13px">③ 저장용 코드 복사</button>
+      </div>
+      <textarea id="jsonin" rows="5" placeholder='{"2025":{"ships":30400,"fuelMt":218,"co2Mt":678,"aer":5.8,"mix":[59,25,11,5],"cii":[15,21,33,19,12]}}'
+        style="width:100%;font-family:var(--mono);font-size:12px;padding:12px;border:1px solid var(--line);border-radius:8px;color:var(--input)"></textarea>
+      <p class="io-note" id="importmsg" style="margin-top:8px">스키마: {"연도":{ships,fuelMt,co2Mt,aer,mix:[HFO,MDO,LNG,기타 %],cii:[A,B,C,D,E %]}} · 여러 연도 동시 반입 가능 · mix·cii 합계는 100±1 · 없는 항목은 null</p>
+    </div>
+
+    <p class="reveal" style="font-size:12.5px;color:var(--muted);max-width:74ch;word-break:keep-all;margin:26px 0 56px">
+      ⚠️ 현재 수치는 자리표시용 <b>예시 데이터</b>입니다. 공식 출처는 IMO가 매년 MEPC에 제출하는
+      <b>DCS 연료유 소비 데이터 집계 보고</b>(IMO 문서, GISIS 공개)이며, 위 반입 패널로 매년 새 값을 얹어 나가면 됩니다.
+      개별 선박 진단은 <a href="decarbonizer.html" style="color:var(--teal);font-weight:700">Decarbonizer</a>, 등급 계산은 <a href="tool.html#cii" style="color:var(--teal);font-weight:700">CII 계산기</a>에서.
+    </p>
+  </div>
+</section>
+
+<div class="wrap tool-note">IMO DCS Dashboard · 출처: IMO MEPC 연차 DCS 집계. 현재 값은 예시이며 반입 패널로 갱신합니다.</div>
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="index.html">Home</a></li><li><a href="story.html">Story</a></li><li><a href="policy.html">Policy</a></li><li><a href="insight.html">Insight</a></li><li><a href="project.html">Project</a></li><li><a href="tool.html">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="index.html#s1">01 Regulation</a></li><li><a href="index.html#s2">02 Transition</a></li><li><a href="index.html#s3">03 Scale up</a></li><li><a href="index.html#s4">04 Governance</a></li><li><a href="index.html#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@planit.institute">contact@planit.institute</a></li>
+        <li>Hyeryoun Chi, Lead Researcher</li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════ ✏️ 연도별 데이터 · 예시값, 실제로 교체하세요 ═══════════
+   ships: 보고 선박(척) · fuelMt: 연료(백만 t) · co2Mt: CO₂(백만 t)
+   aer: 평균 g/t·nm · mix: 연료 비중 % [HFO, MDO/MGO, LNG, 기타]
+   cii: 등급 비중 % [A,B,C,D,E] (2019–22년은 소급 추정 표기)          */
+const DCS = {
+  2019:{ships:27100, fuelMt:203, co2Mt:634, aer:6.4, mix:[72,21,5,2],  cii:[10,18,34,22,16]},
+  2020:{ships:27600, fuelMt:196, co2Mt:612, aer:6.3, mix:[68,24,6,2],  cii:[11,19,34,21,15]},
+  2021:{ships:28200, fuelMt:206, co2Mt:643, aer:6.2, mix:[66,25,7,2],  cii:[11,19,35,21,14]},
+  2022:{ships:28700, fuelMt:209, co2Mt:652, aer:6.1, mix:[65,25,8,2],  cii:[12,20,34,20,14]},
+  2023:{ships:29300, fuelMt:213, co2Mt:664, aer:6.0, mix:[63,25,9,3],  cii:[13,20,33,20,14]},
+  2024:{ships:29900, fuelMt:216, co2Mt:672, aer:5.9, mix:[61,25,10,4], cii:[14,21,33,19,13]},
+};
+const MIXNAMES=['HFO/VLSFO','MDO·MGO','LNG','기타·대체'];
+const $=id=>document.getElementById(id);
+/* 예시값 연도: 반입으로 교체되면 배지를 숨깁니다 */
+const EXAMPLE_YEARS=new Set(Object.keys(DCS).map(Number));
+/* 슬라이더는 연도 자체가 아니라 '있는 연도 목록'의 순번을 움직입니다 (연도 공백 대응) */
+let YEARS=[];
+const isNum=v=>typeof v==='number'&&isFinite(v);
+const fmt=(v,f)=>isNum(v)?f(v):'–';
+
+/* 와플 100점 생성 */
+const waffle=$('waffle');
+for(let i=0;i<100;i++){waffle.appendChild(document.createElement('span'))}
+/* 탱크 4개 생성 */
+$('tanks').innerHTML=MIXNAMES.map((n,i)=>`<div class="tank">
+  <div class="vessel"><div class="fill" id="tk${i}"></div><div class="pct" id="tp${i}"></div></div>
+  <div class="tl">${n}</div></div>`).join('');
+/* 성장 막대 생성 */
+function buildGrowth(){
+  YEARS=Object.keys(DCS).map(Number).sort((a,b)=>a-b);
+  const sh=YEARS.map(y=>DCS[y].ships).filter(isNum);
+  const lo=sh.length?Math.min(...sh)*0.985:0, hi=sh.length?Math.max(...sh)*1.005:1;
+  $('growth').innerHTML=YEARS.map(y=>{const v=DCS[y].ships;
+    const h=isNum(v)&&hi>lo?(v-lo)/(hi-lo)*100:0;
+    return `<div class="g" data-y="${y}" style="height:${h}%"><span class="gl">${isNum(v)?(v/1000).toFixed(1)+'k':'–'}</span></div>`}).join('');
+  const yr=$('yr'); yr.min=0; yr.max=YEARS.length-1;
+  const lab=YEARS.map(y=>`<span>${y}</span>`).join('');
+  document.querySelector('.scrub .yrs').innerHTML=lab;
+  $('g-yrs').innerHTML=lab;
+  $('g-range').textContent=YEARS[0]+'–'+YEARS[YEARS.length-1];
+}
+buildGrowth();
+$('growth').addEventListener('click',e=>{const g=e.target.closest('.g');if(g){$('yr').value=YEARS.indexOf(+g.dataset.y);render()}});
+
+function delta(id,cur,prev,unit,goodDown,prevYear,y){
+  const el=$(id);
+  if(!isNum(prev)||!isNum(cur)){el.textContent='';return}
+  const d=cur-prev, up=d>0;
+  el.textContent=(up?'▲ +':'▼ ')+Math.abs(d).toLocaleString(undefined,{maximumFractionDigits:1})+unit+(prevYear===y-1?' vs 전년':' vs '+prevYear);
+  el.className='d '+((up!==goodDown)?'dn':'up');
+}
+
+function render(){
+  const idx=Math.min(Math.max(+$('yr').value||0,0),YEARS.length-1);
+  const y=YEARS[idx], d=DCS[y], py=idx>0?YEARS[idx-1]:null, p=py!=null?DCS[py]:null;
+  /* 스크러버 배 이동 */
+  const frac=YEARS.length>1?idx/(YEARS.length-1):0;
+  document.getElementById('shipmark').setAttribute('transform',`translate(${16+frac*608},0)`);
+  document.getElementById('shipyear').textContent=y;
+  /* KPI */
+  $('k-ships').textContent=fmt(d.ships,v=>v.toLocaleString());
+  $('k-fuel').textContent=fmt(d.fuelMt,v=>v);
+  $('k-co2').textContent=fmt(d.co2Mt,v=>v);
+  $('k-eff').textContent=fmt(d.aer,v=>v.toFixed(1));
+  document.querySelectorAll('.kpi .ex').forEach(b=>b.style.display=EXAMPLE_YEARS.has(y)?'':'none');
+  delta('d-ships',d.ships,p&&p.ships,'척',false,py,y);
+  delta('d-fuel',d.fuelMt,p&&p.fuelMt,' Mt',true,py,y);
+  delta('d-co2',d.co2Mt,p&&p.co2Mt,' Mt',true,py,y);
+  delta('d-eff',d.aer,p&&p.aer,'',true,py,y);
+  /* 탱크 */
+  for(let i=0;i<4;i++){const v=d.mix?d.mix[i]:null;
+    $('tk'+i).style.height=(isNum(v)?v:0)+'%';$('tp'+i).textContent=isNum(v)?v+'%':'–'}
+  /* 와플 */
+  const cls=['cA','cB','cC','cD','cE'];let k=0;
+  const dots=waffle.children;
+  if(d.cii){
+    d.cii.forEach((v,ci)=>{for(let j=0;j<Math.round(v)&&k<100;j++,k++)dots[k].className=cls[ci]});
+    while(k<100)dots[k++].className='cE';
+    ['A','B','C','D','E'].forEach((g,i)=>$('w-'+g).textContent=d.cii[i]+'%');
+    $('w-note').textContent=(y<=2022?'※ 2019–2022 등급은 CII 방법론 소급 적용 추정치 표기. ':'')+`D·E 합계 ${d.cii[3]+d.cii[4]}% · E 등급, D는 3년 연속일 때 시정계획(SEEMP III) 대상입니다.`;
+  }else{
+    for(;k<100;k++)dots[k].className='cN';
+    ['A','B','C','D','E'].forEach(g=>$('w-'+g).textContent='–');
+    $('w-note').textContent='이 연도는 CII 등급 분포 자료가 없습니다.';
+  }
+  /* 성장 하이라이트 */
+  document.querySelectorAll('.growth .g').forEach(g=>g.classList.toggle('on',+g.dataset.y===y));
+}
+$('yr').value=YEARS.length-1;
+$('yr').addEventListener('input',render);
+render();
+
+/* ═══════════ 데이터 반입 (매년 갱신) ═══════════ */
+const PROMPT=`첨부한 IMO DCS 연간 집계 보고에서 아래 JSON 스키마로 값을 추출해줘. 숫자만, 설명 없이 JSON 하나로만 답해줘.
+{"<연도>":{"ships":<보고 선박 수(척)>,"fuelMt":<총 연료 소비(백만 t)>,"co2Mt":<총 CO2(백만 t)>,"aer":<평균 AER(gCO2/dwt-nm)>,"mix":[<HFO/VLSFO %>,<MDO·MGO %>,<LNG %>,<기타·대체 %>],"cii":[<A %>,<B %>,<C %>,<D %>,<E %>]}}
+비중은 합이 100이 되도록 반올림하고, 보고서에 없는 항목은 null로 표기해줘.`;
+$('promptbtn').addEventListener('click',async function(){
+  try{await navigator.clipboard.writeText(PROMPT);this.textContent='복사됨 ✓'}catch(e){this.textContent='복사 실패'}
+  setTimeout(()=>this.textContent='① 추출 프롬프트 복사',1800);
+});
+$('applybtn').addEventListener('click',()=>{
+  const msg=$('importmsg');
+  let txt=$('jsonin').value.trim();
+  if(!txt){msg.textContent='JSON을 붙여넣은 뒤 적용을 눌러주세요.';return}
+  txt=txt.replace(/^```json?|```$/g,'').trim();
+  try{
+    const obj=JSON.parse(txt); let n=0;
+    if(!obj||typeof obj!=='object'||Array.isArray(obj)) throw '연도를 키로 하는 객체가 아닙니다.';
+    const ok={};
+    for(const [y,d] of Object.entries(obj)){
+      if(!/^\d{4}$/.test(y)) throw '연도 키가 아님: '+y;
+      if(!d||typeof d!=='object') throw y+'년 값이 객체가 아닙니다.';
+      for(const k of ['ships','fuelMt','co2Mt','aer']){
+        if(d[k]===undefined) d[k]=null;
+        if(d[k]!==null&&!isNum(d[k])) throw y+'년 '+k+'는 숫자 또는 null이어야 합니다.';
+      }
+      for(const [k,len,nm] of [['mix',4,'연료 비중'],['cii',5,'CII 등급 비중']]){
+        if(d[k]===undefined||d[k]===null){d[k]=null;continue}
+        if(!Array.isArray(d[k])||d[k].length!==len) throw y+'년 '+k+'는 '+len+'개 숫자 배열(또는 null)이어야 합니다.';
+        if(!d[k].every(v=>isNum(v)&&v>=0)) throw y+'년 '+k+'에 숫자가 아니거나 음수인 값이 있습니다. 모르면 배열 전체를 null로 두세요.';
+        const sum=d[k].reduce((a,b)=>a+b,0);
+        if(Math.abs(sum-100)>1) throw y+'년 '+nm+' 합계가 '+(Math.round(sum*10)/10)+'%입니다. 합계는 100%(±1)여야 합니다.';
+      }
+      if(['ships','fuelMt','co2Mt','aer','mix','cii'].every(k=>d[k]===null)) throw y+'년은 모든 항목이 null입니다.';
+      ok[y]=d; n++;
+    }
+    for(const [y,d] of Object.entries(ok)){DCS[y]=d; EXAMPLE_YEARS.delete(+y)}
+    buildGrowth(); $('yr').value=YEARS.length-1; render();
+    msg.innerHTML='<b style="color:var(--teal)">'+n+'개 연도 반영 완료.</b> 새로고침하면 사라지니, ③으로 코드를 복사해 파일의 DCS 객체와 교체하세요.';
+  }catch(e){msg.innerHTML='<b style="color:var(--navy)">형식 오류:</b> '+e}
+});
+$('savebtn').addEventListener('click',async function(){
+  const code='const DCS = '+JSON.stringify(DCS,null,2).replace(/"(\d{4})":/g,'$1:')+';';
+  try{await navigator.clipboard.writeText(code);this.textContent='복사됨 ✓'}catch(e){this.textContent='복사 실패'}
+  setTimeout(()=>this.textContent='③ 저장용 코드 복사',1800);
+});
+</script>
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · Decarbonizer · 5단계 시나리오</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="description" content="선박 제원 → 규제 → 탈탄소 조치 → CAPEX/OPEX → 결과 요약. PLANiT의 5단계 탈탄소 시나리오 도구.">
+
+<!-- ═══════════════════════════════════════════════
+  ✏️ 수정 가이드 (decarbonizer.html)
+  · 참조선 프리셋: REF · 조치: MEASURES(일일 연료비 변화는 자동 계산)
+  · 규제 목록: REGS (minGT로 적용 톤수 필터)
+  · 연료 물성·가격: FUELS · 배출계수: EMIS · LNG 엔진(메탄 슬립): LNG_ENG
+  · 통화: EUR 항목(EUA·FuelEU 벌금·유지보수)은 환율 입력값으로 USD 환산
+  · 컨설팅 코멘트: advise() 안의 조건문
+  모든 값이 스크립트 상단 데이터 블록에 모여 있습니다.
+═══════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── 위저드 스텝 ── */
+.steps{display:flex;gap:10px;flex-wrap:wrap;margin:34px 0 8px}
+.stepbtn{flex:1;min-width:150px;border:1px solid var(--line);background:var(--white);border-radius:10px;padding:12px 14px;cursor:pointer;text-align:left;transition:all .2s}
+.stepbtn .n{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);display:block}
+.stepbtn .t{font-weight:700;font-size:14px;color:var(--navy)}
+.stepbtn:hover{border-color:var(--teal)}
+.stepbtn.on{background:var(--navy);border-color:var(--navy)}
+.stepbtn.on .n{color:#9FB9DB}
+.stepbtn.on .t{color:#fff}
+.step{display:none}
+.step.on{display:block}
+.stepnav{display:flex;justify-content:space-between;margin-top:26px}
+/* ── 선박 실루엣 ── */
+.shipfig{background:var(--chart-bg);border:1px solid var(--line);border-radius:10px;padding:18px;position:relative}
+.shipfig svg{width:100%;height:auto}
+.shipfig .cap{font-family:var(--mono);font-size:10.5px;color:#9FB4C4;letter-spacing:.06em;margin-top:6px;display:flex;justify-content:space-between}
+.hull{fill:var(--navy)} .house{fill:var(--teal)} .sea{stroke:var(--line);stroke-width:1.5}
+/* ── 운항 도넛 ── */
+.opdonut{display:grid;grid-template-columns:200px 1fr;gap:22px;align-items:center}
+.oplegend{font-size:13px}
+.oplegend .r{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.oplegend .sw{width:12px;height:12px;border-radius:3px;flex:none}
+.oplegend input[type=range]{flex:1;accent-color:var(--navy)}
+.oplegend .v{font-family:var(--mono);font-size:12px;color:var(--input);width:64px;text-align:right}
+/* ── 미니 표 공통 재사용: .rt ── */
+/* ── 불릿 차트 ── */
+.bullet{position:relative;height:34px;background:var(--card);border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.bullet .ach{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--teal),var(--gold));transition:width .5s}
+.bullet .tgt{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--navy)}
+.bullet-lab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px}
+/* ── 조치 표 ── */
+.mrow{display:grid;grid-template-columns:26px 1fr 74px 104px 92px 104px;gap:10px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);font-size:13.5px}
+.mrow input[type=number]{width:100%;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--input);text-align:right;background:var(--white)}
+.blendbox{background:var(--sky);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:14px;display:none}
+.blendbox.on{display:block}
+.blendbox label{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--navy)}
+.blendbox input{width:100%;accent-color:var(--navy);margin-top:8px}
+.blendmix{display:flex;height:16px;border-radius:99px;overflow:hidden;border:1px solid var(--line);margin-top:10px}
+.blendmix .bA{background:var(--navy);transition:width .3s}
+.blendmix .bB{background:var(--teal);transition:width .3s}
+.regchecks label{display:flex;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);font-size:13.5px;cursor:pointer}
+.regchecks input{accent-color:var(--navy);width:15px;height:15px}
+.mrow:hover{background:var(--sky)}
+.mrow.head{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.05em;border-bottom:2px solid var(--line)}
+.mrow .nm{font-weight:500;color:var(--ink);word-break:keep-all}
+.mrow .nm small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
+.mrow .num{font-family:var(--mono);font-size:12.5px;text-align:right}
+.mrow input{accent-color:var(--navy);width:16px;height:16px}
+.mgroup{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--teal);padding:14px 8px 4px}
+.mgroup::before{content:"◆ ";color:var(--gold)}
+/* ── 연료 탱크 비교 ── */
+.tanks{display:flex;gap:14px;align-items:flex-end;justify-content:space-around;padding:10px 0 0}
+.tank{text-align:center;width:64px}
+.tank .vessel{height:120px;border:2px solid var(--navy);border-radius:8px 8px 12px 12px;position:relative;overflow:hidden;background:var(--white)}
+.tank .fill{position:absolute;left:0;right:0;bottom:0;background:var(--teal);opacity:.85;transition:height .5s}
+.tank.big .fill{background:var(--gold)}
+.tank .tl{font-size:11px;font-weight:700;color:var(--navy);margin-top:6px}
+.tank .tv{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+/* ── 가격 슬라이더 ── */
+.pricegrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 30px}
+.pr{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.pr .k{width:140px;flex:none}
+.pr input{flex:1;accent-color:var(--navy)}
+.pr .v{font-family:var(--mono);font-size:12px;color:var(--input);width:90px;text-align:right}
+/* ── 요약 카드 ── */
+.quote{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px}
+.qc{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:20px}
+.qc .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--muted)}
+.qc .v{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--navy);line-height:1.2;margin-top:4px}
+.qc .s{font-size:11.5px;color:var(--muted)}
+.advice{background:var(--sky);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:20px 22px;margin-top:20px;font-size:14px;word-break:keep-all}
+.advice h5{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--navy);margin-bottom:8px}
+.advice h5::before{content:"◆ ";color:var(--gold)}
+.advice p{margin-bottom:8px}
+.line-base{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:5 5}
+.line-scen{fill:none;stroke:var(--teal);stroke-width:2.5}
+.line-imo{fill:none;stroke:var(--navy);stroke-width:2.5}
+.line-tgt{stroke:var(--gold);stroke-width:2.5}
+.capex-mark{fill:var(--gold)}
+.fwarn{font-size:11.5px;color:#B4442E;margin-top:4px;word-break:keep-all}
+input.bad{border-color:#B4442E!important}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.duo .field{margin-bottom:0}
+.regnote{font-size:11.5px;color:var(--muted);margin-top:8px;word-break:keep-all;line-height:1.5}
+@media(max-width:860px){.opdonut{grid-template-columns:1fr}.quote{grid-template-columns:1fr}.mrow{grid-template-columns:24px 1fr 70px 90px 90px;font-size:12.5px}.pricegrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="index.html">Home</a>
+      <a href="story.html">Story</a>
+      <a href="policy.html">Policy</a>
+      <a href="insight.html">Insight</a>
+      <a href="project.html">Project</a>
+      <a class="active" aria-current="page" href="tool.html">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="page-hero" style="padding-bottom:26px">
+  <div class="wrap">
+    <p class="eyebrow" data-i="dz-eye">Tool · Decarbonizer · Stage 02 전환</p>
+    <h1 data-i="dz-h1">우리 배, <em>뭐부터</em> 하면 되나.</h1>
+    <p class="lede" data-i="dz-lede">다섯 단계로 진행합니다. 선박 제원을 확인하고, 적용 규제를 파악하고, 조치를 조합하고, 비용을 비교한 뒤, 한 장의 결과 요약을 받으세요. 모든 값은 파란 글자를 고쳐 즉시 재계산됩니다.</p>
+
+    <div class="steps" id="steps">
+      <button class="stepbtn on" data-s="1"><span class="n">STEP 1</span><span class="t" data-i="dz-st1">선박 제원</span></button>
+      <button class="stepbtn" data-s="2"><span class="n">STEP 2</span><span class="t" data-i="dz-st2">적용 규제</span></button>
+      <button class="stepbtn" data-s="3"><span class="n">STEP 3</span><span class="t" data-i="dz-st3">탈탄소 조치</span></button>
+      <button class="stepbtn" data-s="4"><span class="n">STEP 4</span><span class="t" data-i="dz-st4">CAPEX / OPEX</span></button>
+      <button class="stepbtn" data-s="5"><span class="n">STEP 5</span><span class="t" data-i="dz-st5">결과 요약</span></button>
+    </div>
+  </div>
+</div>
+
+<section style="padding-top:34px">
+  <div class="wrap">
+
+  <!-- ═════════ STEP 1 · 선박 제원 ═════════ -->
+  <div class="step on" id="step1">
+    <div class="calc">
+      <h3>① 선박 제원 · 운항 프로필</h3>
+      <p class="sub">선종을 고르면 참조선 값이 채워집니다. 실제 선박에 맞게 파란 값을 조정하세요.</p>
+      <div class="calc-grid" style="grid-template-columns:320px 1fr">
+        <div>
+          <div class="field">
+            <label for="s-type">선종 (참조선 자동 입력)</label>
+            <select id="s-type">
+              <option value="bulk">벌크선 · Supramax</option>
+              <option value="tanker" selected>탱커 · MR 프로덕트</option>
+              <option value="container">컨테이너선 · 4,600 TEU</option>
+              <option value="gcargo">일반화물선 · 12k DWT</option>
+            </select>
+          </div>
+          <div class="field"><label for="s-dwt">재화중량 DWT (t)</label><input id="s-dwt" type="number" step="500"></div>
+          <div class="field"><label for="s-gt">GT</label><input id="s-gt" type="number" step="500"></div>
+          <div class="field"><label for="s-speed">순항 속도 (knots)</label><input id="s-speed" type="number" step="0.1"></div>
+          <div class="field"><label for="s-mcr">주기관 MCR (kW)</label><input id="s-mcr" type="number" step="100"></div>
+          <div class="field"><label for="s-aux">보조기관 합계 (kW)</label><input id="s-aux" type="number" step="100"></div>
+          <div class="field"><label for="s-sfc">주기관 최적 SFC (g/kWh)</label><input id="s-sfc" type="number"></div>
+          <div class="field">
+            <label for="s-fuel">기준 연료</label>
+            <select id="s-fuel">
+              <option value="HFO">HFO</option><option value="LFO">VLSFO · LFO</option><option value="MDO" selected>MDO · MGO</option>
+              <option value="LNG">LNG</option><option value="LPG">LPG</option>
+              <option value="B30">바이오 B30</option><option value="B100">바이오 B100</option>
+              <option value="MEOH">메탄올 (그린)</option><option value="NH3">암모니아 (그린)</option>
+              <option value="H2">수소 (그린)</option>
+            </select>
+          </div>
+          <div class="field" id="s-lngwrap" style="display:none"><label for="s-lng">LNG 엔진 (메탄 슬립)</label><select id="s-lng" class="lngsel"></select></div>
+        </div>
+        <div>
+          <div class="shipfig">
+            <svg id="shipsvg" viewBox="0 0 640 150" aria-label="선박 실루엣"></svg>
+            <div class="cap"><span id="shipname">–</span><span>SILHOUETTE · SCALE ∝ DWT</span></div>
+          </div>
+
+          <h3 style="font-size:16px;margin:24px 0 10px">연간 운항 프로필 · 부하율</h3>
+          <div class="opdonut">
+            <svg id="opsvg" viewBox="0 0 170 170" aria-label="연간 운항 도넛"></svg>
+            <div class="oplegend">
+              <div class="r"><span class="sw" style="background:var(--navy)"></span>항해 Sailing
+                <input id="o-sail" type="range" min="0" max="365" value="245"><span class="v"><span id="o-sail-v">245</span>일</span></div>
+              <div class="r"><span class="sw" style="background:var(--teal)"></span>하역 Working
+                <input id="o-work" type="range" min="0" max="365" value="30"><span class="v"><span id="o-work-v">30</span>일</span></div>
+              <div class="r"><span class="sw" style="background:#C9D6E2"></span>정박 Idle <span style="margin-left:auto" class="v"><span id="o-idle-v">90</span>일</span></div>
+              <div class="r"><span class="sw" style="background:var(--navy)"></span>항해 부하
+                <input id="o-lsail" type="range" min="30" max="100" value="80"><span class="v"><span id="o-lsail-v">80</span>%</span></div>
+              <div class="r"><span class="sw" style="background:var(--teal)"></span>하역 부하(주기관)
+                <input id="o-lwork" type="range" min="10" max="80" value="40"><span class="v"><span id="o-lwork-v">40</span>%</span></div>
+              <div class="r"><span class="sw" style="background:#C9D6E2"></span>정박 부하(보기)
+                <input id="o-lidle" type="range" min="10" max="80" value="40"><span class="v"><span id="o-lidle-v">40</span>%</span></div>
+            </div>
+          </div>
+
+          <h3 style="font-size:16px;margin:26px 0 10px">엔진 특성 · SFC 곡선</h3>
+          <div class="chartbox" style="margin-top:0">
+            <svg id="sfcsvg" viewBox="0 0 640 170"></svg>
+            <p class="cap">SPECIFIC FUEL CONSUMPTION · ── 주기관 · ─ ─ 보기 · 점 = 각 모드의 운전점</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px;margin:28px 0 8px">기준 시나리오 개요 (연간)</h3>
+      <table class="rt" id="ovtable"></table>
+      <p class="io-note" style="margin-top:10px">금액은 USD. 유지보수 €20/엔진시간은 2단계 환율로 USD 환산. 배출계수는 스크립트 EMIS. <b>파란 글자</b> = 입력값 · 검정 = 계산값</p>
+    </div>
+    <div class="stepnav"><span></span><button class="btn btn-primary" onclick="goStep(2)">다음 · 적용 규제 →</button></div>
+  </div>
+
+  <!-- ═════════ STEP 2 · 규제 ═════════ -->
+  <div class="step" id="step2">
+    <div class="calc">
+      <h3>② 적용 규제 · 탈탄소 타임라인</h3>
+      <p class="sub">감축 목표를 슬라이더로 정하면 IMO 선대 궤적(2008 대비)과 만나는 해가 표시됩니다. 이 배의 감축률은 현재 기준 대비라 참고용 비교입니다. 아래 표는 이 배(GT 기준)에 걸리는 규제만 추립니다. 헤더를 클릭하면 정렬됩니다.</p>
+      <div class="calc-grid" style="grid-template-columns:1fr 300px">
+        <div class="chartbox" style="margin-top:0">
+          <svg id="tlsvg" viewBox="0 0 640 240"></svg>
+          <p class="cap">IMO 2023 전략 · 선대 전체 2008 대비 · ── 최소 · ─ ─ 노력 · ── 이 배 목표(골드, 현재 대비) · ◆ 교차 연도(참고)</p>
+        </div>
+        <div>
+          <div class="field">
+            <label for="r-target">이 배 감축 목표 (현재 대비 %) · <span id="r-target-v" style="color:var(--input)">40</span>%</label>
+            <input id="r-target" type="range" min="0" max="100" value="40" style="width:100%;accent-color:var(--navy)">
+          </div>
+          <div class="regchecks" style="margin-top:14px">
+            <label><input type="checkbox" id="r-ets" checked>EU ETS 적용 <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)">2024–</span></label>
+            <label><input type="checkbox" id="r-feu" checked>FuelEU Maritime 적용 <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)">2025–</span></label>
+            <label><input type="checkbox" id="r-nzf">IMO NZF (미채택 · 시나리오) <span style="margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)">미정</span></label>
+          </div>
+          <p class="regnote">IMO NZF: 2025.4 MEPC 83 승인, 2025.10 채택 연기. 시행 여부·연도 미정. 켜면 2028년 시행을 가정합니다. 단가 USD 100/380은 초안상 2028–2030년만 정해져 있어 2031년 이후는 가정입니다.</p>
+          <div class="duo" style="margin-top:14px">
+            <div class="field"><label for="r-eua">EUA 가격 (EUR/tCO₂)</label><input id="r-eua" type="number" min="0" value="75"></div>
+            <div class="field"><label for="r-fx">환율 (USD/EUR)</label><input id="r-fx" type="number" min="0.5" max="2" step="0.01" value="1.08"></div>
+          </div>
+          <p class="regnote">EU ETS·FuelEU 벌금(EUR 2,400/t)은 이 환율로 USD 환산해 합산합니다. EU ETS는 2026년부터 CH₄·N₂O 포함.</p>
+          <div class="advice" style="margin-top:14px">
+            <h5>이 배에 걸리는 것</h5>
+            <p id="r-note">–</p>
+          </div>
+        </div>
+      </div>
+      <table class="rt" id="regtable" style="margin-top:22px"></table>
+    </div>
+    <div class="stepnav"><button class="btn btn-ghost" onclick="goStep(1)">← 선박 제원</button><button class="btn btn-primary" onclick="goStep(3)">다음 · 탈탄소 조치 →</button></div>
+  </div>
+
+  <!-- ═════════ STEP 3 · 조치 ═════════ -->
+  <div class="step" id="step3">
+    <div class="calc">
+      <h3>③ 탈탄소 조치 · WtW 감축 · CAPEX · 일일 연료비 변화</h3>
+      <p class="sub">에너지 조치는 중복 선택, 연료 전환은 하나만 선택됩니다. 일일 연료비 변화 = (연료·전력비 절감 − 조치 OPEX) ÷ 365. 규제 비용과 CAPEX는 빠져 있습니다. WtW 감축은 조치 단독 기준이며 결과 요약과 같은 방식(에너지 가중 GFI)입니다.</p>
+      <div id="mlist"></div>
+      <p class="io-note" style="margin-top:8px">전력 배출은 선박 기준으로 계산: 육상전원(OPS) 0 (FuelEU 방식), 배터리 충전 전력은 그리드 GFI 20 g/MJ 가정.</p>
+      <div class="blendbox on" id="blendbox" style="display:block">
+        <h3 style="font-size:16px;margin-bottom:10px;font-family:var(--serif);color:var(--navy)">연료 전략 · 듀얼퓨얼 (모든 조합 가능)</h3>
+        <div style="display:grid;grid-template-columns:1fr 130px 130px;gap:14px;align-items:start">
+          <div class="field" style="margin:0">
+            <label for="b-fuel">연료 B (대체·혼소)</label>
+            <select id="b-fuel">
+              <option value="NONE" selected>없음 · 단일 연료 유지</option>
+              <option value="HFO">HFO</option><option value="LFO">VLSFO · LFO</option><option value="MDO">MDO · MGO</option>
+              <option value="LNG">LNG</option><option value="LPG">LPG</option>
+              <option value="B30">바이오 B30</option><option value="B100">바이오 B100</option>
+              <option value="MEOH">메탄올 (그린)</option><option value="NH3">암모니아 (그린)</option>
+              <option value="H2">수소 (그린)</option><option value="ELEC">배터리 전기</option>
+            </select>
+            <select id="b-lng" class="lngsel" style="display:none;margin-top:8px" aria-label="LNG 엔진 (메탄 슬립)"></select>
+          </div>
+          <div class="field" style="margin:0"><label for="b-capex">개조 CAPEX $k ✏️</label><input id="b-capex" type="number" step="50" value="0"></div>
+          <div class="field" style="margin:0"><label for="b-opex">추가 OPEX $k/yr ✏️</label><input id="b-opex" type="number" step="5" value="0"></div>
+        </div>
+        <div id="blendctl" style="display:none;margin-top:14px">
+          <label>혼소 비율 · <span id="b-alt-name">연료 B</span> 에너지 비중 <b style="color:var(--input)"><span id="b-share-v">40</span>%</b></label>
+          <input id="b-share" type="range" min="0" max="100" value="40">
+          <div class="blendmix"><div class="bA" id="bmixA" style="width:60%"></div><div class="bB" id="bmixB" style="width:40%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:6px"><span id="b-base-lab">연료 A</span><span id="b-alt-lab">연료 B</span></div>
+          <div style="display:flex;gap:26px;flex-wrap:wrap;margin-top:12px;font-size:13px">
+            <span>WtW 감축 (연료 전략 단독) <b id="b-red" style="color:var(--teal)">–</b></span>
+            <span>혼합 GFI <b id="b-gfi" style="font-family:var(--mono)">–</b> g/MJ</span>
+            <span>일일 연료비 변화 (규제비 제외) <b id="b-day" style="font-family:var(--mono)">–</b></span>
+          </div>
+          <p class="io-note" id="b-note" style="margin-top:10px"></p>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px;margin:28px 0 8px">달성 vs 목표 (이 배 현재 기준 대비)</h3>
+      <div class="bullet"><div class="ach" id="b-ach" style="width:0%"></div><div class="tgt" id="b-tgt" style="left:40%"></div></div>
+      <div class="bullet-lab"><span>ACHIEVED <b id="b-ach-v" style="color:var(--teal)">0%</b></span><span>TARGET <b id="b-tgt-v" style="color:var(--navy)">40%</b></span></div>
+
+      <h3 style="font-size:16px;margin:30px 0 8px">연료 가격 비교 · 저장 부피</h3>
+      <div class="calc-grid" style="grid-template-columns:1fr 340px">
+        <div class="pricegrid" id="prices"></div>
+        <div>
+          <div class="tanks" id="tanks"></div>
+          <p class="cap" style="font-family:var(--mono);font-size:10.5px;color:#9FB4C4;text-align:center;margin-top:8px">동일 에너지 저장 부피 (HFO=1.0)</p>
+        </div>
+      </div>
+    </div>
+    <div class="stepnav"><button class="btn btn-ghost" onclick="goStep(2)">← 적용 규제</button><button class="btn btn-primary" onclick="goStep(4)">다음 · CAPEX/OPEX →</button></div>
+  </div>
+
+  <!-- ═════════ STEP 4 · CAPEX/OPEX ═════════ -->
+  <div class="step" id="step4">
+    <div class="calc">
+      <h3>④ CAPEX / OPEX · 기준 대비 시나리오</h3>
+      <p class="sub">연간 비용 구성(연료·유지보수·규제·조치 OPEX)과 10개년 누적 곡선입니다. 모든 금액은 USD입니다. 규제 비용은 2단계에서 켠 항목(EU ETS·FuelEU·IMO NZF)만 반영하며, EUR 항목은 2단계 환율로 환산합니다. 조치별 CAPEX/OPEX는 3단계 표에서 직접 고친 값을 씁니다.</p>
+      <div class="result-big">
+        <div class="rb"><div class="v" id="k-save">–</div><div class="k">연평균 절감 (USD)</div></div>
+        <div class="rb"><div class="v" id="k-capex">–</div><div class="k">총 CAPEX (USD)</div></div>
+        <div class="rb warn"><div class="v" id="k-pay">–</div><div class="k">투자 회수기간</div></div>
+      </div>
+      <table class="rt" id="costtable"></table>
+      <p class="io-note" id="costnote" style="margin-top:8px"></p>
+      <div class="chartbox">
+        <svg id="cumsvg" viewBox="0 0 640 240"></svg>
+        <p class="cap">누적 총비용 2026–2035 (USD) · ─ ─ 기준 · ── 시나리오 · ● 초기 CAPEX</p>
+      </div>
+      <div class="field" style="max-width:280px;margin-top:18px"><label for="e-cov2">EU 관할 커버리지 (%)</label><input id="e-cov2" type="number" min="0" max="100" value="50"></div>
+    </div>
+    <div class="stepnav"><button class="btn btn-ghost" onclick="goStep(3)">← 탈탄소 조치</button><button class="btn btn-primary" onclick="goStep(5)">다음 · 결과 요약 →</button></div>
+  </div>
+
+  <!-- ═════════ STEP 5 · 결과 요약 ═════════ -->
+  <div class="step" id="step5">
+    <div class="calc">
+      <h3>⑤ 결과 요약 · Budget Quote</h3>
+      <div class="quote" id="quote"></div>
+      <h3 style="font-size:16px;margin:8px 0 8px">배출 비교 (연간)</h3>
+      <table class="rt" id="emtable"></table>
+      <div class="advice" id="advice"></div>
+      <button class="btn btn-primary" id="copybtn" style="margin-top:18px">결과 요약 복사</button>
+    </div>
+    <div class="stepnav"><button class="btn btn-ghost" onclick="goStep(4)">← CAPEX/OPEX</button><span></span></div>
+  </div>
+
+  <p style="font-size:12.5px;color:var(--muted);max-width:70ch;word-break:keep-all;margin:14px 0 56px">
+    참조선 제원·조치 계수·규제 표는 공개 문헌의 대표 범위를 초벌로 담은 연구용 추정입니다.
+    실제 선형 값으로 교정하려면 스크립트 상단 데이터 블록(REF·MEASURES·REGS·FUELS)을 수정하세요.
+    선대 단위 계산은 <a href="tool.html" style="color:var(--teal);font-weight:700">TOOL</a>, 글로벌 선대 현황은
+    <a href="imo-dcs.html" style="color:var(--teal);font-weight:700">IMO DCS 대시보드</a>에서.
+  </p>
+  </div>
+</section>
+
+<div class="wrap tool-note">Decarbonizer · 연구용 추정 도구입니다. 실제 규제 비용은 검증 방법론과 세부 규칙에 따라 달라집니다.</div>
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="index.html">Home</a></li><li><a href="story.html">Story</a></li><li><a href="policy.html">Policy</a></li><li><a href="insight.html">Insight</a></li><li><a href="project.html">Project</a></li><li><a href="tool.html">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="index.html#s1">01 Regulation</a></li><li><a href="index.html#s2">02 Transition</a></li><li><a href="index.html#s3">03 Scale up</a></li><li><a href="index.html#s4">04 Governance</a></li><li><a href="index.html#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@planit.institute">contact@planit.institute</a></li>
+        <li>Hyeryoun Chi, Lead Researcher</li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════ ✏️ 데이터 블록 ═══════════ */
+const REF = {
+  bulk:     {name:'Supramax 벌크 (참조선)',    gt:31500, dwt:56000, speed:14.5, mcr:8800,  aux:1800, sfc:172, fuel:'HFO', hullH:34},
+  tanker:   {name:'MR 프로덕트 탱커 (참조선)', gt:28844, dwt:47987, speed:16.4, mcr:9480,  aux:3800, sfc:171, fuel:'MDO', hullH:38},
+  container:{name:'4,600 TEU 파나막스 (참조선)',gt:52000, dwt:58000, speed:21.0, mcr:36000, aux:6000, sfc:168, fuel:'HFO', hullH:30},
+  gcargo:   {name:'일반화물 12k DWT (참조선)', gt:9500,  dwt:12500, speed:13.0, mcr:4500,  aux:900,  sfc:182, fuel:'MDO', hullH:32},
+};
+/* 연료 물성: LHV GJ/t (MEPC.364(79)) · 기본가 · WtW GFI g/MJ (FuelEU Annex II 기본값) · 저장부피(HFO=1) · 개조 CAPEX $/kW */
+const FUELS = {
+  HFO: {lhv:40.2, price:520,  unit:'USD/t',  gfi:91.74, vol:1.0,  conv:0,    ko:'HFO'},
+  LFO: {lhv:41.2, price:600,  unit:'USD/t',  gfi:91.39, vol:1.02, conv:0,    ko:'VLSFO'},
+  MDO: {lhv:42.7, price:780,  unit:'USD/t',  gfi:90.77, vol:1.05, conv:0,    ko:'MDO'},
+  LNG: {lhv:48.0, price:600,  unit:'USD/t',  gfi:89.20, vol:1.9,  conv:450,  ko:'LNG',  note:'메탄 슬립에 따라 WtW 변동 (FuelEU 기본값 76.08–89.20). 엔진 타입을 고르세요.'},
+  LPG: {lhv:46.0, price:620,  unit:'USD/t',  gfi:80.0, vol:1.6,  conv:350,  ko:'LPG'},
+  B30: {lhv:39.6, price:860,  unit:'USD/t',  gfi:73.9, vol:1.05, conv:100,  ko:'B30',  note:'드롭인. 지속가능성 인증(ISCC 등) 필요.'},
+  B100:{lhv:37.0, price:1050, unit:'USD/t',  gfi:35.0, vol:1.15, conv:150,  ko:'B100', note:'드롭인. 원료별 GFI 편차 큼(20–60).'},
+  MEOH:{lhv:19.9, price:700,  unit:'USD/t',  gfi:25.0, vol:2.4,  conv:635,  ko:'메탄올', note:'그린 기준. 그레이 메탄올은 GFI ~100.'},
+  NH3: {lhv:18.6, price:800,  unit:'USD/t',  gfi:8.0,  vol:2.8,  conv:900,  ko:'암모니아', note:'그린 기준. 독성·N₂O 슬립 관리 필요, 파일럿유 병용.'},
+  H2:  {lhv:120,  price:12000,unit:'USD/t',  gfi:5.0,  vol:4.6,  conv:2450, ko:'수소',  note:'액화 저장 부피 4.6×, 항속 제약.'},
+  ELEC:{lhv:3.6,  price:150,  unit:'USD/MWh',gfi:20.0, vol:14,   conv:4875, ko:'전력',  note:'그리드 집약도에 따라 GFI 조정.'},
+};
+const EMIS = { /* TtW kg per t (ETS·대기오염 표용) · ch4/n2o = 연소 계수 (LNG 메탄 슬립은 LNG_ENG) */
+  HFO:{co2:3114,ch4:0.05,n2o:0.18,nox:57,sox:10,pm:1.4}, LFO:{co2:3151,ch4:0.05,n2o:0.18,nox:57,sox:10,pm:1.2},
+  MDO:{co2:3206,ch4:0.05,n2o:0.18,nox:56,sox:2,pm:0.9},
+  LNG:{co2:2750,ch4:0,n2o:0.11,nox:8, sox:0.05,pm:0.1}, LPG:{co2:3000,ch4:0.05,n2o:0.18,nox:20,sox:0.1,pm:0.2},
+  B30:{co2:2244,ch4:0.05,n2o:0.18,nox:55,sox:1.5,pm:0.85}, B100:{co2:0,ch4:0.05,n2o:0.18,nox:52,sox:1,pm:0.8},
+  MEOH:{co2:1375,ch4:0.05,n2o:0.18,nox:30,sox:0,pm:0.1}, NH3:{co2:0,ch4:0,n2o:0.18,nox:35,sox:0,pm:0},
+  H2:{co2:0,ch4:0,n2o:0,nox:15,sox:0,pm:0}, ELEC:{co2:0,ch4:0,n2o:0,nox:0,sox:0,pm:0},
+};
+/* LNG 엔진별 메탄 슬립 (FuelEU Annex II). GFI = WtT 18.5 + [(1−s)(2.750 + 0.00011×298) + s×25] / 0.0491 */
+const LNG_ENG = {
+  DS:  {ko:'디젤 저속 (LNG Diesel)', slip:0.002},
+  OS:  {ko:'오토 저속 (LNG Otto SS)', slip:0.017},
+  OM:  {ko:'오토 중속 (LNG Otto MS)', slip:0.031},
+  LBSI:{ko:'LBSI', slip:0.026},
+};
+const lngGfi=sl=>18.5+((1-sl)*(2.750+0.00011*298)+sl*25)/0.0491;
+const GWP={ch4:28,n2o:265}; /* EU ETS (2026~ CH₄·N₂O 포함) */
+const MEASURES = [ /* 에너지 효율 조치 (연료 전략은 아래 듀얼퓨얼 패널) */
+  {id:'shore',grp:'eff', name:'육상전원 Shore Power', note:'정박 배출 제거, 항만 인프라 필요', save:0, idleElec:true, capexK:0, perKWaux:690, opexK:0},
+  {id:'solar',grp:'eff', name:'태양광 Solar PV',      note:'보기 부하 일부 대체',            save:1, capexK:350, opexK:5},
+  {id:'wind', grp:'eff', name:'풍력보조 로터 세일',    note:'항로 풍황 따라 3–10%',          save:5, capexK:0, perKW:120, opexK:40},
+  {id:'coat', grp:'eff', name:'저마찰 선체 도료',      note:'입거 주기 시공, 재도장 연환산',  save:6, capexK:450, opexK:60},
+  {id:'batt', grp:'eff', name:'배터리 하이브리드',     note:'피크 셰이빙, 보기 최적화',       save:2, capexK:0, perKWaux:3000, opexK:30},
+  {id:'slow', grp:'eff', name:'감속 운항 −10%',        note:'운항일수 증가 비용 미반영',      save:15, capexK:0, opexK:0},
+];
+const REGS = [
+  {n:'IMO DCS',            org:'IMO', imp:'연간 연료 보고 의무',        st:'시행 중', yr:2019, minGT:5000},
+  {n:'EU MRV',             org:'EU',  imp:'항차 보고 의무',             st:'시행 중', yr:2018, minGT:5000},
+  {n:'Global Sulphur 0.5%',org:'IMO', imp:'SOx 상한',                   st:'시행 중', yr:2020, minGT:0},
+  {n:'EEXI',               org:'IMO', imp:'설계효율 기준, EPL 대응',     st:'시행 중', yr:2023, minGT:400},
+  {n:'CII + SEEMP III',    org:'IMO', imp:'연간 A–E 등급, 시정계획',     st:'시행 중', yr:2023, minGT:5000},
+  {n:'EU ETS (해운)',       org:'EU',  imp:'배출권 구매 의무 (2026~ CH₄·N₂O 포함)', st:'시행 중', yr:2024, minGT:5000},
+  {n:'FuelEU Maritime',    org:'EU',  imp:'GHG 집약도 미달 벌금',        st:'시행 중', yr:2025, minGT:5000},
+  {n:'AFIR (육상전원)',     org:'EU',  imp:'컨테이너·여객 OPS 의무',      st:'확정',   yr:2030, minGT:5000},
+  {n:'IMO NZF (Net-Zero Fw.)', org:'IMO', imp:'RU/SU 준수비용 (시나리오)', st:'미채택 (채택 연기)', yr:2028, disp:'미정', minGT:5000},
+  {n:'US Clean Shipping',  org:'US',  imp:'무배출 요구 (발의)',          st:'불확실',  yr:2027, minGT:0},
+];
+/* IMO 2023 GHG 전략: 선대 전체, 2008 대비. 2030 ≥20% (노력 30%) · 2040 ≥70% (노력 80%) · 2050년경 넷제로 */
+const IMO_TRAJ = [[2008,0],[2030,20],[2040,70],[2050,100]];
+const IMO_STRIVE = [[2008,0],[2030,30],[2040,80],[2050,100]];
+const ZTAB = {2028:{base:4,dir:17},2029:{base:6,dir:19},2030:{base:8,dir:21},2031:{base:12.4,dir:25.4},2032:{base:16.8,dir:29.8},2033:{base:21.2,dir:34.2},2034:{base:25.6,dir:38.6},2035:{base:30,dir:43}};
+const FEU_T = y => y>=2035?77.94:y>=2030?85.69:89.34;
+const T1=100, T2=380, MAINT=20; /* NZF 단가 USD/tCO₂eq (초안상 2028–2030만 확정, 이후 가정) · 유지보수 EUR/엔진시간 */
+
+const $=id=>document.getElementById(id);
+const nv=id=>parseFloat($(id).value)||0;
+/* ── 입력 검증: 빈 칸·음수·범위 밖 값을 보정하고 짧은 경고 표시 ── */
+const VRULE={
+  's-dwt':{min:1,ref:'dwt'}, 's-gt':{min:1,ref:'gt'}, 's-speed':{min:0.1,ref:'speed'},
+  's-mcr':{min:1,ref:'mcr'}, 's-aux':{min:0,ref:'aux'}, 's-sfc':{min:120,max:300,ref:'sfc',clamp:true},
+  'r-eua':{min:0,def:75,clamp:true}, 'r-fx':{min:0.5,max:2,def:1.08,clamp:true},
+  'e-cov2':{min:0,max:100,def:50,clamp:true}, 'b-capex':{min:0,def:0,clamp:true}, 'b-opex':{def:0},
+};
+function vv(id){
+  const r=VRULE[id], el=$(id), raw=String(el.value).trim(); let v=parseFloat(raw), msg='';
+  const d=r.ref?REF[$('s-type').value][r.ref]:r.def, f=x=>x.toLocaleString();
+  if(raw===''||!isFinite(v)){v=d;msg=`빈 칸이라 ${f(d)} 적용`}
+  else if(r.min!=null&&v<r.min){
+    if(r.clamp){v=r.min;msg=r.max!=null?`${f(r.min)}–${f(r.max)} 범위로 조정: ${f(v)} 적용`:`${f(r.min)} 이상만 가능: ${f(v)} 적용`}
+    else{v=d;msg=`${r.min>0?'0보다 커야':'0 이상이어야'} 합니다. 참조값 ${f(d)} 적용`}
+  }
+  else if(r.max!=null&&v>r.max){v=r.max;msg=`${f(r.min)}–${f(r.max)} 범위로 조정: ${f(v)} 적용`}
+  let w=el.nextElementSibling; if(!w||!w.classList.contains('fwarn')){w=document.createElement('p');w.className='fwarn';el.after(w)}
+  w.textContent=msg; w.style.display=msg?'block':'none'; el.classList.toggle('bad',!!msg);
+  return v;
+}
+const usd=n=>(n<0?'-':'')+'$'+fmt(Math.abs(n));
+const fmt=n=>{const a=Math.abs(n);return a>=1e9?(n/1e9).toFixed(2)+'B':a>=1e6?(n/1e6).toFixed(2)+'M':a>=1e3?(n/1e3).toFixed(0)+'K':n.toFixed(0)};
+const sfcCurve=(L,min)=>min*(0.455*L*L-0.71*L+1.28);
+
+function goStep(s){
+  document.querySelectorAll('.step').forEach((e,i)=>e.classList.toggle('on',i===s-1));
+  document.querySelectorAll('.stepbtn').forEach(b=>b.classList.toggle('on',+b.dataset.s===s));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$('steps').addEventListener('click',e=>{const b=e.target.closest('.stepbtn');if(b)goStep(+b.dataset.s)});
+
+function loadRef(){
+  const r=REF[$('s-type').value];
+  $('s-dwt').value=r.dwt;$('s-gt').value=r.gt;$('s-speed').value=r.speed;
+  $('s-mcr').value=r.mcr;$('s-aux').value=r.aux;$('s-sfc').value=r.sfc;$('s-fuel').value=r.fuel;
+  $('shipname').textContent=r.name;
+  setCapexDefaults(true); setFuelCapexDefault(true);
+}
+
+/* ── 효율 조치 표 (CAPEX/OPEX 편집 가능) ── */
+function defaultCapex(m){
+  if(m.perKW) return Math.round(m.perKW*vv('s-mcr')/1000);
+  if(m.perKWaux) return Math.round(m.perKWaux*vv('s-aux')/1000);
+  return m.capexK||0;
+}
+function buildMeasures(){
+  const row=m=>`<label class="mrow"><input type="checkbox" name="eff" value="${m.id}">
+      <span class="nm">${m.name}<small>${m.note}</small></span>
+      <span class="num" data-red="${m.id}">–</span>
+      <input type="number" step="10" data-capin="${m.id}" aria-label="${m.name} CAPEX 천 달러">
+      <input type="number" step="5" data-opin="${m.id}" aria-label="${m.name} OPEX 천 달러 연간">
+      <span class="num" data-day="${m.id}">–</span></label>`;
+  $('mlist').innerHTML =
+    `<div class="mrow head"><span></span><span>조치</span><span class="num">WtW 감축</span><span class="num">CAPEX $k ✏️</span><span class="num">OPEX $k/yr ✏️</span><span class="num">일일 연료비 변화</span></div>`+
+    `<div class="mgroup">에너지 효율 (중복 선택)</div>`+MEASURES.map(row).join('');
+  document.querySelectorAll('[data-capin],[data-opin]').forEach(i=>i.addEventListener('input',()=>i.dataset.user='1'));
+  setCapexDefaults(true);
+}
+function setCapexDefaults(force){
+  MEASURES.forEach(m=>{
+    const c=document.querySelector(`[data-capin="${m.id}"]`), o=document.querySelector(`[data-opin="${m.id}"]`);
+    if(c&&(force&&c.dataset.user!=='1'||!c.value)) c.value=defaultCapex(m);
+    if(o&&(force&&o.dataset.user!=='1'||!o.value)) o.value=m.opexK||0;
+  });
+}
+/* 조치 표 칸: 빈 칸은 기본값, CAPEX 음수는 0 (빨간 테두리 + 툴팁) */
+function cell(el,v,msg){el.classList.toggle('bad',!!msg);el.title=msg||'';return v}
+function getCapex(m){const el=document.querySelector(`[data-capin="${m.id}"]`),raw=el.value.trim(),v=parseFloat(raw);
+  if(raw===''||!isFinite(v)) return cell(el,defaultCapex(m),'빈 칸이라 기본값 적용');
+  if(v<0) return cell(el,0,'음수 불가: 0 적용'); return cell(el,v,'');}
+function getOpex(m){const el=document.querySelector(`[data-opin="${m.id}"]`),raw=el.value.trim(),v=parseFloat(raw);
+  if(raw===''||!isFinite(v)) return cell(el,m.opexK||0,'빈 칸이라 기본값 적용'); return cell(el,v,'');}
+
+/* ── 연료 전략(듀얼퓨얼) 개조 CAPEX 기본값 ── */
+function setFuelCapexDefault(force){
+  const fB=$('b-fuel').value, c=$('b-capex');
+  if(fB==='NONE'){if(c.dataset.user!=='1')c.value=0;return}
+  if(force&&c.dataset.user!=='1'||!c.value||c.dataset.lastfuel!==fB){
+    if(c.dataset.user!=='1'||c.dataset.lastfuel!==fB){
+      c.value=Math.round(FUELS[fB].conv*vv('s-mcr')/1000); c.dataset.user='';
+    }
+  }
+  c.dataset.lastfuel=fB;
+}
+$('b-capex').addEventListener('input',e=>e.target.dataset.user='1');
+
+function buildPrices(){
+  $('prices').innerHTML=Object.entries(FUELS).map(([k,f])=>`
+    <div class="pr"><span class="k">${f.ko} <span style="color:var(--muted);font-size:10.5px">${f.unit}</span></span>
+    <input type="range" min="${Math.round(f.price*.4)}" max="${Math.round(f.price*2.2)}" value="${f.price}" data-price="${k}">
+    <span class="v" id="pv-${k}">${f.price.toLocaleString()}</span></div>`).join('');
+  const order=['HFO','MDO','LNG','LPG','B100','MEOH','NH3','H2'];
+  $('tanks').innerHTML=order.map(k=>`<div class="tank ${FUELS[k].vol>2?'big':''}">
+    <div class="vessel"><div class="fill" style="height:${Math.min(FUELS[k].vol/4.6*100,100)}%"></div></div>
+    <div class="tl">${FUELS[k].ko}</div><div class="tv">×${FUELS[k].vol}</div></div>`).join('');
+}
+
+/* ═══════════ 핵심 재계산 ═══════════ */
+let S={};
+/* LNG 엔진 선택 (1단계·3단계 선택 상자 공유) */
+let LNG_SEL='OM';
+const slipOf=k=>k==='LNG'?LNG_ENG[LNG_SEL].slip:0;
+function buildLngSelects(){
+  const opts=Object.entries(LNG_ENG).map(([k,e])=>`<option value="${k}"${k===LNG_SEL?' selected':''}>${e.ko} · 슬립 ${(e.slip*100).toFixed(1)}% · GFI ${lngGfi(e.slip).toFixed(2)}</option>`).join('');
+  document.querySelectorAll('.lngsel').forEach(el=>{el.innerHTML=opts;el.addEventListener('change',()=>{LNG_SEL=el.value;document.querySelectorAll('.lngsel').forEach(o=>o.value=LNG_SEL)})});
+}
+
+/* 시나리오 한 벌 계산: 연료별 에너지(MJ)로 가중한 GHG 집약도 = Σ(MJ_i × GFI_i) / ΣMJ_i
+   · 육상전원(OPS) 전력: 배출 0 (FuelEU Annex I), 분모에는 포함
+   · 배터리(전력) 충전: FUELS.ELEC.gfi (그리드 가정) */
+function build(C,effList,fBk,share){
+  const {modes,fuel0,E_kWh,baseFuel}=C;
+  const shore=effList.some(m=>m.idleElec);
+  const effSave=effList.reduce((p,m)=>p*(1-(m.save||0)/100),1);
+  const hasAlt=!!fBk&&fBk!=='NONE', s=hasAlt?share:0, isElec=fBk==='ELEC';
+  const altK=hasAlt&&!isElec?fBk:null;
+  const E_scen=(modes.sail.E+modes.work.E)*effSave+(shore?0:modes.idle.E);
+  const opsE=shore?modes.idle.E:0;
+  const sfcAvg=E_kWh>0?fuel0*1e6/E_kWh:0;
+  const massEq=E_scen*sfcAvg/1e6;
+  const mB=massEq*(1-s);
+  const mA=altK?massEq*s*(FUELS[baseFuel].lhv/FUELS[altK].lhv):0;
+  const battE=isElec?E_scen*s:0;
+  const lines=[{k:baseFuel,t:mB}]; if(altK) lines.push({k:altK,t:mA});
+  let MJ=0,G=0,co2=0,ch4=0,n2o=0,cost=0;
+  lines.forEach(({k,t})=>{const f=FUELS[k],e=EMIS[k],sl=slipOf(k),mj=t*f.lhv*1000;
+    MJ+=mj; G+=mj*f.gfi; cost+=t*f.p;
+    co2+=t*(1-sl)*e.co2/1000; ch4+=t*((1-sl)*e.ch4/1000+sl); n2o+=t*(1-sl)*e.n2o/1000;});
+  const opsMJ=opsE*3.6, battMJ=battE*3.6;
+  MJ+=opsMJ+battMJ; G+=battMJ*FUELS.ELEC.gfi;
+  cost+=(opsE+battE)/1000*FUELS.ELEC.p;
+  return {shore,effSave,hasAlt,s,isElec,altK,mB,mA,opsE,battE,elecE:opsE+battE,MJ,gfi:MJ>0?G/MJ:0,wtw:G/1e6,co2,ch4,n2o,fuelCost:cost};
+}
+
+function recalc(){
+  const mcr=vv('s-mcr'), aux=vv('s-aux'), sfcMin=vv('s-sfc'), baseFuel=$('s-fuel').value;
+  ['s-dwt','s-gt','s-speed'].forEach(vv);
+  let sail=nv('o-sail'), work=nv('o-work');
+  if(sail+work>365){work=365-sail;$('o-work').value=work}
+  const idle=365-sail-work;
+  ['sail','work','idle'].forEach(k=>$(`o-${k}-v`).textContent={sail,work,idle}[k]);
+  const L={sail:nv('o-lsail')/100, work:nv('o-lwork')/100, idle:nv('o-lidle')/100};
+  ['lsail','lwork','lidle'].forEach(k=>$(`o-${k}-v`).textContent=Math.round(L[k.slice(1)]*100));
+  Object.entries(FUELS).forEach(([k,f])=>{const el=document.querySelector(`[data-price="${k}"]`);if(el){f.p=+el.value;$('pv-'+k).textContent=f.p.toLocaleString()}else f.p=f.price;});
+  const target=nv('r-target'); $('r-target-v').textContent=target;
+  FUELS.LNG.gfi=lngGfi(LNG_ENG[LNG_SEL].slip);
+
+  const modes={
+    sail:{days:sail, P:mcr*L.sail, sfc:sfcCurve(L.sail,sfcMin), eng:'main'},
+    work:{days:work, P:mcr*L.work, sfc:sfcCurve(L.work,sfcMin), eng:'main'},
+    idle:{days:idle, P:aux*L.idle, sfc:sfcCurve(L.idle,sfcMin*1.1), eng:'aux'},
+  };
+  for(const m of Object.values(modes)){ m.E=m.P*24*m.days; m.fuel=m.E*m.sfc/1e6; }
+  const E_kWh=Object.values(modes).reduce((s,m)=>s+m.E,0);
+  const fuel0=Object.values(modes).reduce((s,m)=>s+m.fuel,0);
+  const bf=FUELS[baseFuel], be=EMIS[baseFuel];
+  const C={modes,fuel0,E_kWh,baseFuel};
+
+  /* 조치 */
+  const effSel=[...document.querySelectorAll('input[name="eff"]:checked')].map(i=>MEASURES.find(m=>m.id===i.value));
+
+  /* 연료 전략 */
+  setFuelCapexDefault(false);
+  const fB=$('b-fuel').value, hasAlt=fB!=='NONE';
+  $('blendctl').style.display=hasAlt?'block':'none';
+  $('s-lngwrap').style.display=baseFuel==='LNG'?'block':'none';
+  $('b-lng').style.display=fB==='LNG'?'block':'none';
+  const s=hasAlt?nv('b-share')/100:0;
+  const nf=hasAlt?FUELS[fB]:bf, ne=hasAlt?EMIS[fB]:be;
+  const isElec=fB==='ELEC';
+  if(hasAlt){
+    $('b-alt-name').textContent=nf.ko; $('b-share-v').textContent=Math.round(s*100);
+    $('bmixA').style.width=(100-s*100)+'%'; $('bmixB').style.width=(s*100)+'%';
+    $('b-base-lab').textContent=`${bf.ko} ${Math.round(100-s*100)}%`;
+    $('b-alt-lab').textContent=`${nf.ko} ${Math.round(s*100)}%`;
+    $('b-note').textContent=(nf.note||'')+(fB==='LNG'?` 현재: ${LNG_ENG[LNG_SEL].ko}, GFI ${nf.gfi.toFixed(2)} g/MJ.`:'');
+  }
+
+  const B0=build(C,[],'NONE',0);            /* 기준 */
+  const BS=build(C,effSel,fB,s);            /* 시나리오 */
+  const BF=build(C,[],fB,s);                /* 연료 전략 단독 */
+  const {mB:massBase,mA:massAlt,elecE,shore}=BS;
+  const gfiBlend=BF.gfi, gfiScen=BS.gfi;
+  const em=(k)=>({base:fuel0*be[k]/1000, scen:(massBase*be[k]+massAlt*ne[k])/1000});
+  const co2Base=B0.wtw, co2Scen=BS.wtw;                  /* WtW tCO2eq */
+  const co2BaseT=B0.co2, co2ScenT=BS.co2;                /* TtW CO2 */
+  const redPct=co2Base>0?(1-co2Scen/co2Base)*100:0;
+
+  const gtOK=vv('s-gt')>=5000;
+  const regOn={ets:$('r-ets').checked&&gtOK, feu:$('r-feu').checked&&gtOK, nzf:$('r-nzf').checked&&gtOK};
+  const eua=vv('r-eua'), fx=vv('r-fx'), cov=vv('e-cov2')/100;
+  const MAINT_Y=365*24*MAINT*fx;             /* EUR → USD */
+
+  /* 규제 비용 (USD). EUR 항목은 fx로 환산 */
+  function regCost(B,y){
+    let ets=0,feu=0,nzf=0;
+    if(regOn.ets){const co2e=B.co2+(y>=2026?B.ch4*GWP.ch4+B.n2o*GWP.n2o:0); ets=co2e*cov*eua*fx;}
+    if(regOn.feu){const t=FEU_T(y); if(B.gfi>t) feu=(B.gfi-t)*B.MJ*cov/(B.gfi*41000)*2400*fx;}
+    if(regOn.nzf&&ZTAB[y]){const gB=93.3*(1-ZTAB[y].base/100),gD=93.3*(1-ZTAB[y].dir/100),g=B.gfi,E=B.MJ;let a=0,b2=0;
+      if(g>gB){b2=(g-gB)*E/1e6;a=(gB-gD)*E/1e6}else if(g>gD){a=(g-gD)*E/1e6}
+      nzf=a*T1+b2*T2;}
+    return {ets,feu,nzf};
+  }
+  const opexSel=effSel.reduce((sm,m)=>sm+getOpex(m),0)*1000 + (hasAlt?vv('b-opex')*1000:0);
+  const capex=effSel.reduce((sm,m)=>sm+getCapex(m),0)*1000 + (hasAlt?vv('b-capex')*1000:0);
+
+  /* FuelEU 연속 미달 가중 (EU 2023/1805 Art.23(2)): n년 연속 미달 시 × (1 + (n−1)/10), 준수한 해에 n 초기화.
+     2025년은 기준 연료로 운항한 것으로 가정 */
+  const feu25=regOn.feu&&cov>0&&B0.gfi>FEU_T(2025);
+  const run=(B,opex)=>{let n=feu25?1:0;const out=[];
+    for(let y=2026;y<=2035;y++){const r=regCost(B,y);
+      if(r.feu>0){n++;r.feuMul=1+(n-1)/10;r.feu*=r.feuMul}else{n=0;r.feuMul=0}
+      out.push({y,fuel:B.fuelCost,...r,total:B.fuelCost+MAINT_Y+opex+r.ets+r.feu+r.nzf});}
+    return out;};
+  const yearsB=run(B0,0), yearsS=run(BS,opexSel);
+  const bSum=yearsB.reduce((a,r)=>a+r.total,0), sSum=yearsS.reduce((a,r)=>a+r.total,0);
+  const saveAvg=(bSum-sSum)/10, payback=saveAvg>0?capex/saveAvg:Infinity;
+
+  S={modes,E_kWh,fuel0,baseFuel,bf,be,nf,ne,fB,hasAlt,s,isElec,massBase,massAlt,elecE,gfiBlend,gfiScen,
+     co2Base,co2Scen,co2BaseT,co2ScenT,redPct,target,capex,opexSel,saveAvg,payback,yearsB,yearsS,bSum,sSum,
+     effSel,MAINT_Y,gtOK,regOn,shore,sfcMin,em,C,B0,BS,BF,fx,eua,cov};
+  renderAll();
+}
+
+function renderAll(){
+  drawShip(); drawDonut(); drawSFC(); drawOverview();
+  drawTimeline(); drawRegs();
+  drawMeasureNums(); drawFuelPanel(); drawBullet();
+  drawCost(); drawQuote();
+}
+
+function drawShip(){
+  const t=$('s-type').value, r=REF[t];
+  const scale=Math.min(1,Math.max(.45,vv('s-dwt')/120000+.4));
+  const W=560*scale, x0=(640-W)/2, y=100, h=r.hullH;
+  let deck='';
+  if(t==='container') for(let i=0;i<7;i++) deck+=`<rect x="${x0+W*0.18+i*W*0.09}" y="${y-h-16}" width="${W*0.07}" height="14" fill="var(--gold)" rx="1"/>`;
+  if(t==='tanker') deck=`<line x1="${x0+W*0.15}" y1="${y-h-4}" x2="${x0+W*0.75}" y2="${y-h-4}" stroke="var(--gold)" stroke-width="3"/>`;
+  if(t==='bulk') for(let i=0;i<4;i++) deck+=`<rect x="${x0+W*0.16+i*W*0.16}" y="${y-h-8}" width="${W*0.11}" height="6" fill="var(--gold)" rx="2"/>`;
+  $('shipsvg').innerHTML=`
+    <line class="sea" x1="0" y1="${y+14}" x2="640" y2="${y+14}" stroke-dasharray="6 5"/>
+    <path class="hull" d="M ${x0} ${y-h} L ${x0+W*0.9} ${y-h} L ${x0+W} ${y-h*0.45} L ${x0+W*0.96} ${y+8} L ${x0+W*0.05} ${y+8} Z"/>
+    <rect class="house" x="${x0+W*0.78}" y="${y-h-26}" width="${W*0.11}" height="26" rx="2"/>
+    <rect fill="var(--navy)" x="${x0+W*0.86}" y="${y-h-38}" width="5" height="14"/>
+    ${deck}`;
+  $('shipname').textContent=r.name;
+}
+
+function drawDonut(){
+  const d=[['항해',nv('o-sail'),'var(--navy)'],['하역',nv('o-work'),'var(--teal)'],['정박',365-nv('o-sail')-nv('o-work'),'#C9D6E2']];
+  const C=85,R=62,IR=38; let a0=-90, out='';
+  d.forEach(([n,v,c])=>{
+    const a1=a0+v/365*360;
+    const p=(r,a)=>[C+r*Math.cos(a*Math.PI/180),C+r*Math.sin(a*Math.PI/180)];
+    const [x0,y0]=p(R,a0),[x1,y1]=p(R,a1),[x2,y2]=p(IR,a1),[x3,y3]=p(IR,a0);
+    const la=(a1-a0)>180?1:0;
+    out+=`<path d="M${x0},${y0} A${R},${R} 0 ${la} 1 ${x1},${y1} L${x2},${y2} A${IR},${IR} 0 ${la} 0 ${x3},${y3} Z" fill="${c}"/>`;
+    a0=a1;
+  });
+  out+=`<text x="${C}" y="${C-2}" text-anchor="middle" font-family="var(--serif)" font-weight="700" font-size="20" fill="var(--navy)">365</text>
+        <text x="${C}" y="${C+16}" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--muted)">DAYS/YEAR</text>`;
+  $('opsvg').innerHTML=out;
+}
+
+function drawSFC(){
+  const min=S.sfcMin, W=640,H=170,pL=48,pB=24,pT=8, maxY=min*1.6;
+  const x=l=>pL+(W-pL-14)*(l-0.05)/0.95, y=v=>H-pB-(H-pB-pT)*(v-min*0.9)/(maxY-min*0.9);
+  const pts=f=>Array.from({length:20},(_,i)=>{const l=0.05+i/19*0.95;return x(l)+','+y(sfcCurve(l,f))}).join(' ');
+  let out=`<line class="axis" x1="${pL}" y1="${H-pB}" x2="${W-8}" y2="${H-pB}"/>
+    <polyline class="line-imo" points="${pts(min)}"/>
+    <polyline class="line-base" points="${pts(min*1.1)}"/>`;
+  [['sail','var(--navy)','o-lsail'],['work','var(--teal)','o-lwork'],['idle','#8FA6BC','o-lidle']].forEach(([k,c,id])=>{
+    const m=S.modes[k], l=nv(id)/100;
+    out+=`<circle cx="${x(l)}" cy="${y(m.sfc)}" r="5" fill="${c}"/>`;
+  });
+  [0.25,0.5,0.75,1].forEach(l=>out+=`<text class="axl" x="${x(l)}" y="${H-pB+14}" text-anchor="middle">${l*100}%</text>`);
+  [min,Math.round(min*1.3)].forEach(v=>out+=`<text class="axl" x="${pL-4}" y="${y(v)+3}" text-anchor="end">${v}</text>`);
+  $('sfcsvg').innerHTML=out;
+}
+
+function drawOverview(){
+  const M=S.modes, f=S.bf, e=S.be;
+  const row=(k,n)=>{const m=M[k];const co2=m.fuel*(1-slipOf(S.baseFuel))*e.co2/1000;
+    return `<tr><td>${n} · ${m.days}일</td><td>${Math.round(m.P).toLocaleString()}</td><td>${fmt(m.E)}</td><td>${Math.round(m.sfc)}</td><td>${Math.round(m.fuel).toLocaleString()}</td><td>${Math.round(co2).toLocaleString()}</td><td>$${fmt(m.fuel*f.p)}</td></tr>`};
+  $('ovtable').innerHTML=`<tr><th>모드</th><th>평균 출력 kW</th><th>에너지 kWh</th><th>SFC g/kWh</th><th>연료 t</th><th>CO₂ t</th><th>연료비</th></tr>`
+    +row('sail','항해')+row('work','하역')+row('idle','정박')
+    +`<tr><td><b>합계 (연간)</b></td><td>-</td><td>${fmt(S.E_kWh)}</td><td>-</td><td><b>${Math.round(S.fuel0).toLocaleString()}</b></td><td><b>${Math.round(S.co2BaseT).toLocaleString()}</b></td><td><b>$${fmt(S.fuel0*f.p)}</b></td></tr>`;
+}
+
+function drawTimeline(){
+  const W=640,H=240,pL=46,pB=26,pT=12;
+  const x=yr=>pL+(W-pL-14)*(yr-2008)/42, y=v=>H-pB-(H-pB-pT)*v/100;
+  let out=`<line class="axis" x1="${pL}" y1="${H-pB}" x2="${W-8}" y2="${H-pB}"/>`;
+  [25,50,75,100].forEach(v=>out+=`<line class="axis" x1="${pL}" y1="${y(v)}" x2="${W-8}" y2="${y(v)}" stroke-dasharray="3 4"/><text class="axl" x="${pL-4}" y="${y(v)+3}" text-anchor="end">${v}%</text>`);
+  out+=`<polyline class="line-imo" points="${IMO_STRIVE.map(([a,b])=>x(a)+','+y(b)).join(' ')}" stroke-dasharray="6 5" opacity=".55"/>`;
+  out+=`<polyline class="line-imo" points="${IMO_TRAJ.map(([a,b])=>x(a)+','+y(b)).join(' ')}"/>`;
+  [[2030,'20–30%'],[2040,'70–80%'],[2050,'넷제로']].forEach(([yr,t])=>{const v=IMO_TRAJ.find(p=>p[0]===yr)[1];
+    out+=`<circle cx="${x(yr)}" cy="${y(v)}" r="3.5" fill="var(--navy)"/><text class="axl" x="${x(yr)+(yr===2050?-10:6)}" y="${yr===2050?y(v)+4:y(v)+14}" text-anchor="${yr===2050?'end':'start'}">${t}</text>`});
+  out+=`<line class="line-tgt" x1="${pL}" y1="${y(S.target)}" x2="${W-8}" y2="${y(S.target)}"/>`;
+  let cross=null;
+  for(let i=1;i<IMO_TRAJ.length;i++){const [y0,v0]=IMO_TRAJ[i-1],[y1,v1]=IMO_TRAJ[i];
+    if(v0<=S.target&&v1>=S.target&&v1>v0){cross=y0+(S.target-v0)/(v1-v0)*(y1-y0);break}}
+  if(cross&&S.target>0){out+=`<path d="M ${x(cross)-7} ${y(S.target)} l7,-9 l7,9 l-7,9 Z" fill="var(--gold)"/>
+    <text class="axl" x="${x(cross)}" y="${y(S.target)-14}" text-anchor="middle" font-weight="700">${Math.round(cross)}</text>`;}
+  [2008,2020,2030,2040,2050].forEach(yr=>out+=`<text class="axl" x="${x(yr)}" y="${H-pB+14}" text-anchor="middle">${yr}</text>`);
+  $('tlsvg').innerHTML=out;
+  const on=[S.regOn.ets&&'EU ETS',S.regOn.feu&&'FuelEU',S.regOn.nzf&&'IMO NZF (시나리오)'].filter(Boolean).join(' · ');
+  const gt=vv('s-gt');
+  $('r-note').innerHTML = S.gtOK
+    ? `GT ${gt.toLocaleString()} ≥ 5,000: 보고 의무(DCS·MRV)와 CII가 적용됩니다. 비용 계산에 반영 중인 규제: <b>${on||'없음'}</b>. 목표 ${S.target}%는 IMO 선대 최소 궤적(2008 대비)상 <b>${cross&&S.target>0?Math.round(cross):'-'}년</b> 수준입니다. 이 배의 감축률은 현재 대비라 참고용입니다.`
+    : `GT ${gt.toLocaleString()} &lt; 5,000: ETS·FuelEU·CII 대상 밖이라 규제 비용은 0으로 계산됩니다. EEXI·황함량 규제는 적용됩니다.`;
+}
+
+let regSort={k:'yr',asc:true};
+function drawRegs(){
+  const gt=vv('s-gt');
+  const rows=REGS.filter(r=>gt>=r.minGT).sort((a,b)=>(a[regSort.k]>b[regSort.k]?1:-1)*(regSort.asc?1:-1));
+  $('regtable').innerHTML=`<tr>
+    <th data-k="n" style="cursor:pointer;text-align:left">규제 ⇅</th><th data-k="org" style="cursor:pointer">기관 ⇅</th>
+    <th style="text-align:left">영향</th><th data-k="st" style="cursor:pointer">상태 ⇅</th><th data-k="yr" style="cursor:pointer">발효 ⇅</th></tr>`+
+    rows.map(r=>`<tr><td style="text-align:left;font-weight:500">${r.n}</td><td>${r.org}</td><td style="text-align:left;color:var(--muted)">${r.imp}</td><td>${r.st}</td><td>${r.disp||r.yr}</td></tr>`).join('');
+}
+document.addEventListener('click',e=>{
+  const th=e.target.closest('#regtable th[data-k]');if(!th)return;
+  const k=th.dataset.k; regSort.asc=regSort.k===k?!regSort.asc:true; regSort.k=k; drawRegs();
+});
+
+const dayTxt=(el,day)=>{el.textContent=(day>=0?'− $':'+ $')+fmt(Math.abs(day));el.style.color=day>=0?'var(--teal)':'var(--navy)'};
+function drawMeasureNums(){
+  /* 조치 단독 효과: 결과 요약과 같은 build() 기준 (WtW, 에너지 가중) */
+  MEASURES.forEach(m=>{
+    const B1=build(S.C,[m],'NONE',0);
+    const red=S.B0.wtw>0?(1-B1.wtw/S.B0.wtw)*100:0;
+    const day=(S.B0.fuelCost-B1.fuelCost-getOpex(m)*1000)/365;   /* 규제비·CAPEX 제외 */
+    document.querySelector(`[data-red="${m.id}"]`).textContent=red.toFixed(red<10?1:0)+'%';
+    dayTxt(document.querySelector(`[data-day="${m.id}"]`),day);
+  });
+}
+
+function drawFuelPanel(){
+  if(!S.hasAlt) return;
+  const red=S.B0.wtw>0?(1-S.BF.wtw/S.B0.wtw)*100:0;
+  $('b-red').textContent=red.toFixed(1)+'%';
+  $('b-gfi').textContent=S.gfiBlend.toFixed(1);
+  /* 연료 전략 단독 일일 연료비 변화 (규제비·CAPEX 제외, 추가 OPEX 포함) */
+  dayTxt($('b-day'),(S.B0.fuelCost-S.BF.fuelCost-vv('b-opex')*1000)/365);
+}
+
+function drawBullet(){
+  $('b-ach').style.width=Math.max(0,Math.min(S.redPct,100))+'%';
+  $('b-tgt').style.left=S.target+'%';
+  $('b-ach-v').textContent=Math.max(0,S.redPct).toFixed(0)+'%';
+  $('b-tgt-v').textContent=S.target+'%';
+}
+
+function drawCost(){
+  $('k-save').textContent=(S.saveAvg>=0?'$':'−$')+fmt(Math.abs(S.saveAvg));
+  $('k-capex').textContent='$'+fmt(S.capex);
+  $('k-pay').textContent=S.capex===0?(S.saveAvg>0?'즉시':'-'):isFinite(S.payback)?S.payback.toFixed(1)+'년':'회수 불가';
+  const b=S.yearsB.find(r=>r.y===2030), s=S.yearsS.find(r=>r.y===2030);
+  $('costtable').innerHTML=`<tr><th>2030년 (USD)</th><th>연료·전력</th><th>유지보수</th><th>조치 OPEX</th><th>EU ETS</th><th>FuelEU</th><th>IMO NZF</th><th>합계</th></tr>
+    <tr><td>기준</td><td>$${fmt(b.fuel)}</td><td>$${fmt(S.MAINT_Y)}</td><td>-</td><td>$${fmt(b.ets)}</td><td>$${fmt(b.feu)}</td><td>$${fmt(b.nzf)}</td><td><b>$${fmt(b.total)}</b></td></tr>
+    <tr><td>시나리오</td><td>$${fmt(s.fuel)}</td><td>$${fmt(S.MAINT_Y)}</td><td>$${fmt(S.opexSel)}</td><td>$${fmt(s.ets)}</td><td class="${s.feu===0?'su':''}">${s.feu===0?'준수':'$'+fmt(s.feu)}</td><td class="${s.nzf===0?'su':''}">${!S.regOn.nzf?'-':s.nzf===0?'잉여/준수':'$'+fmt(s.nzf)}</td><td><b>$${fmt(s.total)}</b></td></tr>`;
+  const mulB=Math.max(...S.yearsB.map(r=>r.feuMul));
+  $('costnote').innerHTML=`환율 ${S.fx} USD/EUR: EUA ${S.eua} EUR = $${(S.eua*S.fx).toFixed(1)}/t, FuelEU 벌금 EUR 2,400 = $${Math.round(2400*S.fx).toLocaleString()}/t VLSFO 환산, 유지보수 €${MAINT}/h. EU ETS는 CO₂ + CH₄(GWP 28) + N₂O(GWP 265).`
+    +(S.regOn.feu?` FuelEU 연속 미달 가중 × (1 + (n−1)/10) 반영 (2025년은 기준 연료 가정, 기준선 최대 ×${mulB.toFixed(1)}).`:'')
+    +(S.regOn.nzf?' IMO NZF는 미채택 시나리오이며 2031년 이후 단가는 가정입니다.':'');
+  const W=640,H=240,pL=58,pB=26,pT=12;let cb=0,cs=S.capex;
+  const B=S.yearsB.map(r=>cb+=r.total),Sc=S.yearsS.map(r=>cs+=r.total);
+  const max=Math.max(B[9],Sc[9])*1.05;
+  const x=i=>pL+(W-pL-16)*i/9,yv=v=>H-pB-(H-pB-pT)*v/max;
+  let out=`<line class="axis" x1="${pL}" y1="${H-pB}" x2="${W-8}" y2="${H-pB}"/>`;
+  [0.5,1].forEach(f=>{const yy=yv(max*f);out+=`<line class="axis" x1="${pL}" y1="${yy}" x2="${W-8}" y2="${yy}" stroke-dasharray="3 4"/><text class="axl" x="${pL-6}" y="${yy+3}" text-anchor="end">${fmt(max*f)}</text>`});
+  out+=`<polyline class="line-base" points="${B.map((v,i)=>x(i)+','+yv(v)).join(' ')}"/>
+        <polyline class="line-scen" points="${Sc.map((v,i)=>x(i)+','+yv(v)).join(' ')}"/>`;
+  if(S.capex>0)out+=`<circle class="capex-mark" cx="${x(0)}" cy="${yv(Sc[0])}" r="5"/>`;
+  S.yearsB.forEach((r,i)=>{if(i%3===0||i===9)out+=`<text class="axl" x="${x(i)}" y="${H-pB+14}" text-anchor="middle">${r.y}</text>`});
+  $('cumsvg').innerHTML=out;
+}
+
+function drawQuote(){
+  const blendTxt=S.hasAlt?` · ${S.bf.ko} ${Math.round((1-S.s)*100)}% + ${S.nf.ko} ${Math.round(S.s*100)}%`:'';
+  $('quote').innerHTML=`
+    <div class="qc"><div class="k">CO₂eq 감축 (연간, WtW)</div><div class="v">${Math.max(0,S.redPct).toFixed(0)}%</div><div class="s">${Math.round(S.co2Base-S.co2Scen).toLocaleString()} t 감축 · 목표 ${S.target}% (현재 대비)${blendTxt}</div></div>
+    <div class="qc"><div class="k">총 CAPEX / 연평균 절감 (USD)</div><div class="v">$${fmt(S.capex)}</div><div class="s">연평균 ${(S.saveAvg>=0?'$':'−$')+fmt(Math.abs(S.saveAvg))} 절감 · 회수 ${S.capex===0?'즉시':isFinite(S.payback)?S.payback.toFixed(1)+'년':'불가'}</div></div>
+    <div class="qc"><div class="k">10년 총비용 (USD, CAPEX 포함)</div><div class="v">$${fmt(S.sSum+S.capex)}</div><div class="s">기준 $${fmt(S.bSum)} 대비 ${(S.bSum-S.sSum-S.capex>=0?'−':'+')}$${fmt(Math.abs(S.bSum-S.sSum-S.capex))}</div></div>`;
+  const r=(n,k)=>{const e=S.em(k);return `<tr><td style="text-align:left">${n}</td><td>${Math.round(e.base).toLocaleString()}</td><td>${Math.round(e.scen).toLocaleString()}</td><td class="su">−${Math.max(0,Math.round(e.base-e.scen)).toLocaleString()}</td></tr>`};
+  const wtw=`<tr><td style="text-align:left">CO₂eq (WtW)</td><td>${Math.round(S.co2Base).toLocaleString()}</td><td>${Math.round(S.co2Scen).toLocaleString()}</td><td class="su">−${Math.max(0,Math.round(S.co2Base-S.co2Scen)).toLocaleString()}</td></tr>`;
+  const ttw=`<tr><td style="text-align:left">CO₂ (연돌, TtW)</td><td>${Math.round(S.co2BaseT).toLocaleString()}</td><td>${Math.round(S.co2ScenT).toLocaleString()}</td><td class="su">−${Math.max(0,Math.round(S.co2BaseT-S.co2ScenT)).toLocaleString()}</td></tr>`;
+  $('emtable').innerHTML=`<tr><th style="text-align:left">배출 (t/yr)</th><th>기준</th><th>시나리오</th><th>감축</th></tr>`+wtw+ttw+r('NOx','nox')+r('SOx','sox')+r('PM','pm');
+  advise();
+  window._summary=`[Decarbonizer 요약]
+선박: ${$('shipname').textContent} · DWT ${vv('s-dwt').toLocaleString()} · GT ${vv('s-gt').toLocaleString()} · 기준 연료 ${S.bf.ko}
+운항: 항해 ${nv('o-sail')}일 / 하역 ${nv('o-work')}일 / 정박 ${365-nv('o-sail')-nv('o-work')}일 · 연료 ${Math.round(S.fuel0).toLocaleString()} t/yr
+규제 반영: ${[S.regOn.ets&&'EU ETS',S.regOn.feu&&'FuelEU',S.regOn.nzf&&'IMO NZF (시나리오)'].filter(Boolean).join(', ')||'없음'} · 금액 USD (환율 ${S.fx} USD/EUR)
+효율 조치: ${S.effSel.map(m=>m.name).join(', ')||'없음'}
+연료 전략: ${S.hasAlt?`${S.bf.ko} ${Math.round((1-S.s)*100)}% + ${S.nf.ko} ${Math.round(S.s*100)}% (혼합 GFI ${S.gfiBlend.toFixed(1)} g/MJ)`:'단일 연료 유지'} · 선박 GHG 집약도 ${S.gfiScen.toFixed(1)} g/MJ
+결과: CO₂eq −${Math.max(0,S.redPct).toFixed(0)}% WtW (목표 ${S.target}%) · CAPEX $${fmt(S.capex)} · 연평균 절감 ${usd(S.saveAvg)} · 회수 ${S.capex===0?'즉시':isFinite(S.payback)?S.payback.toFixed(1)+'년':'불가'}
+10년 총비용: 기준 $${fmt(S.bSum)} → 시나리오 $${fmt(S.sSum+S.capex)} (CAPEX 포함)`;
+}
+
+function advise(){
+  const P=[];
+  if(S.redPct>=S.target) P.push(`선택 조합은 목표 ${S.target}%를 <b>충족</b>합니다 (달성 ${S.redPct.toFixed(0)}%).`);
+  else P.push(`목표까지 <b>${(S.target-Math.max(0,S.redPct)).toFixed(0)}%p</b> 남았습니다. 혼소 비율을 올리거나 효율 조치를 추가해 보세요.`);
+  if(S.hasAlt&&S.s>0&&S.s<1) P.push(`듀얼퓨얼 ${S.bf.ko}+${S.nf.ko} ${Math.round(S.s*100)}%: 인프라·가격 리스크를 나누면서 감축을 시작하는 현실적 경로입니다. FuelEU 목표가 조여올수록 최적 혼소 비율이 올라갑니다.`);
+  if(S.hasAlt&&S.nf.note) P.push(`${S.nf.ko} 유의사항: ${S.nf.note}`);
+  if(S.capex>0&&isFinite(S.payback)&&S.payback<4) P.push(`회수기간 ${S.payback.toFixed(1)}년: 규제 비용이 매년 강화되므로 조기 도입이 유리한 구간입니다.`);
+  if(S.capex>0&&(!isFinite(S.payback)||S.payback>8)) P.push(`현재 가정에서 회수가 어렵습니다. 연료 가격 슬라이더로 프리미엄 축소 시나리오를 시험하거나, CAPEX 칸을 견적가로 고쳐 재계산하세요.`);
+  const s2030=S.yearsS.find(r=>r.y===2030);
+  if(S.regOn.feu) P.push(s2030.feu===0?`시나리오는 <b>2030년 FuelEU를 벌금 없이 준수</b>합니다 (GHG 집약도 ${S.gfiScen.toFixed(1)} g/MJ).`:`2030년에도 FuelEU 벌금 $${fmt(s2030.feu)}가 남습니다 (GHG 집약도 ${S.gfiScen.toFixed(1)} g/MJ, 목표 85.69, 연속 미달 가중 포함).`);
+  if(!S.regOn.ets&&!S.regOn.feu&&!S.regOn.nzf&&S.gtOK) P.push(`규제를 모두 끈 상태입니다. 연료 절감만으로 평가 중이며, 규제를 켜면 조치의 실질 수익률이 올라갑니다.`);
+  if(S.shore) P.push(`육상전원 선택: 정박 배출이 제거되어 CII와 항만 대기질에 모두 기여합니다. AFIR 의무화(2030) 대비 효과도 있습니다.`);
+  $('advice').innerHTML='<h5>Consulting Note</h5>'+P.map(p=>'<p>'+p+'</p>').join('');
+}
+
+/* ═══════════ 초기화 · 이벤트 ═══════════ */
+buildMeasures(); buildPrices(); buildLngSelects(); loadRef(); recalc();
+$('s-type').addEventListener('change',()=>{loadRef();recalc()});
+$('b-fuel').addEventListener('change',()=>{$('b-capex').dataset.user='';setFuelCapexDefault(true);recalc()});
+['s-mcr','s-aux'].forEach(id=>$(id).addEventListener('input',()=>{setCapexDefaults(true);setFuelCapexDefault(true)}));
+document.addEventListener('input',e=>{if(e.target.closest('.calc'))recalc()});
+document.addEventListener('change',e=>{if(e.target.closest('.calc'))recalc()});
+$('copybtn').addEventListener('click',async function(){
+  try{await navigator.clipboard.writeText(window._summary||'');this.textContent='복사됨 ✓'}
+  catch(e){this.textContent='복사 실패 · 표를 드래그해 복사하세요'}
+  setTimeout(()=>this.textContent='결과 요약 복사',2000);
+});
+</script>
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

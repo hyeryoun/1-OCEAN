@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · 녹색항로 한 장 캔버스</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── 녹색항로 플로우라인 · 한 장 캔버스 ─────────────────
+   ✏️ 데이터: 하단 <script>의 LANES / NODES / EDGES / DETAIL.
+   노드 상태 st: done(완료) now(현재) risk(위험·회귀) wait(대기)
+   gate:1 이면 마름모(관문)로 그려집니다.                      */
+
+.fl-stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
+.fl-stat{flex:1;min-width:130px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;text-align:center}
+.fl-stat b{display:block;font-family:var(--mono);font-size:24px;color:var(--navy)}
+.fl-stat span{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted)}
+.fl-stat.gold b{color:#3A6DA6}
+
+.fl-panel{margin-top:34px;background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fl-bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line)}
+.fl-bar .cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--muted)}
+.fl-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.fl-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.fl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#flsvg{display:block;min-width:1080px;width:100%;height:auto}
+#flsvg .nd{cursor:pointer}
+#flsvg .nd:hover .nbox{filter:brightness(.96)}
+#flsvg .nd.selq .nbox{stroke-width:2.6}
+
+.fl-detail{display:none;border-top:1px solid var(--line);background:var(--card);padding:18px 22px}
+.fl-detail.on{display:block;animation:ffade .25s ease}
+@keyframes ffade{from{opacity:0}to{opacity:1}}
+.fl-detail .dt{font-weight:700;color:var(--navy);font-size:15px}
+.fl-detail .dt .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-left:10px;color:var(--muted);vertical-align:2px}
+.fl-detail .dx{font-size:13.5px;line-height:1.85;margin-top:6px;word-break:keep-all;max-width:80ch}
+
+/* 캔버스 섹션 */
+.canvas-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin:64px 0 6px}
+.canvas-head .basis{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--muted)}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+.cbox{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px 24px}
+.cbox.full{grid-column:1/-1}
+.cbox h3{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--teal);text-transform:uppercase;margin-bottom:12px}
+.cbox h3::before{content:"◆ ";color:var(--gold)}
+.cbox p,.cbox li{font-size:13.5px;line-height:1.9;word-break:keep-all}
+.cbox ul{margin-left:18px}
+.cbox li{margin-bottom:6px}
+.law{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:10px 2px;border-bottom:1px solid var(--line);font-size:13.5px}
+.law a:hover{color:var(--teal)}
+.law .lm{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+.role{padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;word-break:keep-all}
+.role b{color:var(--navy)}
+.docflow{font-family:var(--mono);font-size:12px;line-height:2.2;color:var(--ink);word-break:keep-all}
+.docflow em{font-style:normal;color:var(--teal)}
+.bneck li::marker{content:"⚠ ";color:#3A6DA6}
+.keys li::marker{content:"🔑 ";font-size:11px}
+.verify{font-size:12px;color:var(--muted);line-height:1.9;border-top:1px dashed var(--line);margin-top:14px;padding-top:12px}
+
+@media (max-width:860px){.cgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="index.html">Home</a>
+      <a href="story.html">Story</a>
+      <a href="policy.html">Policy</a>
+      <a href="insight.html">Insight</a>
+      <a class="active" aria-current="page" href="project.html">Project</a>
+      <a href="tool.html">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<section style="padding-bottom:0">
+  <div class="wrap">
+    <p class="eyebrow" data-i="fl-eye">Stage 02 · Green Shipping Council · One-Page Canvas</p>
+    <h1 data-i="fl-h1">녹색항로, <em>한 장의 구조도</em>로</h1>
+    <p class="lede" data-i="fl-lede">
+      단계 구분은 국제 녹색항로 실무 지침을, 정부 절차는 법 하위법령안을 따랐습니다.
+    </p>
+
+    <!-- 정량 스트립 -->
+    <div class="fl-stats reveal">
+      <div class="fl-stat"><b>23</b><span>절차</span></div>
+      <div class="fl-stat"><b>9</b><span>행위 레인</span></div>
+      <div class="fl-stat"><b>7</b><span>관문</span></div>
+      <div class="fl-stat gold"><b>3</b><span>위험 구간</span></div>
+      <div class="fl-stat"><b>0 → 1</b><span>종착 · 첫 통합 상업 운항</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 업무구조도 ═══════════ -->
+<section style="padding-top:34px">
+  <div class="wrap">
+    <div class="fl-panel reveal">
+      <div class="fl-bar">
+        <span class="cap">업무구조도 · 절차: 녹색해운항로법 하위법령안</span>
+        <div class="fl-legend">
+          <span><i style="background:var(--teal)"></i>완료</span>
+          <span><i style="background:var(--gold)"></i>진행 중</span>
+          <span><i style="background:#fff;border:2px dashed #C24E3A"></i>위험 · 되돌아감</span>
+          <span><i style="background:#fff;border:1.5px solid #AFC0CE"></i>대기</span>
+          <span><i style="background:#fff;border:1.5px solid var(--navy);transform:rotate(45deg);border-radius:2px"></i>게이트</span>
+        </div>
+      </div>
+      <div class="fl-scroll"><svg id="flsvg" viewBox="0 0 1180 720" role="group" aria-label="녹색항로 절차 흐름: 여덟 레인 위의 노드와 관문"></svg></div>
+      <div class="fl-detail" id="fldetail" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 한 장 캔버스 ═══════════ -->
+<section class="alt" style="padding-top:56px">
+  <div class="wrap">
+    <div class="canvas-head">
+      <h2 style="margin:0">한 장 캔버스</h2>
+      <span class="basis">근거 · 역할 · 돈 · 문서 · 병목 · 솔루션 · 기준일 2026-10-23</span>
+    </div>
+
+    <div class="cgrid">
+      <div class="cbox">
+        <h3>목적과 근거</h3>
+        <p style="margin-bottom:12px">한국 항로 위에서 무탄소 선박의 첫 통합 상업 운항을 성립시키고, 그 운항을 다음 항로가 따라 할 수 있는 표준으로 만든다.</p>
+        <div class="law"><span>「녹색해운항로 구축 지원 특별법」</span><span class="lm">세계 최초 · 2027.4.1 시행</span></div>
+        <div class="law"><span>시행령 · 시행규칙안 (항로 지정, 항만 요건, 지원협의체)</span><span class="lm">입법예고 2026.9–10</span></div>
+        <div class="law"><span>제2차 친환경선박 개발·보급 기본계획</span><span class="lm">2026–2035 · 889척</span></div>
+        <div class="law"><span>IMO 넷제로 프레임워크</span><span class="lm">2025.10 채택 연기</span></div>
+        <div class="law"><span>EU ETS 해운 편입 · FuelEU Maritime</span><span class="lm">2024 · 2025 시행</span></div>
+        <div class="law"><span>한·미 태평양 녹색해운항로 · 한·호주 MOU</span><span class="lm">2027 시범 목표 · 2025.2</span></div>
+      </div>
+
+      <div class="cbox">
+        <h3>역할 관계</h3>
+        <div class="role"><b>해양수산부</b> · 기본계획, 예비·녹색해운항로 지정과 고시, 지역별 지원협의체, 벙커링 안전기준</div>
+        <div class="role"><b>산업부</b> · 친환경선박 기본계획 공동 수립, 중소 조선소·기자재 지원</div>
+        <div class="role"><b>화주</b> · 감축 수요를 수요 결집과 장기운송계약으로 전환</div>
+        <div class="role"><b>선사</b> · 노선·선대 결정, 선박 투입과 발주, 운항</div>
+        <div class="role"><b>조선소 · 연료 생산자 · 항만</b> · 건조, 공급계약과 생산 투자, 벙커링 체계</div>
+        <div class="role"><b>금융 · 공적 재원</b> · 가격 격차 보전, 선박금융 우대, 인프라 펀드</div>
+        <div class="role"><b>연구 (PLANiT)</b> · 규제 비용 근거, 항로 선별, 가격 격차·계약 구조, MRV</div>
+      </div>
+
+      <div class="cbox">
+        <h3>돈의 흐름</h3>
+        
+      </div>
+
+      <div class="cbox">
+        <h3>문서의 흐름</h3>
+        <p class="docflow">
+          규제 비용 분석 → 항로 선별 → <em>가격 격차 산정</em>
+          → 화주 수요 결집(LOI) → <em>장기운송계약</em> → 연료 공급 LOI → 공급계약 · 생산 FID
+          → 선박 투입 · 발주 → 벙커링 안전기준 → <em>녹색해운항로 지정 · 고시</em> → 첫 운항 기록 → 다음 항로를 위한 표준 계약
+        </p>
+      </div>
+
+      <div class="cbox">
+        <h3>병목 · 5</h3>
+        <ul class="bneck">
+          <li>수요 확약이 없으면 발주가 없고, 발주가 없으면 연료 생산 투자도 없다. 서로 기다리는 교착</li>
+          <li>IMO 넷제로 프레임워크 채택 연기(2025.10). 탄소 규제 비용의 예측 가능성이 약화되면서 투자 경제성 평가의 핵심 전제가 흔들리고, 선박·연료·인프라 전반의 투자 의사결정 불확실성 확대</li>
+          <li>가격 격차를 메울 재원 구조가 아직 없음</li>
+          <li>그린 연료 국내 생산은 시험 물량 수준. 초기 공급은 수입에 기대야 함</li>
+          <li>이중연료선은 화석연료로도 운항 가능. 계약이 없으면 녹색연료 사용이 보장되지 않음</li>
+        </ul>
+      </div>
+
+      <div class="cbox">
+        <h3>솔루션</h3>
+        <ul class="keys"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="index.html">Home</a></li><li><a href="story.html">Story</a></li><li><a href="policy.html">Policy</a></li><li><a href="insight.html">Insight</a></li><li><a href="project.html">Project</a></li><li><a href="tool.html">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="index.html#s1">01 Regulation</a></li><li><a href="index.html#s2">02 Transition</a></li><li><a href="index.html#s3">03 Scale up</a></li><li><a href="index.html#s4">04 Governance</a></li><li><a href="index.html#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@planit.institute">contact@planit.institute</a></li>
+        <li>Hyeryoun Chi, Lead Researcher</li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════ 플로우라인 데이터 ═══════════
+   기준일 2026-10-23. 단계 구분은 MMMCZCS 녹색항로 타당성 청사진(2022)과 GMF 연례 보고서(2025)의 단계,
+   정부 절차는 「녹색해운항로 구축 지원 특별법」 시행령·시행규칙 입법예고(2026.9.2~10.13)를 따릅니다.
+   lane: LANES 순서, col: COLS 순서, st: done 완료 / now 진행 / risk 위험 / wait 대기, gate:1 = 관문(마름모)
+   dy: 같은 칸 안에서 위아래로 비킬 때의 픽셀 값 */
+const LANES=[
+  {k:'intl', n:'국제 규제 · IMO · EU'},
+  {k:'gov',  n:'정부 · 해양수산부'},
+  {k:'cargo',n:'화주'},
+  {k:'liner',n:'선사'},
+  {k:'yard', n:'조선소'},
+  {k:'fuel', n:'연료 생산자'},
+  {k:'port', n:'항만 · 벙커링'},
+  {k:'fin',  n:'금융 · 재원'},
+  {k:'res',  n:'연구 · 근거 · PLANiT'}
+];
+const COLS=['탐색 · ~2026','사전타당성 · 2026–27','타당성 · 합의 · 2027','계약 · FID · 2027–28','건조 · 운항 · 2028–','0 → 1'];
+
+const NODES=[
+ {id:'i1', lane:0, col:0, t:'EU ETS · FuelEU 시행', st:'done'},
+ {id:'g0', lane:0, col:2, t:'IMO NZF 채택', st:'risk', gate:1},
+
+ {id:'v1', lane:1, col:0, t:'녹색해운항로법 제정', st:'done'},
+ {id:'v2', lane:1, col:1, t:'하위법령 · 기본계획', st:'now'},
+ {id:'v3', lane:1, col:2, t:'예비 녹색해운항로 지정', st:'wait'},
+ {id:'gv', lane:1, col:3, t:'녹색해운항로 지정·고시', st:'wait', gate:1},
+
+ {id:'c1', lane:2, col:1, t:'수요 · 지불의사 확인', st:'wait'},
+ {id:'c2', lane:2, col:2, t:'수요 결집 · LOI', st:'wait'},
+ {id:'gc', lane:2, col:3, t:'장기운송계약', st:'wait', gate:1},
+
+ {id:'l1', lane:3, col:1, t:'노선 · 선대 타당성', st:'wait'},
+ {id:'gl', lane:3, col:3, t:'선박 투입 · 발주 FID', st:'wait', gate:1},
+ {id:'l2', lane:3, col:4, t:'시범 → 정기 운항', st:'wait'},
+
+ {id:'y1', lane:4, col:4, t:'신조 · 개조 · 인도', st:'wait'},
+
+ {id:'f1', lane:5, col:1, t:'공급원 조사 · 국내·수입', st:'wait'},
+ {id:'f2', lane:5, col:2, t:'공급 LOI', st:'wait'},
+ {id:'gf', lane:5, col:3, t:'공급계약 · 생산 FID', st:'risk', gate:1},
+ {id:'f3', lane:5, col:4, t:'공급 개시', st:'wait'},
+
+ {id:'p1', lane:6, col:0, t:'메탄올 STS 지침 개정', st:'done'},
+ {id:'p2', lane:6, col:1, t:'암모니아 벙커링 실증', st:'done'},
+ {id:'p3', lane:6, col:2, t:'벙커링 안전기준', st:'now'},
+ {id:'p4', lane:6, col:3, t:'연료 공급체계 갖춘 항만', st:'wait'},
+
+ {id:'m1', lane:7, col:0, t:'연료 인프라 펀드', st:'done'},
+ {id:'m2', lane:7, col:2, t:'가격 격차 보전 설계', st:'risk'},
+ {id:'gm', lane:7, col:3, t:'보전 · 금융 실행', st:'wait', gate:1},
+
+ {id:'r1', lane:8, col:0, t:'규제 비용 분석', st:'done'},
+ {id:'r2', lane:8, col:1, t:'항로 선별 · 배출 기준선', st:'wait'},
+ {id:'r3', lane:8, col:2, t:'가격 격차 · TCO 산정', st:'wait'},
+ {id:'r4', lane:8, col:3, t:'계약 · 보전 구조 설계', st:'wait'},
+ {id:'r5', lane:8, col:4, t:'MRV · 사용 인증 체계', st:'wait'},
+
+ {id:'g8', lane:4, col:5, t:'첫 통합 상업 운항', st:'wait', gate:1, big:1}
+];
+
+const EDGES=[
+ ['v1','v2'],['v2','v3'],['v3','gv'],['gv','l2'],
+ ['r1','r2'],['r2','r3'],['r3','r4'],['r4','r5'],
+ ['r3','m2'],['r4','gm'],
+ ['v3','c2'],
+ ['c1','c2'],['c2','gc'],['gc','gl'],
+ ['l1','gl'],['gl','y1'],['gl','l2'],['y1','l2'],
+ ['c2','f2'],['f1','f2'],['f2','gf'],['gf','f3'],['gf','p4'],['f3','l2','arc'],
+ ['p1','p2'],['p2','p3'],['p3','p4'],['p4','gv','arc'],
+ ['m2','gm'],['gm','gl','arc'],['g0','m2','arc'],
+ ['l2','g8'],
+ /* 회귀 루프 (빨간 점선) */
+ ['gf','f2','loop'],   /* 공급계약 불발 → 공급 LOI 재협상 */
+ ['gl','c2','loop']    /* 장기계약 조건 불일치 → 수요 재결집 */
+];
+
+const DETAIL={
+ i1:'EU ETS는 2024년부터 해운에 단계 적용(2024 40%, 2025 70%, 2026 100%)되고, FuelEU Maritime은 2025년부터 에너지 온실가스 집약도 감축을 요구합니다. 한국 선사가 이미 내고 있는 확정 비용입니다.',
+ g0:'IMO 넷제로 프레임워크는 2025년 4월 MEPC 83에서 승인됐지만 같은 해 10월 채택이 1년 연기됐습니다. 채택 여부가 가격 격차의 크기를 바꿉니다. UMAS·GMF(2025)는 글로벌 연료 기준이 채택돼도 e-연료 격차는 남는다고 봅니다.',
+ v1:'「녹색해운항로 구축 지원 특별법」. 세계 최초의 녹색해운항로 법률이며 2027년 4월 1일 시행됩니다. 항구 사이 화물 운송 전 과정에서 탄소 배출이 없는 운항을 지향하는 항로를 지원합니다.',
+ v2:'시행령·시행규칙 입법예고(2026.9.2~10.13), 2027년 2월 확정 예정. 녹색선박 연료 범위(메탄올·수소·암모니아·바이오·재생합성연료, 전기·연료전지), 연료 공급체계를 갖춘 항만 요건, 기본계획, 지역별 지원협의체를 정합니다. 제2차 친환경선박 기본계획(2026–2035)과 함께 갑니다.',
+ v3:'선종과 동력원이 정해지기 전에도 지정할 수 있는 타당성 검토용 항로. 부산·울산–시애틀·타코마 컨테이너선·자동차운반선 항로가 정부 연구에서 예비 항로로 선정돼 있습니다(2027 시범 목표).',
+ gv:'정식 지정. 항로명, 출발·도착·기항지, 운항 선종과 동력원을 고시합니다. 출발·도착 항만은 친환경 연료 공급체계를 갖춰야 합니다. 선박, 연료, 항만이 모두 정해져야 열리는 관문입니다.',
+ c1:'수출 화주의 감축 목표(스코프 3)와 운임 프리미엄 지불의사를 확인합니다. 지불의사가 측정되지 않으면 분담 협상의 출발점이 없습니다.',
+ c2:'여러 화주의 수요를 묶어 한 번에 입찰합니다. 해외 사례로 ZEMBA는 2025년 12월 두 번째 입찰에서 e-메탄올(Hapag-Lloyd)과 e-암모니아(NCL) 운송을 3년 계약으로 낙찰했습니다(2027년 감축 개시).',
+ gc:'핵심 관문. 그린 프리미엄 분담이 들어간 장기운송계약(또는 CoA)이 맺어져야 선사의 투입·발주 결정이 섭니다.',
+ l1:'어떤 노선에, 어떤 선형과 연료로 투입할지 검토합니다. 메탄올 이중연료선은 화석연료로도 운항할 수 있어, 계약이 없으면 녹색연료를 실제로 쓴다는 보장이 없습니다.',
+ gl:'⚠ 교착의 중심. 수요(장기운송계약)와 재원(격차 보전)이 함께 채워져야 열립니다. 보유한 이중연료선을 투입하면 신조 없이도 시작할 수 있습니다.',
+ l2:'시범 운항을 거쳐 정기 운항으로. 항로 지정, 연료 공급, 선박이 한 항로 위에서 만납니다.',
+ y1:'신조라면 발주에서 인도까지 대개 2~3년. 중형 조선소에는 무탄소선 건조 실적을 쌓을 기회입니다. 제2차 친환경선박 기본계획은 중소 조선소의 설계·실증 지원을 담고 있습니다.',
+ f1:'그린 메탄올·암모니아를 어디서 얼마나 조달할 수 있는지 봅니다. 국내 생산은 아직 시험 물량 수준이라 초기에는 수입 의존이 큽니다.',
+ f2:'확정 수요를 근거로 한 공급 의향서. 단독으로는 생산 투자를 움직이지 못합니다.',
+ gf:'⚠ 위험 관문. 생산 FID는 장기 공급계약 없이 서지 않습니다. 조건이 맞지 않으면 공급 LOI 재협상으로 돌아갑니다.',
+ f3:'공급 개시. 항만의 벙커링 체계와 같은 시점에 착지해야 합니다.',
+ p1:'해양수산부가 「위험물 하역 자체안전관리계획서 승인 업무처리 지침」을 개정(2025.7.1 시행)해 메탄올 선박 간(STS) 공급 기준과 안전구역(호스 연결부 반경 25m)을 정했습니다.',
+ p2:'2026년 4월 울산본항에서 암모니아 추진 가스운반선에 약 600톤의 청정 암모니아를 공급하는 세계 첫 PTS 벙커링 실증. 암모니아 선박연료공급업 임시 등록기준은 2025년에 마련됐습니다.',
+ p3:'암모니아 벙커링 안전관리 방안을 전문가위원회가 마련 중입니다. 항만 투자 결정의 선행 조건입니다.',
+ p4:'법이 정한 녹색해운항로의 요건. 출발·도착 항만이 친환경 연료 공급체계(또는 육상전원)를 갖춰야 지정할 수 있습니다.',
+ m1:'2025년 1월 1조 원 규모의 친환경 선박연료 인프라 펀드 발표. 울산항 액체화물터미널 증설 등에 쓰입니다.',
+ m2:'⚠ 위험. 녹색연료와 기존 연료의 가격 차를 누가, 어떤 순서로 메울지 아직 정해지지 않았습니다. 후보는 차액계약(CfD), e-연료 경매, 국내 벙커링 연동 보조금, 정책금융 우대입니다.',
+ gm:'보전 계약과 선박금융 우대의 실행. 선박 투입 결정의 비용 부담을 낮춥니다.',
+ r1:'SFOC × PLANiT 보고서(2025.4, 2025.7, 2026.3)에서 규제 시나리오별 연료 전환 비용을 계산했습니다. 늦출수록 장기 비용이 커진다는 결론입니다.',
+ r2:'어느 항로에서 시작할지 고릅니다. 물동량, 항로별 배출 기준선, 양 끝 항만의 연료 공급 가능성, 참여 의향이 있는 선사·화주를 함께 봅니다. 국제 지침의 사전타당성 단계에 해당합니다.',
+ r3:'선택한 항로에서 녹색연료와 기존 연료의 총소유비용(TCO)과 가격 차를 계산합니다. EU ETS·FuelEU 비용과 IMO 규제 시나리오를 반영합니다. 화주 수요 결집과 격차 보전 설계의 출발점입니다.',
+ r4:'가격 차를 화주 운임 프리미엄, 공적 보전, 선박금융 우대가 어떻게 나눌지 계약 구조를 설계합니다. 차액계약, e-연료 경매, 국내 벙커링 연동 보조금을 비교합니다.',
+ r5:'녹색연료를 실제로 썼다는 것을 어떻게 측정·보고·검증하고, 화주의 감축 실적으로 인정할지 정합니다. 이중연료선의 연료 사용 증빙과 북앤클레임 같은 방식을 검토합니다.',
+ g8:'종착점. 녹색연료를 벙커링한 무탄소 선박이 장기계약 화물을 싣고 지정 항로를 달리는 첫 통합 상업 운항. 0에서 1로. 그다음 질문은 확산입니다.'
+};
+
+/* ═══════════ 렌더 ═══════════ */
+(function(){
+  const svg=document.getElementById('flsvg');
+  const W=1180,H=720,L=170,T=64,R=24;
+  const laneH=(H-T-24)/LANES.length;
+  const colW=(W-L-R)/COLS.length;
+  const yOf=l=>T+l*laneH+laneH/2;
+  const xOf=c=>L+c*colW+colW/2;
+  const CLR={done:'var(--teal)',now:'var(--gold)',risk:'#C24E3A',wait:'#AFC0CE'};
+  const pos={};
+  NODES.forEach(n=>{pos[n.id]={x:xOf(n.col),y:yOf(n.lane)+(n.dy||0)}});
+
+  let s='';
+  /* 열 배경 + 라벨 */
+  COLS.forEach((c,i)=>{
+    if(i%2)s+=`<rect x="${L+i*colW}" y="${T-26}" width="${colW}" height="${H-T-8}" fill="var(--card)" opacity=".5"/>`;
+    s+=`<text x="${xOf(i)}" y="34" text-anchor="middle" font-family="Pretendard Variable, Pretendard, sans-serif" font-size="11" letter-spacing="1" fill="var(--muted)">${c}</text>`;
+  });
+  /* 레인 */
+  LANES.forEach((ln,i)=>{
+    const y=yOf(i);
+    s+=`<line x1="${L-6}" y1="${y}" x2="${W-R}" y2="${y}" stroke="var(--line)" stroke-width="1"/>
+        <text x="16" y="${y-4}" font-family="Pretendard Variable, Pretendard, sans-serif" font-weight="700" font-size="12.5" fill="var(--navy)">${ln.n.split(' · ')[0]}</text>
+        ${ln.n.includes(' · ')?`<text x="16" y="${y+12}" font-family="Pretendard Variable, Pretendard, sans-serif" font-size="9" fill="var(--muted)">${ln.n.split(' · ').slice(1).join(' · ')}</text>`:''}`;
+  });
+  /* 엣지 */
+  s+='<defs><marker id="ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#8FA3B8"/></marker><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#C24E3A"/></marker></defs>';
+  EDGES.forEach(e=>{
+    const a=pos[e[0]],b=pos[e[1]],loop=e[2]==='loop';
+    if(!a||!b)return;
+    if(e[2]==='arc'){
+      const na=NODES.find(n=>n.id===e[0]),nb=NODES.find(n=>n.id===e[1]);
+      const wa=na.gate?24:56, wb=nb.gate?24:56, bx=Math.max(a.x+wa,b.x+wb)+40;
+      s+=`<path d="M${a.x+wa} ${a.y} C ${bx} ${a.y}, ${bx} ${b.y}, ${b.x+wb+6} ${b.y}" fill="none" stroke="#B9C6D2" stroke-width="1.3" marker-end="url(#ar)"/>`;
+      return;
+    }
+    if(loop){
+      const my=Math.min(a.y,b.y)-34;
+      s+=`<path d="M${a.x} ${a.y-14} C ${a.x} ${my}, ${b.x} ${my}, ${b.x} ${b.y-14}" fill="none" stroke="#C24E3A" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#arr)" opacity=".8"/>`;
+    }else{
+      const mx=(a.x+b.x)/2;
+      s+=`<path d="M${a.x+8} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x-14} ${b.y}" fill="none" stroke="#B9C6D2" stroke-width="1.3" marker-end="url(#ar)"/>`;
+    }
+  });
+  /* 노드 */
+  NODES.forEach(n=>{
+    const {x,y}=pos[n.id];
+    const c=CLR[n.st];
+    const fill=n.st==='done'?'var(--teal)':n.st==='now'?'var(--gold)':'#fff';
+    const txt=n.st==='done'?'#fff':'var(--navy)';
+    const dash=n.st==='risk'?'stroke-dasharray="5 3"':'';
+    const sw=n.st==='wait'?1.4:2;
+    let shape;
+    if(n.gate){
+      const r=n.big?26:19;
+      shape=`<rect class="nbox" x="${x-r}" y="${y-r}" width="${r*2}" height="${r*2}" rx="5" transform="rotate(45 ${x} ${y})" fill="${fill}" stroke="${n.st==='wait'?'var(--navy)':c}" stroke-width="${sw}" ${dash}/>`;
+    }else{
+      shape=`<rect class="nbox" x="${x-56}" y="${y-15}" width="112" height="30" rx="15" fill="${fill}" stroke="${c}" stroke-width="${sw}" ${dash}/>`;
+    }
+    const label=n.gate
+      ?`<text x="${x}" y="${y+(n.big?46:38)}" text-anchor="middle" font-family="Pretendard Variable, Pretendard, sans-serif" font-weight="700" font-size="11" fill="var(--navy)">${n.t}</text>`
+      :`<text class="fit" data-max="100" x="${x}" y="${y+4}" text-anchor="middle" font-family="Pretendard Variable, Pretendard, sans-serif" font-weight="${n.st==='now'?'700':'500'}" font-size="10.5" fill="${txt}">${n.t}</text>`;
+    const pulse=(n.st==='now')?`<circle cx="${x-46}" cy="${y-13}" r="4" fill="var(--gold)"><animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/></circle>`:'';
+    s+=`<g class="nd" data-id="${n.id}" tabindex="0" role="button" aria-label="${n.t}"><title>${n.t}</title>${shape}${label}${pulse}</g>`;
+  });
+  svg.innerHTML=s;
+
+  /* 클릭 → 상세 */
+  const det=document.getElementById('fldetail');
+  const STL={done:'완료',now:'진행 중',risk:'위험',wait:'대기'};
+  function show(id){
+    const n=NODES.find(x=>x.id===id); if(!n)return;
+    svg.querySelectorAll('.nd').forEach(g=>g.classList.toggle('selq',g.dataset.id===id));
+    det.innerHTML=`<div class="dt">${n.t}<span class="tag">${n.big?'종착':LANES[n.lane].n}</span><span class="tag">${STL[n.st]}</span>${n.gate?'<span class="tag">GATE</span>':''}</div>
+      <div class="dx">${DETAIL[id]||''}</div>`;
+    det.classList.add('on');
+  }
+  svg.addEventListener('click',e=>{const g=e.target.closest('.nd');if(g)show(g.dataset.id)});
+  svg.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    const g=e.target.closest('.nd');if(g){e.preventDefault();show(g.dataset.id)}
+  });
+  show('v2');  /* 기본: 하위법령 */
+})();
+</script>
+<script src="site.js"></script>
+<script src="i18n.js"></script>
+</body>
+</html>

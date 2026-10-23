@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · Insight</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="description" content="PLANiT 해운 섹터의 항해일지. 연재, 기고, 분석을 기록합니다.">
+
+<!-- ═══════════════════════════════════════════════
+  ✏️ 수정 가이드 (insight.html)
+  · 글 목록: 하단 <script> 의 POSTS 배열에서 한 줄이 글 한 편.
+    {d:'날짜', cat:'series/op/analysis', b:'배지', t:'제목',
+     x:'발췌', m:읽기시간(분), u:'링크', soon:true(예정)}
+  · 항해일지(13부작): <ol class="voyage-log"> 의 li 클래스
+    (done=발행, now=집필 중, 없음=예정)와 진행률 data-progress
+═══════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* 칼럼 매체별 가로 목록 */
+.outlet + .outlet{margin-top:48px}
+.outlet-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px}
+.outlet-h h2{margin:6px 0 0}
+.rail-nav{display:flex;gap:8px}
+.rail-nav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ocean-deep);font-size:16px;cursor:pointer}
+.rail-nav button:hover{border-color:var(--ocean-deep)}
+.rail{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding-bottom:10px}
+.rail:focus-visible{outline:2px solid var(--ocean-blue);outline-offset:4px}
+.rail ul{list-style:none;margin:0;padding:0;display:flex;gap:14px}
+.rail li{flex:0 0 clamp(161px,calc(16.8 * var(--vw)),210px);scroll-snap-align:start}
+.rail a{display:flex;flex-direction:column;gap:4px;color:var(--ocean-deep);text-decoration:none}
+.rail img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:4px;border:1px solid var(--line);margin-bottom:8px}
+.rail .no{font-size:12px;color:var(--ocean-blue);font-variant-numeric:lining-nums}
+.rail b{font-size:13.5px;font-weight:700;letter-spacing:-.02em;line-height:1.4;word-break:keep-all}
+.rail a:hover b{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+
+/* 오픈 소스 저장소 */
+.os-h{display:flex;justify-content:space-between;align-items:flex-end;gap:24px 48px;flex-wrap:wrap;margin-bottom:26px}
+.os-h h2{margin:6px 0 0}
+.os-sub{margin:0;max-width:46ch;font-size:14.5px;line-height:1.75;color:#3D5A74;word-break:keep-all}
+.repos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.repo{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 20px 18px;display:flex;flex-direction:column;gap:6px}
+.repo .rh{display:flex;align-items:center;gap:10px;color:var(--ocean-deep)}
+.repo .rh b{font-size:16px;letter-spacing:-.02em}
+.repo .rs{margin:0;font-size:12px;color:var(--ocean-blue)}
+.repo .rd{margin:4px 0 0;font-size:13.5px;line-height:1.6;color:#3D5A74;word-break:keep-all;flex:1}
+.repo .rm{display:flex;gap:12px;margin:8px 0 0;font-size:11.5px;color:var(--muted)}
+.repo .ra{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.repo .ra a{font-size:12.5px;font-weight:600;text-decoration:none;border-radius:999px;padding:7px 14px}
+.repo .gh{background:var(--ocean-deep);color:#fff}
+.repo .gh[aria-disabled="true"]{background:#E6EEF6;color:var(--muted);pointer-events:none}
+.repo .try{border:1px solid var(--line);color:var(--ocean-deep)}
+.repo .try:hover{border-color:var(--ocean-deep)}
+@media (max-width:860px){.repos{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.repos{grid-template-columns:1fr}}
+/* 임팩트온 표지는 정사각 */
+.rail.sq img{aspect-ratio:1/1}
+</style>
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="index.html">Home</a>
+      <a href="story.html">Story</a>
+      <a href="policy.html">Policy</a>
+      <a class="active" aria-current="page" href="insight.html">Insight</a>
+      <a href="project.html">Project</a>
+      <a href="tool.html">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="page-hero-oc">
+  <div class="wrap">
+    <p class="kicker">INSIGHT</p>
+    <h1>Voyage log</h1>
+    <p class="kr" data-i="in2-kr">연재, 기고, 분석을 시간 순서로 기록합니다.</p>
+  </div>
+</section>
+<!-- ═══════════ 13부작 항해일지 ═══════════ -->
+<!-- ═══ 칼럼 · 매체별 가로 목록 ═══
+     ✏️ 매체를 늘릴 때는 <div class="outlet"> 블록을 복사해 이름·글·그림만 바꿉니다. 그림은 img/clif/ -->
+<section style="padding:56px 0 48px">
+  <div class="wrap">
+    <div class="outlet">
+      <div class="outlet-h">
+        <div>
+          <p class="eyebrow">CLIF · 연재 13편 완결</p>
+          <h2 data-i="in2-s-h">탈탄소 여정, 흔들리는 한국 해운</h2>
+        </div>
+        <div class="rail-nav"><button type="button" class="rail-prev" aria-label="이전 글">←</button><button type="button" class="rail-next" aria-label="다음 글">→</button></div>
+      </div>
+      <div class="rail" tabindex="0" aria-label="CLIF 연재 목록, 옆으로 넘겨 보기">
+        <ul>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=217" target="_blank" rel="noopener"><img src="img/clif/clif-4-3.webp" width="720" height="540" alt="" loading="lazy"><span class="no">4-3</span><b>누가 비용을 댈 것인가</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=212" target="_blank" rel="noopener"><img src="img/clif/clif-4-2.webp" width="720" height="540" alt="" loading="lazy"><span class="no">4-2</span><b>연결고리를 복원하라</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=208" target="_blank" rel="noopener"><img src="img/clif/clif-4-1.webp" width="720" height="540" alt="" loading="lazy"><span class="no">4-1</span><b>한국 해운의 승부처는</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=203" target="_blank" rel="noopener"><img src="img/clif/clif-3-3.webp" width="720" height="540" alt="" loading="lazy"><span class="no">3-3</span><b>잃게 될 것들</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=195" target="_blank" rel="noopener"><img src="img/clif/clif-3-2.webp" width="720" height="540" alt="" loading="lazy"><span class="no">3-2</span><b>한국 해운의 노후화와 인프라 공백</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=190" target="_blank" rel="noopener"><img src="img/clif/clif-3-1.webp" width="720" height="540" alt="" loading="lazy"><span class="no">3-1</span><b>나아가는 경쟁국</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=185" target="_blank" rel="noopener"><img src="img/clif/clif-2-3.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2-3</span><b>더 심해질 규제</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=180" target="_blank" rel="noopener"><img src="img/clif/clif-2-2.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2-2</span><b>한국의 임시방편</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=176" target="_blank" rel="noopener"><img src="img/clif/clif-2-1.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2-1</span><b>EEXI, CII</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=171" target="_blank" rel="noopener"><img src="img/clif/clif-1-4.webp" width="720" height="540" alt="" loading="lazy"><span class="no">1-4</span><b>지금 왜 해운을 이야기하는가</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=166" target="_blank" rel="noopener"><img src="img/clif/clif-1-3.webp" width="720" height="540" alt="" loading="lazy"><span class="no">1-3</span><b>해운 산업의 현재</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=161" target="_blank" rel="noopener"><img src="img/clif/clif-1-2.webp" width="720" height="540" alt="" loading="lazy"><span class="no">1-2</span><b>한국 해운의 역사</b></a></li>
+          <li><a href="https://www.climateinfact.org/news/articleView.html?idxno=158" target="_blank" rel="noopener"><img src="img/clif/clif-1-1.webp" width="720" height="540" alt="" loading="lazy"><span class="no">1-1</span><b>해운? 조선? 개념 정리</b></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="outlet">
+      <div class="outlet-h">
+        <div>
+          <p class="eyebrow">IMPACT ON · 플랜잇의 전환이야기</p>
+          <h2>임팩트온 칼럼</h2>
+        </div>
+        <div class="rail-nav"><button type="button" class="rail-prev" aria-label="이전 글">←</button><button type="button" class="rail-next" aria-label="다음 글">→</button></div>
+      </div>
+      <div class="rail sq" tabindex="0" aria-label="임팩트온 칼럼 목록, 옆으로 넘겨 보기">
+        <ul>
+          <li><a href="http://www.impacton.net/news/articleView.html?idxno=19220" target="_blank" rel="noopener"><img src="img/impacton/impacton-19220.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2026.06</span><b>두 개의 항로법이 말하지 않는 것</b></a></li>
+          <li><a href="http://www.impacton.net/news/articleView.html?idxno=18112" target="_blank" rel="noopener"><img src="img/impacton/impacton-18112.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2026.03</span><b>조선소 전동화, 바다 위가 아니라 도크 안에서 시작된다</b></a></li>
+          <li><a href="http://www.impacton.net/news/articleView.html?idxno=16843" target="_blank" rel="noopener"><img src="img/impacton/impacton-16843.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2025</span><b>IMO 중기조치 1년 유예, 기회인가 위기인가</b></a></li>
+          <li><a href="http://www.impacton.net/news/articleView.html?idxno=16164" target="_blank" rel="noopener"><img src="img/impacton/impacton-16164.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2025.08</span><b>미국 정치가 세운, 항로 위의 새로운 장벽</b></a></li>
+          <li><a href="http://www.impacton.net/news/articleView.html?idxno=15404" target="_blank" rel="noopener"><img src="img/impacton/impacton-15404.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2025</span><b>지속가능항공유(SAF)와 바이오선박유, 공존의 조건을 묻다</b></a></li>
+          <li><a href="http://www.impacton.net/news/articleView.html?idxno=15039" target="_blank" rel="noopener"><img src="img/impacton/impacton-15039.webp" width="720" height="540" alt="" loading="lazy"><span class="no">2025</span><b>글로벌 해운, 탄소비용 시대의 서막: IMO 이중가격제와 조선·해운산업의 재설계</b></a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 오픈 소스: 계산에 쓴 코드와 데이터 ═══════════
+     ✏️ 각 카드의 <a class="gh" href="#"> 에 깃허브 저장소 주소를 넣으면 링크가 켜집니다. -->
+<section class="alt opensrc" style="padding:64px 0 80px">
+  <div class="wrap">
+    <div class="os-h">
+      <div>
+        <p class="eyebrow">OPEN SOURCE</p>
+        <h2>계산에 쓴 코드를 공개합니다</h2>
+      </div>
+      <p class="os-sub">연재와 보고서의 숫자는 아래 모델과 계산기에서 나왔습니다. 가정, 계수, 수식을 누구나 확인하고 다시 돌려볼 수 있도록 저장소를 엽니다.</p>
+    </div>
+    <ul class="repos">
+      <li class="repo">
+        <div class="rh"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><b>규제 비용 계산기</b></div>
+        <p class="rs">CII · EU ETS · FuelEU · EEXI</p>
+        <p class="rd">선박 한 척의 등급과 규제 비용. 규정 원문의 식과 기본값을 그대로 옮겼습니다.</p>
+        <p class="rm"><span>JavaScript</span><span>라이선스 미정</span></p>
+        <div class="ra">
+          <!-- ✏️ 깃허브 주소를 href 에 넣으세요 -->
+          <a class="gh" href="#" data-repo="" aria-disabled="true">GitHub 저장소 · 준비 중</a><a class="try" href="tool.html">계산기 열기</a>
+        </div>
+      </li>
+      <li class="repo">
+        <div class="rh"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><b>Decarbonizer</b></div>
+        <p class="rs">감축 조치 시나리오</p>
+        <p class="rd">감속, 연료 전환, 육상전원, 배터리를 조합해 비용과 회수기간을 비교합니다.</p>
+        <p class="rm"><span>JavaScript</span><span>라이선스 미정</span></p>
+        <div class="ra">
+          <!-- ✏️ 깃허브 주소를 href 에 넣으세요 -->
+          <a class="gh" href="#" data-repo="" aria-disabled="true">GitHub 저장소 · 준비 중</a><a class="try" href="decarbonizer.html">계산기 열기</a>
+        </div>
+      </li>
+      <li class="repo">
+        <div class="rh"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><b>선박연료 LCA</b></div>
+        <p class="rs">WtT · TtW · WtW</p>
+        <p class="rd">FuelEU와 IMO LCA 지침 기본값으로 연료별 전과정 배출을 계산합니다.</p>
+        <p class="rm"><span>JavaScript</span><span>라이선스 미정</span></p>
+        <div class="ra">
+          <!-- ✏️ 깃허브 주소를 href 에 넣으세요 -->
+          <a class="gh" href="#" data-repo="" aria-disabled="true">GitHub 저장소 · 준비 중</a><a class="try" href="lca.html">계산기 열기</a>
+        </div>
+      </li>
+      <li class="repo">
+        <div class="rh"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><b>IMO DCS 대시보드</b></div>
+        <p class="rs">세계 선대 연료·배출</p>
+        <p class="rd">IMO 연례 DCS 집계를 연도별로 시각화합니다.</p>
+        <p class="rm"><span>JavaScript</span><span>라이선스 미정</span></p>
+        <div class="ra">
+          <!-- ✏️ 깃허브 주소를 href 에 넣으세요 -->
+          <a class="gh" href="#" data-repo="" aria-disabled="true">GitHub 저장소 · 준비 중</a><a class="try" href="imo-dcs.html">계산기 열기</a>
+        </div>
+      </li>
+      <li class="repo">
+        <div class="rh"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><b>IMO NZF 준수비용 모델</b></div>
+        <p class="rs">선대 단위 비용 모델</p>
+        <p class="rd">IMO 넷제로 프레임워크 초안 기준 선대의 연도별 준수비용을 계산합니다.</p>
+        <p class="rm"><span>Python · Excel</span><span>라이선스 미정</span></p>
+        <div class="ra">
+          <!-- ✏️ 깃허브 주소를 href 에 넣으세요 -->
+          <a class="gh" href="#" data-repo="" aria-disabled="true">GitHub 저장소 · 준비 중</a>
+        </div>
+      </li>
+      <li class="repo">
+        <div class="rh"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><b>조선소 산업연관 모델</b></div>
+        <p class="rs">지역경제 파급효과</p>
+        <p class="rd">중형 조선소 녹색전환의 생산·부가가치·고용 효과를 산업연관표로 계산합니다.</p>
+        <p class="rm"><span>Python · Excel</span><span>라이선스 미정</span></p>
+        <div class="ra">
+          <!-- ✏️ 깃허브 주소를 href 에 넣으세요 -->
+          <a class="gh" href="#" data-repo="" aria-disabled="true">GitHub 저장소 · 준비 중</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="index.html">Home</a></li><li><a href="story.html">Story</a></li><li><a href="policy.html">Policy</a></li><li><a href="insight.html">Insight</a></li><li><a href="project.html">Project</a></li><li><a href="tool.html">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="index.html#s1">01 Regulation</a></li><li><a href="index.html#s2">02 Transition</a></li><li><a href="index.html#s3">03 Scale up</a></li><li><a href="index.html#s4">04 Governance</a></li><li><a href="index.html#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@planit.institute">contact@planit.institute</a></li>
+        <li>Hyeryoun Chi, Lead Researcher</li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ✏️ 글 목록 데이터 · 여기만 고치면 목록·필터에 자동 반영됩니다.
+   cat: 'series'(연재) | 'analysis'(분석) | 'op'(기고)
+   soon:true 를 붙이면 흐리게 UPCOMING 표시              */
+/* ═══════════ ✏️ 단일 데이터 소스 ═══════════
+   여기 한 곳에 글을 추가하면 목록과 인사이트 차트에 자동 반영됩니다.
+   목록용: d·cat(series/analysis/op)·b·t·x·m·u·soon·hide(목록 숨김)
+   차트용: stage(1규칙 2경로 3실행 4규범 5생명 · Y축, 보호 대상의 넓이)
+           yr(주제 연도 · X축) · short(라벨) · links:[선행 글 id · 서사 실]
+   stage 가 없으면 차트에서 빠지고, hide:true 면 목록에서 빠집니다.     */
+const POSTS = [
+  /* ── 매체별 산출물: 분석(◆)·기고(■)·도구(▲) · 선의 정의: '근거로 쓰였다'(과거→미래) ── */
+  {id:'mdl', d:'2026.05', stage:2, yr:2031, short:'466척 준수비용 모델', links:['ep3'], cat:'analysis', b:'모델 · PLANiT', t:'466척 선대 IMO NZF 준수비용 모델 (IRI × PLANiT)', x:'대만 3사 실선대의 연도별 컴플라이언스 비용. 이후 연재·기고·도구가 딛고 선 계산의 기반입니다.', m:0, u:'https://planit.institute/works', q:'격차는 정확히 얼마인가'},
+  {id:'mepc', d:'2025', stage:1, yr:2027, short:'MEPC 83/7/22', links:['ep1'], cat:'op', b:'기고 · IMO', t:'MEPC 83/7/22 · 비용효과적 연료 전환 경로', x:'IMO 중기조치 논의에 제출된 문서 기여. 규제 설계 테이블에 놓인 첫 산출물.', m:6, u:'https://planit.institute/works', q:'전환 비용은 규제 설계로 낮출 수 있는가'},
+  {id:'ep10', d:'2026.07.06', stage:3, yr:2032, short:'한국 해운의 승부처', links:['ep8','rep','ep9'], q:'그래서 한국은 어디서 이기는가', cat:'series', b:'EP 4-1', t:'한국 해운의 승부처는', x:'손자병법의 프레임으로 네 개의 전장(비용·계약·발주·공급망)에 같은 세 질문을 던지고, 감내할 곳과 승부를 걸 곳을 가려냅니다.', m:14, u:'https://www.climateinfact.org/news/articleView.html?idxno=208'},
+  {id:'ep9', d:'2026.06', stage:2, yr:2030, short:'노후화·인프라 공백', links:['ep2','ep3'], q:'교체 주기는 위기인가 기회인가', cat:'series', b:'EP 3-2', t:'한국 해운의 노후화와 인프라 공백', x:'한국 선대의 평균 선령이 말해주는 것, 그리고 벙커링 인프라가 비어 있는 항만의 지도.', m:10, u:'https://www.climateinfact.org/news/articleView.html?idxno=195'},
+  {id:'ep8', d:'2026.05', stage:3, yr:2028, short:'나아가는 경쟁국', links:['ep7'], cat:'series', b:'EP 3-1', t:'나아가는 경쟁국', x:'경쟁국은 조선·해운·화주·금융을 하나의 구조로 묶어 발주의 위험을 나누고 있습니다. 격차를 데이터로 확인합니다.', m:9, u:'https://www.climateinfact.org/news/articleView.html?idxno=190'},
+  {id:'ep7', d:'2026.04', stage:1, yr:2028, short:'더 심해질 규제', links:['ep4','ep5','mepc'], q:'지연은 시간을 버는가, 비용을 쌓는가', cat:'series', b:'EP 2-3', t:'더 심해질 규제', x:'IMO NZF와 EU 규제의 시간표. 지연은 준비할 시간이 아니라 준비하지 않은 비용이 쌓이는 시간입니다.', m:9, u:'https://www.climateinfact.org/news/articleView.html?idxno=185'},
+  {id:'law', d:'2026.06', stage:1, yr:2027, short:'두 개의 항로법', links:['ep5'], cat:'analysis', b:'분석', t:'두 개의 항로법이 말하지 않는 것', x:'친환경선박법과 해운법 사이, 기준이 비어 있는 자리. 법은 기준을 세우는 일이고, 그 기준은 선박 25년보다 오래 갑니다.', m:5, u:'https://planit.institute/insights/two-route-laws'},
+  {id:'rep', d:'2026.02', stage:1, yr:2029, short:'지연 시나리오', links:['ep7','mdl'], q:'지연 시나리오에서 총비용은 어디로 가는가', cat:'analysis', b:'리포트', t:"Decarbonisation Hasn't Stopped · 규제 지연 시나리오", x:'규제 지연 시나리오에서 한국 해운의 연료 믹스와 총비용이 어떻게 움직이는지. SFOC × PLANiT 26쪽 리포트.', m:26, u:'https://planit.institute/works'},
+  {id:'col', d:'집필 예정', stage:1, yr:2040, short:'법은 기준이다', links:['law','ep7','mdl'], q:'기준은 왜 배보다 오래 가는가', cat:'op', b:'임팩트온', t:'법은 기준을 세우는 일이다 · 기준은 배보다 오래 간다', x:'친환경선박법에 LNG가 들어간 경위. 기준은 선박 25년, 인프라는 그보다 긴 시간을 좌우하므로 처음부터 잘 세워야 합니다.', soon:true},
+  /* 차트 전용(목록 숨김): 초반 연재 + 예정 연구 */
+  {id:'ep1', hide:true, stage:1, yr:2024, short:'왜 지금 해운인가', links:[], cat:'series', b:'EP 1-4', t:'지금 왜 해운을 이야기하는가 · 항해의 기점', u:'https://www.climateinfact.org/news/articleView.html?idxno=171', big:true},
+  {id:'ep2', hide:true, stage:2, yr:2025, short:'배는 25년을 산다', links:['ep1'], cat:'series', b:'EP 02', t:'배는 25년을 산다 · 지금 발주가 2050을 결정', u:'https://planit.institute/insights', big:true},
+  {id:'ep3', hide:true, stage:2, yr:2027, short:'연료라는 갈림길', links:['ep2'], cat:'series', b:'EP 03', t:'연료라는 갈림길', u:'https://planit.institute/insights'},
+  {id:'ep4', hide:true, stage:1, yr:2025, short:'EEXI · CII', links:['ep1'], cat:'series', b:'EP 2-1', t:'EEXI, CII · 규제의 지도', u:'https://www.climateinfact.org/news/articleView.html?idxno=176'},
+  {id:'ep5', hide:true, stage:1, yr:2026, short:'비용은 이미 발생 중', links:['ep4','mdl'], q:'멈춘 규제에도 가격표가 있는가', cat:'series', b:'EP 05', t:'비용은 이미 발생 중', u:'https://planit.institute/insights'},
+  {id:'ep11', stage:3, yr:2036, short:'연결고리를 복원하라', links:['ep10','ep7'], q:'누가 첫 서명을 하는가', cat:'series', b:'EP 4-2', t:'연결고리를 복원하라', x:'각자의 합리가 만든 교착. 손자의 세(勢)처럼, 약정들이 조건부로 동시 발효되는 판을 국가가 설계해야 합니다. 첫 배는 답이 아니라 기준을 만듭니다.', m:13, u:'https://www.climateinfact.org/news/articleView.html?idxno=212'},
+  {id:'ep12', d:'2026.07.21', stage:3, yr:2039, short:'누가 비용을 댈 것인가', links:['ep11'], q:'격차는 누가, 어떤 순서로 지불하는가', cat:'series', b:'EP 4-3', t:'누가 비용을 댈 것인가 (연재 최종화)', x:'저탄소 선박의 반복되는 연료비 격차를 누가 낼지, 그 불확실성을 계약으로 서명 가능한 숫자로 바꿉니다.', m:12, u:'https://www.climateinfact.org/news/articleView.html?idxno=217'},
+  {id:'arc', hide:true, stage:4, yr:2033, short:'북극·그림자 선단', links:['ep9'], cat:'analysis', b:'1-페이저', t:'북극 항로 · Shadow Fleet (Oceans 5)'},
+  {id:'bnk', hide:true, stage:2, yr:2034, short:'벙커링: 병목은 항만', links:['ep9'], cat:'analysis', b:'연구 예정', t:'메탄올·암모니아 벙커링 · 병목은 배가 아니라 항만', soon:true},
+  {id:'cob', hide:true, stage:5, yr:2044, short:'공편익 지도', links:['arc'], q:'탈탄소의 수단이 보존의 수단이 되는가', cat:'analysis', b:'스코핑', t:'탈탄소 × 생물 보존 공편익 지도 · 파트너 모집', soon:true, big:true},
+];
+
+window.KIND_FILTER='all';
+
+/* ═══════════ 인사이트 노선도 v2 (2024→2050) ═══════════
+   ✏️ METRO 데이터만 고치면 됩니다.
+   · st: yr = 주제 연도 · short = 지도에 표기될 제목(짧게)
+     t = 툴팁 전체 제목 · big = 환승역 · soon = 예정 · lab:'below'  */
+/* ═══ 항해 뷰: 시간 재생 + 계보의 빛 ═══
+   ✏️ POSTS만 고치면 됩니다. yr → 가로 위치(주제 연도),
+   stage → 다섯 단계 레인(1 규칙 ~ 5 생명), links → 계보(과거 글 id).
+   움직임의 의미: ▶ 재생 = 서사의 진행 · 골드 입자 = 호버한 글의 지식 흐름 */
+const CATS={series:['연재','#A7C8EB'],analysis:['분석','#7FC4D8'],op:['기고','#F4C9D3'],tool:['도구','#C9C2EE']};
+/* 노드 모양 = 매체 유형: ● 연재(CLIF) ■ 기고(임팩트온·IMO) ◆ 분석·리포트(PLANiT) ▲ 도구 */
+const MILES=[[2024,''],[2030,''],[2040,''],[2050,'']];
+
+(function(){
+  const wrap=document.getElementById('imapwrap'), fl=document.getElementById('imapfloat');
+  const cv=document.getElementById('imapcv');
+  if(!cv||!wrap) return;
+  const ctx=cv.getContext('2d');
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const STAGES=['규제','전환','확산','거버넌스','해양과 생태'];
+  const NOW_YR=2026.55;                    /* HERE 고정 마커 (현재 시점) */
+
+  /* ── 크기 ── */
+  let W=900,H=560,DPR=1,sized=false;
+  function size(){
+    /* 모바일에서는 캔버스가 CSS min-width로 넓어지므로, 래퍼가 아니라 캔버스 자신의 폭을 기준으로 */
+    const cw=Math.max(cv.clientWidth||0, wrap.clientWidth||0);
+    if(!cw||cw<80){ if(!sized){W=900;H=560;cv.width=W;cv.height=H;} return false; }
+    DPR=Math.min(devicePixelRatio||1,2);
+    W=(cv.clientWidth? cv.clientWidth : cw-20); H=Math.max(460,Math.min(620,Math.round(W*0.6)));
+    cv.width=Math.max(1,Math.round(W*DPR)); cv.height=Math.max(1,Math.round(H*DPR));
+    cv.style.height=H+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    sized=true; return true;
+  }
+  size();
+
+  const pL=86,pR=70;
+  const xOf=yr=>{const a=0.58;const f=yr<=2030?a*(yr-2024)/6:a+(1-a)*(yr-2030)/20;return pL+(W-pL-pR)*f};
+  const yOf=st=>H-72-((st||3)-0.5)*(H-160)/5;   /* 고정 레인: 1(하단 규칙)→5(상단 생명) */
+
+  /* ── 노드·링크 ── */
+  const nodes=POSTS.filter(p=>p.stage).map(p=>({
+    p, x:0,y:0, ph:Math.random()*6.28,
+    r:p.big?10:7.5, lab:1,
+    color:(CATS[p.cat]||CATS.series)[1],
+  }));
+  /* 종점 둘: 넷제로는 조선·해운 밸류체인의 수렴점(확산 레인),
+     보존은 그 너머의 지평(환경 레인) · 서로 다른 목적함수, 구분된 선(초록) */
+  const term={p:{id:'t2050',b:'TERMINUS',t:'2050 넷제로 · 조선·해운 밸류체인',yr:2050,stage:3,short:'2050 넷제로',links:['ep12','col']},
+    x:0,y:0,ph:0,r:13,lab:1,color:'#FFFFFF',beacon:true};
+  nodes.push(term);
+  const tenv={p:{id:'tenv',b:'HORIZON',t:'보존의 지평 · 바다의 생명',yr:2050,stage:5,short:'보존의 지평',links:['cob']},
+    x:0,y:0,ph:1.7,r:10,lab:1,color:'#8FD694',beacon:true,envEnd:true};
+  nodes.push(tenv);
+  const byId={}; nodes.forEach(n=>byId[n.p.id]=n);
+  const links=[];
+  nodes.forEach(n=>(n.p.links||[]).forEach(l=>{if(byId[l])links.push({a:byId[l],b:n,yr:Math.max(byId[l].p.yr,n.p.yr),parts:[Math.random(),(Math.random()+.5)%1]})}));
+
+  function layout(){
+    nodes.forEach(n=>{n.x=xOf(n.p.yr);n.y=yOf(n.p.stage)});
+    /* 같은 레인의 라벨 위/아래 교차 배치 (겹침 완화) */
+    for(let st=1;st<=5;st++){
+      nodes.filter(n=>n.p.stage===st).sort((a,b)=>a.x-b.x).forEach((n,i)=>n.lab=i%2?-1:1);
+    }
+  }
+  layout();
+
+  const stars=Array.from({length:90},()=>({x:Math.random(),y:Math.random()*.9,r:Math.random()*1.3+.3,ph:Math.random()*6.28,sp:.5+Math.random()}));
+
+  /* ── 시간 재생 상태: 움직임 = 서사의 진행 ── */
+  let yearNow=2050, playing=false, playT0=0;
+  const PLAY_MS=7000;
+  const scrub=document.getElementById('mscrub'), yEl=document.getElementById('myear'), pBtn=document.getElementById('mplay');
+  function setYear(y,fromScrub){
+    yearNow=Math.max(2024,Math.min(2050,y));
+    if(yEl)yEl.textContent=yearNow>=2050?'2050':(Math.floor(yearNow));
+    if(scrub&&!fromScrub)scrub.value=yearNow;
+  }
+  function play(){ playing=true; playT0=performance.now(); if(pBtn)pBtn.textContent='∥ 항해 중…'; }
+  function ease(p){return 1-Math.pow(1-p,2)}
+  if(pBtn)pBtn.addEventListener('click',()=>{ if(reduced){setYear(2050);return} play(); });
+  if(scrub)scrub.addEventListener('input',()=>{playing=false;if(pBtn)pBtn.textContent='▶ 서사 재생 2024 → 2050';setYear(parseFloat(scrub.value),true)});
+
+  const lit=n=>n.p.yr<=yearNow+0.001;
+  const linkVis=L=>Math.max(0,Math.min(1,(yearNow-(L.yr-1.4))/1.4));
+
+  let focusSet=null, hoverN=null, t=0;
+  /* 선택한 글의 계보만: 조상(이 글이 딛고 선 글, 위로 끝까지) + 후손(이 글을 딛은 글, 아래로 끝까지).
+     사촌 가지(후손의 다른 부모, 조상의 다른 자식)는 포함하지 않는다. */
+  function thread(id){
+    const anc=new Set();
+    (function up(i){
+      (byId[i]?byId[i].p.links||[]:[]).forEach(l=>{
+        if(byId[l]&&!anc.has(l)){anc.add(l);up(l)}
+      });
+    })(id);
+    const desc=new Set(); let grew=true;
+    while(grew){grew=false;
+      nodes.forEach(n=>{
+        if(n.p.id===id||desc.has(n.p.id))return;
+        if((n.p.links||[]).some(l=>l===id||desc.has(l))){desc.add(n.p.id);grew=true}
+      });
+    }
+    return new Set([id,...anc,...desc]);
+  }
+  window._thread=thread;  /* 디버그·테스트용 */
+  function qp(ax,ay,bx,by,tt){
+    const mx=(ax+bx)/2,my=(ay+by)/2+18,u=1-tt;
+    return [u*u*ax+2*u*tt*mx+tt*tt*bx, u*u*ay+2*u*tt*my+tt*tt*by];
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const g=ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#081D3B'); g.addColorStop(.75,'#0B3D66'); g.addColorStop(1,'#083459');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    for(const s of stars){
+      ctx.globalAlpha=reduced?.5:.25+.45*Math.abs(Math.sin(t*.02*s.sp+s.ph));
+      ctx.fillStyle='#CFE3F5';
+      ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,6.28);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+    /* 다섯 단계 레인 */
+    ctx.textAlign='left';
+    for(let st=1;st<=5;st++){
+      const y=yOf(st);
+      ctx.globalAlpha=.14;ctx.strokeStyle='#9FB8D4';ctx.lineWidth=1;ctx.setLineDash([2,7]);
+      ctx.beginPath();ctx.moveTo(pL-20,y);ctx.lineTo(W-30,y);ctx.stroke();ctx.setLineDash([]);
+      ctx.globalAlpha=.7;ctx.fillStyle='#9FB8D4';ctx.font='700 11px "Pretendard Variable", sans-serif';
+      ctx.fillText(STAGES[st-1],14,y+4);
+      ctx.globalAlpha=1;
+    }
+    ctx.textAlign='center';
+
+    /* 연도 눈금 + HERE 고정 마커 */
+    ctx.fillStyle='rgba(207,227,245,.55)';ctx.font='10px "Pretendard Variable", monospace';
+    [2024,2030,2040,2050].forEach(yr=>ctx.fillText(yr,xOf(yr),H-10));
+    const hx=xOf(NOW_YR);
+    ctx.strokeStyle='rgba(244,201,211,.6)';ctx.lineWidth=1;ctx.setLineDash([3,5]);
+    ctx.beginPath();ctx.moveTo(hx,44);ctx.lineTo(hx,H-30);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#F4C9D3';ctx.font='700 9.5px "Pretendard Variable", monospace';
+    ctx.fillText('NOW · 2026',hx,36);
+
+    /* 현재 연도(재생) 항해선 */
+    if(yearNow<2049.9){
+      const nx=xOf(yearNow);
+      ctx.strokeStyle='rgba(167,200,235,.9)';ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.moveTo(nx,50);ctx.lineTo(nx,H-30);ctx.stroke();
+      ctx.fillStyle='#A7C8EB';ctx.font='700 11px "Pretendard Variable", monospace';
+      ctx.fillText(String(Math.floor(yearNow)),nx,H-36<64?64:26+36);
+      /* 작은 배 */
+      ctx.save();ctx.translate(nx,52);ctx.fillStyle='#A7C8EB';
+      ctx.beginPath();ctx.moveTo(-8,0);ctx.lineTo(8,0);ctx.lineTo(4,6);ctx.lineTo(-4,6);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(0,-1);ctx.lineTo(0,-9);ctx.lineTo(6,-3);ctx.closePath();ctx.fill();
+      ctx.restore();
+    }
+
+    /* 링크: 시간이 지나야 그려지고, 호버 계보에서만 빛이 흐른다 */
+    for(const L of links){
+      const vis=linkVis(L); if(vis<=0)continue;
+      const kf=window.KIND_FILTER||'all';
+      const kOn=kf==='all'||((L.a.p.cat===kf||L.a.beacon)&&(L.b.p.cat===kf||L.b.beacon));
+      const on=(!focusSet||(focusSet.has(L.a.p.id)&&focusSet.has(L.b.p.id)))&&kOn;
+      const envEdge=(L.b.p.stage===5)||L.b.envEnd;   /* 보존 계열: 환경 레인으로 들어가는 선 */
+      ctx.strokeStyle=(on&&focusSet)?'#FFFFFF':(envEdge?'rgba(143,214,148,.9)':'rgba(159,212,255,.85)');
+      ctx.globalAlpha=focusSet?(on?.85:.05):.22;
+      ctx.lineWidth=(on&&focusSet)?2:1.2;
+      ctx.beginPath();
+      const SEG=22, lim=Math.round(SEG*vis);
+      for(let i=0;i<=lim;i++){const [px,py]=qp(L.a.x,L.a.y,L.b.x,L.b.y,i/SEG); i?ctx.lineTo(px,py):ctx.moveTo(px,py)}
+      ctx.stroke();ctx.globalAlpha=1;
+      /* 계보의 빛: 과거(a) → 미래(b) */
+      if(!reduced&&focusSet&&on&&vis>=1){
+        for(let i=0;i<L.parts.length;i++){
+          L.parts[i]=(L.parts[i]+0.012)%1;
+          const [px,py]=qp(L.a.x,L.a.y,L.b.x,L.b.y,L.parts[i]);
+          ctx.save();ctx.globalAlpha=.95;
+          ctx.shadowColor='#FFFFFF';ctx.shadowBlur=8;
+          ctx.fillStyle='#DCEAF7';ctx.beginPath();ctx.arc(px,py,2.6,0,6.28);ctx.fill();ctx.restore();
+        }
+      }
+    }
+
+    /* 노드 */
+    for(const n of nodes){
+      const isLit=lit(n);
+      const kf=window.KIND_FILTER||'all';
+      const kOn=kf==='all'||n.beacon||n.p.cat===kf;
+      const on=(!focusSet||focusSet.has(n.p.id)||n.beacon)&&isLit&&kOn;
+      const hv=n===hoverN;
+      const fy=n.y+(reduced?0:Math.sin(t*.03+n.ph)*2);   /* 미세한 떠 있음 */
+      ctx.save();
+      ctx.globalAlpha=isLit?(on?1:.14):.16;
+      if(n.beacon&&isLit){
+        const pr=(n.envEnd?10:13)+(reduced?0:6*Math.abs(Math.sin(t*.05+n.ph)));
+        ctx.strokeStyle=n.envEnd?'rgba(143,214,148,.55)':'rgba(167,200,235,.5)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(n.x,fy,pr+8,0,6.28);ctx.stroke();
+      }
+      ctx.shadowColor=n.color; ctx.shadowBlur=isLit?(hv?26:(n.beacon?20:12)):0;
+      ctx.fillStyle=(n.p.soon||!isLit)?'rgba(8,29,59,.92)':n.color;
+      const rr=hv?n.r+3:n.r;
+      ctx.beginPath();
+      if(n.beacon||n.p.cat==='series'||!n.p.cat){ctx.arc(n.x,fy,rr,0,6.28)}
+      else if(n.p.cat==='op'){ctx.rect(n.x-rr*.9,fy-rr*.9,rr*1.8,rr*1.8)}
+      else if(n.p.cat==='analysis'){ctx.moveTo(n.x,fy-rr*1.15);ctx.lineTo(n.x+rr*1.15,fy);ctx.lineTo(n.x,fy+rr*1.15);ctx.lineTo(n.x-rr*1.15,fy);ctx.closePath()}
+      else {ctx.moveTo(n.x,fy-rr*1.2);ctx.lineTo(n.x+rr*1.1,fy+rr*.85);ctx.lineTo(n.x-rr*1.1,fy+rr*.85);ctx.closePath()}
+      ctx.fill();
+      if(n.p.soon||!isLit){ctx.setLineDash([4,3]);ctx.strokeStyle=n.color;ctx.lineWidth=isLit?2:1.2;ctx.stroke();ctx.setLineDash([])}
+      ctx.shadowBlur=0;
+      const ly=n.lab>0?fy+n.r+16:fy-n.r-12;
+      ctx.font=(hv?'700 12.5px':'600 11px')+' "Pretendard Variable", sans-serif';
+      ctx.fillStyle=on?('rgba(235,245,251,'+(hv?1:.92)+')'):'rgba(235,245,251,.22)';
+      ctx.fillText(n.p.short||n.p.t, n.x, ly);
+      ctx.font='9px "Pretendard Variable", monospace';
+      ctx.fillStyle=on?'rgba(159,212,255,.7)':'rgba(159,212,255,.18)';
+      ctx.fillText(n.p.b||'', n.x, n.lab>0?fy-n.r-9:fy+n.r+18);
+      ctx.restore();
+    }
+  }
+
+  function visible(){return wrap.offsetParent!==null}
+  function loop(now){
+    if(visible()){
+      if(!sized||Math.abs((cv.clientWidth||wrap.clientWidth-20)-W)>24){ if(size())layout(); }
+      if(playing){
+        const p=Math.min((now-playT0)/PLAY_MS,1);
+        setYear(2024+26*ease(p));
+        if(p>=1){playing=false;if(pBtn)pBtn.textContent='▶ 서사 재생 2024 → 2050'}
+      }
+      t++; draw();
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  addEventListener('resize',()=>{if(visible()&&size())layout()});
+
+  function pick(e){
+    const r=cv.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*(W/r.width), my=(e.clientY-r.top)*(H/r.height);
+    let best=null,bd=400;
+    for(const n of nodes){const d=(n.x-mx)**2+(n.y-my)**2;if(d<bd){bd=d;best=n}}
+    return {n:best,mx,my};
+  }
+  cv.addEventListener('pointermove',e=>{
+    const {n}=pick(e);
+    hoverN=n; cv.style.cursor=(n&&n.p.u)?'pointer':'default';
+    if(n){
+      focusSet=n.beacon?null:thread(n.p.id);
+      const r=cv.getBoundingClientRect(), box=wrap.getBoundingClientRect();
+      fl.style.left=(r.left-box.left+n.x*(r.width/W))+'px';
+      fl.style.top =(r.top-box.top +(n.y-n.r-14)*(r.height/H))+'px';
+      fl.innerHTML=`<div class="fb">${n.p.b||''} · YEAR ${n.p.yr}${n.p.stage?' · '+STAGES[n.p.stage-1]+' 노선':''}</div>
+        <div class="ft">${n.p.t}</div>
+        ${n.p.q?`<div class="fs" style="color:#F4C9D3">이어받은 질문 · ${n.p.q}</div>`:''}
+        <div class="fs">${n.p.soon?'UPCOMING · 예정':(n.p.u?'클릭하면 글이 열립니다 →':'빛의 방향 = 지식이 흐른 길')}</div>`;
+      fl.classList.add('on');
+    } else {focusSet=null;fl.classList.remove('on')}
+  });
+  cv.addEventListener('pointerleave',()=>{hoverN=null;focusSet=null;fl.classList.remove('on')});
+  cv.addEventListener('pointerup',e=>{const {n}=pick(e);if(n&&n.p.u)location.href=n.p.u});
+
+  window._playInsightMap=()=>{if(size())layout();if(reduced){setYear(2050)}else{setYear(2024);play()}};
+})();
+
+</script>
+<script>
+document.querySelectorAll('.outlet').forEach(function(o){var r=o.querySelector('.rail');
+  function step(d){var li=r.querySelector('li');r.scrollBy({left:d*(li.offsetWidth+14)*3,behavior:'smooth'})}
+  o.querySelector('.rail-prev').addEventListener('click',function(){step(-1)});o.querySelector('.rail-next').addEventListener('click',function(){step(1)});});
+</script>
+<script>
+document.querySelectorAll('.repo .gh').forEach(function(a){var h=a.getAttribute('href');if(h&&h!=='#'){a.removeAttribute('aria-disabled');a.textContent='GitHub 저장소';a.target='_blank';a.rel='noopener'}});
+</script>
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

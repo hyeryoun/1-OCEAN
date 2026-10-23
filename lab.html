@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · Interaction Lab</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="description" content="이 사이트에서 쓰인 인터랙션 패턴 모음. 블록을 복사해 다른 내용으로 재활용하세요.">
+
+<!-- ═══════════════════════════════════════════════
+  ✏️ 사용법 (lab.html)
+  각 데모는 <section class="demo" id="..."> 하나에 HTML+JS가
+  자급자족하도록 들어 있습니다. 그 블록을 통째로 복사해
+  다른 페이지에 붙이고 내용만 바꾸면 그대로 작동합니다.
+  (공통 CSS는 style.css, 데모 전용 CSS는 각 블록 안 <style>)
+═══════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+.demo{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:30px;margin-bottom:30px}
+.demo h3{font-family:var(--serif);font-size:19px;color:var(--navy);margin-bottom:4px;word-break:keep-all}
+.demo .use{font-size:13px;color:var(--muted);margin-bottom:18px;word-break:keep-all}
+.demo .use b{color:var(--teal)}
+.demo .box{background:var(--chart-bg);border:1px dashed var(--line);border-radius:10px;padding:24px;position:relative}
+.demo .src{font-family:var(--mono);font-size:10.5px;color:#9FB4C4;margin-top:12px;letter-spacing:.04em}
+.demo .btn{padding:8px 16px;font-size:12.5px}
+.toc{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 22px;font-size:14px;margin-top:20px}
+.toc a{color:var(--ink);padding:4px 0;border-bottom:1px solid var(--line)}
+.toc a:hover{color:var(--teal)}
+.toc .no{font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:8px}
+@media(max-width:640px){.toc{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="index.html">Home</a>
+      <a href="story.html">Story</a>
+      <a href="policy.html">Policy</a>
+      <a href="insight.html">Insight</a>
+      <a href="project.html">Project</a>
+      <a class="active" aria-current="page" href="tool.html">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow" data-i="lb-eye">Lab · Interaction Patterns</p>
+    <h1 data-i="lb-h1">재활용을 위한 <em>부품 창고</em>.</h1>
+    <p class="lede">이 사이트에서 쓰인 인터랙션을 한 장씩 분해해 두었습니다. 각 블록은 자급자족하므로, 통째로 복사해 내용만 바꾸면 다른 연구 페이지에서 그대로 작동합니다.</p>
+    <div class="toc">
+      <a href="#p01"><span class="no">01</span>스크롤 리빌</a>
+      <a href="#p02"><span class="no">02</span>숫자 카운트업</a>
+      <a href="#p03"><span class="no">03</span>진행 바 + 슬라이더 연동</a>
+      <a href="#p04"><span class="no">04</span>경로선 드로잉 (SVG)</a>
+      <a href="#p05"><span class="no">05</span>동심원 확장 (단계 시각화)</a>
+      <a href="#p06"><span class="no">06</span>호버 툴팁 이정표</a>
+      <a href="#p07"><span class="no">07</span>탭 필터 + 데이터 배열</a>
+      <a href="#p08"><span class="no">08</span>정렬 가능한 데이터 표</a>
+      <a href="#p09"><span class="no">09</span>파라미터 연동 차트</a>
+      <a href="#p10"><span class="no">10</span>클립보드 내보내기</a>
+      <a href="#p11"><span class="no">11</span>라인 드로잉 + 영역 채움</a>
+      <a href="#p12"><span class="no">12</span>바 차트 레이스</a>
+      <a href="#p13"><span class="no">13</span>범프 차트 (순위 흐름)</a>
+      <a href="#p14"><span class="no">14</span>히트맵 매트릭스</a>
+      <a href="#p15"><span class="no">15</span>Gap &amp; Trap 사분면</a>
+      <a href="#p16"><span class="no">16</span>링 게이지</a>
+      <a href="#p17"><span class="no">17</span>캔버스 파도 (화려)</a>
+      <a href="#p18"><span class="no">18</span>시나리오 모핑 바</a>
+    </div>
+  </div>
+</div>
+
+<section style="padding-top:48px">
+  <div class="wrap">
+
+    <!-- ═══ 01 스크롤 리빌 ═══ -->
+    <section class="demo" id="p01">
+      <h3>01 · 스크롤 리빌</h3>
+      <p class="use"><b>용도:</b> 긴 리포트 페이지에서 섹션이 시야에 들어올 때 서서히 등장. 사이트 전역에서 사용 중.</p>
+      <div class="box" style="text-align:center">
+        <div id="d1-target" style="opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s;font-family:var(--serif);font-size:20px;color:var(--navy)">이 문장이 떠오릅니다</div>
+        <button class="btn btn-ghost" style="margin-top:16px" onclick="const t=document.getElementById('d1-target');t.style.transition='none';t.style.opacity=0;t.style.transform='translateY(24px)';requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='opacity .7s,transform .7s';t.style.opacity=1;t.style.transform='none'}))">다시 재생</button>
+      </div>
+      <p class="src">핵심: IntersectionObserver + .reveal → .in 클래스 전환 (site.js 참고). 임계값 threshold:.12</p>
+    </section>
+
+    <!-- ═══ 02 카운트업 ═══ -->
+    <section class="demo" id="p02">
+      <h3>02 · 숫자 카운트업</h3>
+      <p class="use"><b>용도:</b> 핵심 수치(분석 선박 수, 리포트 쪽수)를 강조. 이징(ease-out cubic)으로 끝에서 감속.</p>
+      <div class="box" style="display:flex;gap:40px;align-items:baseline;flex-wrap:wrap">
+        <div><span id="d2-n" style="font-family:var(--serif);font-size:42px;font-weight:700;color:var(--navy)">0</span><span style="font-family:var(--mono);color:var(--gold)"> 척</span></div>
+        <button class="btn btn-ghost" onclick="(function(){const el=document.getElementById('d2-n'),T=466,d=1400,t0=performance.now();(function tick(t){const p=Math.min((t-t0)/d,1);el.textContent=Math.round(T*(1-Math.pow(1-p,3))).toLocaleString();if(p<1)requestAnimationFrame(tick)})(t0)})()">재생</button>
+      </div>
+      <p class="src">핵심: requestAnimationFrame 루프, ease = 1−(1−p)³. data-target 속성으로 값만 바꿔 재사용 (site.js .count)</p>
+    </section>
+
+    <!-- ═══ 03 진행 바 + 슬라이더 ═══ -->
+    <section class="demo" id="p03">
+      <h3>03 · 진행 바 + 슬라이더 연동</h3>
+      <p class="use"><b>용도:</b> 연재 진행률, 프로젝트 진척도. 슬라이더는 <b>가정값을 실시간으로 바꾸는 연구용 입력</b>으로도 그대로 씁니다.</p>
+      <div class="box">
+        <input id="d3-r" type="range" min="0" max="100" value="69" style="width:100%;accent-color:var(--navy)" oninput="document.getElementById('d3-f').style.width=this.value+'%';document.getElementById('d3-v').textContent=this.value+'%'">
+        <div class="pbar" style="margin-top:14px"><div id="d3-f" class="fill" style="width:69%;transition:width .2s"></div></div>
+        <p class="pnum"><span>VOYAGE LOG</span><span id="d3-v">69%</span></p>
+      </div>
+      <p class="src">핵심: input[type=range]의 oninput → width %. 그라데이션 채움은 style.css .pbar .fill</p>
+    </section>
+
+    <!-- ═══ 04 경로선 드로잉 ═══ -->
+    <section class="demo" id="p04">
+      <h3>04 · 경로선 드로잉 (SVG)</h3>
+      <p class="use"><b>용도:</b> 항로·타임라인·플로우가 "그려지는" 오프닝. pathLength=100으로 두면 길이 계산 없이 %로 제어됩니다.</p>
+      <div class="box">
+        <svg viewBox="0 0 600 120" style="width:100%">
+          <path id="d4-p" d="M 20 100 C 150 90, 200 60, 300 55 S 480 30, 580 15"
+            fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"
+            pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+        </svg>
+        <button class="btn btn-ghost" onclick="const p=document.getElementById('d4-p');p.style.transition='none';p.style.strokeDashoffset=100;requestAnimationFrame(()=>requestAnimationFrame(()=>{p.style.transition='stroke-dashoffset 1.8s ease';p.style.strokeDashoffset=0}))">그리기</button>
+      </div>
+      <p class="src">핵심: stroke-dasharray=100 + stroke-dashoffset 100→0 트랜지션. 절반만 채우려면 dasharray="26 100" (index.html 항로)</p>
+    </section>
+
+    <!-- ═══ 05 동심원 확장 ═══ -->
+    <section class="demo" id="p05">
+      <h3>05 · 동심원 확장 (단계 시각화)</h3>
+      <p class="use"><b>용도:</b> "보호 대상이 넓어진다" 같은 <b>포함 관계·단계 논리</b>를 구조로 보여줄 때. 슬라이더로 단계를 움직여 보세요.</p>
+      <div class="box" style="text-align:center">
+        <svg id="d5-svg" viewBox="0 0 300 170" style="max-width:420px;width:100%"></svg><br>
+        <input id="d5-r" type="range" min="1" max="5" value="2" style="width:220px;accent-color:var(--navy)">
+        <p class="pnum" style="justify-content:center;gap:10px"><span>STAGE</span><span id="d5-v">2</span></p>
+      </div>
+      <p class="src">핵심: 반지름 배열을 단계 수만큼 on/new 클래스로 토글. 라벨 배열만 바꾸면 어떤 위계든 재사용</p>
+      <script>
+      (function(){
+        const L=['기후','자산·사람들','시스템','공유지','생명'], R=[26,50,74,98,122];
+        const svg=document.getElementById('d5-svg'), rng=document.getElementById('d5-r');
+        function draw(n){
+          document.getElementById('d5-v').textContent=n;
+          svg.innerHTML='<circle cx="150" cy="160" r="4" fill="var(--navy)"/>'+R.map((r,i)=>{
+            const on=i<n, isNew=i===n-1;
+            return `<path d="M ${150-r} 160 A ${r} ${r} 0 0 1 ${150+r} 160" fill="none"
+              stroke="${isNew?'var(--gold)':on?'var(--teal)':'var(--line)'}"
+              stroke-width="${isNew?2.5:1.5}" opacity="${on?1:.7}"/>
+              <text x="150" y="${160-r-5}" text-anchor="middle" font-family="var(--mono)" font-size="9.5"
+                fill="${isNew?'var(--navy)':'var(--muted)'}" font-weight="${isNew?700:400}">${L[i]}</text>`;
+          }).join('');
+        }
+        rng.addEventListener('input',()=>draw(+rng.value)); draw(2);
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 06 호버 툴팁 이정표 ═══ -->
+    <section class="demo" id="p06">
+      <h3>06 · 호버 툴팁 이정표</h3>
+      <p class="use"><b>용도:</b> 차트·지도 위 특정 지점에 규제 마일스톤이나 데이터 출처를 붙일 때. CSS만으로 동작(JS 불필요).</p>
+      <div class="box" style="height:120px;position:relative">
+        <button class="wp" style="left:30%;top:55%"><span class="tip"><span class="yr">2028</span><b>IMO 중기조치 (초안, 미채택)</b><span class="nt">RU/SU 준수비용 가정</span></span></button>
+        <button class="wp milestone" style="left:65%;top:40%"><span class="tip"><span class="yr">2030</span><b>FuelEU −6% 구간</b><span class="nt">목표 집약도 85.69 g/MJ</span></span></button>
+        <span style="position:absolute;bottom:10px;left:24px;font-family:var(--mono);font-size:10.5px;color:#9FB4C4">점 위에 마우스를 올려 보세요</span>
+      </div>
+      <p class="src">핵심: .wp:hover .tip{opacity:1} + %좌표 배치. style.css의 .wp/.tip 그대로 사용 (planit-shipping.html v1 참고)</p>
+    </section>
+
+    <!-- ═══ 07 탭 필터 ═══ -->
+    <section class="demo" id="p07">
+      <h3>07 · 탭 필터 + 데이터 배열 렌더</h3>
+      <p class="use"><b>용도:</b> 글 목록·프로젝트를 분류별로. <b>내용은 배열 한 곳에서만 관리</b>하므로 유지보수가 가장 쉬운 패턴.</p>
+      <div class="box">
+        <div class="tabs" id="d7-tabs" style="margin-bottom:16px">
+          <button class="tab on" data-f="all">ALL</button>
+          <button class="tab" data-f="reg">규제</button>
+          <button class="tab" data-f="fuel">연료</button>
+        </div>
+        <ul id="d7-list" style="list-style:none;font-size:14px"></ul>
+      </div>
+      <p class="src">핵심: DATA.filter(cat) → innerHTML. insight.html의 POSTS, project.html의 PROJECTS와 동일 구조</p>
+      <script>
+      (function(){
+        const DATA=[{c:'reg',t:'NZF 감축률 표'},{c:'fuel',t:'그린 메탄올 프리미엄'},{c:'reg',t:'FuelEU 벌금 공식'},{c:'fuel',t:'바이오 혼소 경로의존'}];
+        const list=document.getElementById('d7-list');
+        const render=f=>list.innerHTML=DATA.filter(d=>f==='all'||d.c===f).map(d=>`<li style="padding:8px 4px;border-bottom:1px solid var(--line)">· ${d.t}</li>`).join('');
+        document.getElementById('d7-tabs').addEventListener('click',e=>{
+          const b=e.target.closest('.tab');if(!b)return;
+          document.querySelectorAll('#d7-tabs .tab').forEach(x=>x.classList.toggle('on',x===b));
+          render(b.dataset.f);
+        });
+        render('all');
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 08 정렬 표 ═══ -->
+    <section class="demo" id="p08">
+      <h3>08 · 정렬 가능한 데이터 표</h3>
+      <p class="use"><b>용도:</b> 선사·조선소·시나리오 비교표. <b>헤더를 클릭</b>하면 그 열 기준으로 정렬됩니다(다시 클릭 = 역순).</p>
+      <div class="box">
+        <table class="rt" id="d8-t"></table>
+      </div>
+      <p class="src">핵심: 배열 sort → 재렌더. th에 data-k, 클릭 시 방향 토글. 숫자·문자 모두 처리</p>
+      <script>
+      (function(){
+        const ROWS=[{n:'Evergreen',f:220,c:41.2},{n:'Yang Ming',f:94,c:36.8},{n:'Wan Hai',f:152,c:44.5}];
+        const t=document.getElementById('d8-t'); let key='f',asc=false;
+        function render(){
+          ROWS.sort((a,b)=>(a[key]>b[key]?1:-1)*(asc?1:-1));
+          t.innerHTML=`<tr><th data-k="n" style="cursor:pointer">선사 ⇅</th><th data-k="f" style="cursor:pointer">선대(척) ⇅</th><th data-k="c" style="cursor:pointer">'35 혼합비용($/GJ) ⇅</th></tr>`+
+            ROWS.map(r=>`<tr><td>${r.n}</td><td>${r.f}</td><td>${r.c.toFixed(1)}</td></tr>`).join('');
+        }
+        t.addEventListener('click',e=>{const th=e.target.closest('th');if(!th)return;
+          asc = th.dataset.k===key ? !asc : true; key=th.dataset.k; render();});
+        render();
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 09 파라미터 연동 차트 ═══ -->
+    <section class="demo" id="p09">
+      <h3>09 · 파라미터 연동 차트</h3>
+      <p class="use"><b>용도:</b> 연구 발표의 백미. <b>가정(EUA 가격)을 슬라이더로 움직이면 차트가 즉시 반응</b>합니다. "가정이 결론을 얼마나 흔드는가"를 보여줄 때.</p>
+      <div class="box">
+        <label style="font-family:var(--mono);font-size:11px;color:var(--muted)">EUA 가격: €<span id="d9-v">75</span>/tCO₂</label><br>
+        <input id="d9-r" type="range" min="40" max="160" value="75" style="width:100%;accent-color:var(--navy)">
+        <svg id="d9-svg" viewBox="0 0 600 170" style="width:100%;margin-top:12px"></svg>
+      </div>
+      <p class="src">핵심: oninput → 계산 → SVG rect 재렌더. tool.html drawChart와 같은 함수 재사용 가능</p>
+      <script>
+      (function(){
+        const svg=document.getElementById('d9-svg'), rng=document.getElementById('d9-r');
+        const CO2=[42,46,50,53,57]; /* 연도별 배출 kt (예시) */
+        function draw(){
+          const eua=+rng.value; document.getElementById('d9-v').textContent=eua;
+          const vals=CO2.map(c=>c*1000*.5*eua), max=CO2[4]*1000*.5*160;
+          svg.innerHTML=vals.map((v,i)=>{
+            const h=130*v/max, x=60+i*105;
+            return `<rect x="${x}" y="${145-h}" width="52" height="${h}" rx="3" fill="var(--navy)"/>
+              <text x="${x+26}" y="${140-h}" text-anchor="middle" font-family="var(--mono)" font-size="9.5" fill="var(--muted)">€${(v/1e6).toFixed(1)}M</text>
+              <text x="${x+26}" y="162" text-anchor="middle" font-family="var(--mono)" font-size="9.5" fill="var(--muted)">${2026+i}</text>`;
+          }).join('');
+        }
+        rng.addEventListener('input',draw); draw();
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 10 클립보드 ═══ -->
+    <section class="demo" id="p10">
+      <h3>10 · 클립보드 내보내기</h3>
+      <p class="use"><b>용도:</b> 계산 결과를 이메일·보고서에 붙여넣을 요약 텍스트로. Decarbonizer의 "결과 요약 복사"와 동일.</p>
+      <div class="box">
+        <button class="btn btn-primary" id="d10-b">요약 복사</button>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:12px">→ 아무 곳에나 붙여넣어 확인</span>
+      </div>
+      <p class="src">핵심: navigator.clipboard.writeText(). https 또는 로컬 파일에서 동작, 실패 시 폴백 문구</p>
+      <script>
+      document.getElementById('d10-b').addEventListener('click',async function(){
+        try{await navigator.clipboard.writeText('[PLANiT 요약] 466척 · 2035 혼합비용 격차의 원인: 바이오연료선 7척');this.textContent='복사됨 ✓'}
+        catch(e){this.textContent='복사 실패'}
+        setTimeout(()=>this.textContent='요약 복사',1800);
+      });
+      </script>
+    </section>
+
+    <!-- ═══ 11 라인 드로잉 + 영역 채움 ═══ -->
+    <section class="demo" id="p11">
+      <h3>11 · 라인 드로잉 + 영역 채움</h3>
+      <p class="use"><b>용도:</b> 시계열의 서사적 공개. 선이 그려진 뒤 아래 영역이 차오르며 "추세의 무게"를 시각적으로 강조합니다.</p>
+      <div class="box">
+        <svg id="d11" viewBox="0 0 600 180" style="width:100%">
+          <defs><linearGradient id="g11" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--teal)" stop-opacity=".45"/><stop offset="100%" stop-color="var(--teal)" stop-opacity="0"/>
+          </linearGradient></defs>
+          <path id="d11a" fill="url(#g11)" opacity="0"/>
+          <path id="d11l" fill="none" stroke="var(--navy)" stroke-width="2.5" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>
+        </svg>
+        <button class="btn btn-ghost" id="d11b">재생</button>
+      </div>
+      <p class="src">핵심: 선은 dashoffset 드로잉, 영역은 그 뒤 opacity 트랜지션. 그라데이션 defs 재사용</p>
+      <script>
+      (function(){
+        const D=[8,12,11,18,24,22,31,38,36,47];
+        const x=i=>30+i*60, y=v=>160-v*2.8;
+        const line=D.map((v,i)=>(i?'L':'M')+x(i)+' '+y(v)).join(' ');
+        document.getElementById('d11l').setAttribute('d',line);
+        document.getElementById('d11a').setAttribute('d',line+' L '+x(9)+' 160 L 30 160 Z');
+        document.getElementById('d11b').addEventListener('click',()=>{
+          const l=document.getElementById('d11l'),a=document.getElementById('d11a');
+          l.style.transition='none';l.style.strokeDashoffset=100;a.style.transition='none';a.style.opacity=0;
+          requestAnimationFrame(()=>requestAnimationFrame(()=>{
+            l.style.transition='stroke-dashoffset 1.6s ease';l.style.strokeDashoffset=0;
+            a.style.transition='opacity .8s ease 1.4s';a.style.opacity=1;
+          }));
+        });
+        document.getElementById('d11b').click();
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 12 바 차트 레이스 ═══ -->
+    <section class="demo" id="p12">
+      <h3>12 · 바 차트 레이스</h3>
+      <p class="use"><b>용도:</b> "누가 앞서가는가"를 시간 흐름으로. 발주 잔고·선대 규모 경쟁을 보여줄 때 발표 임팩트가 가장 큽니다.</p>
+      <div class="box">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:12px;color:var(--muted)">발주 잔고 (만 TEU, 예시)</span>
+          <span id="d12y" style="font-family:var(--serif);font-size:26px;font-weight:700;color:var(--navy)">2020</span>
+        </div>
+        <div id="d12"></div>
+        <button class="btn btn-primary" id="d12b" style="margin-top:12px">▶ 재생</button>
+      </div>
+      <p class="src">핵심: 연도별 데이터 → 정렬 → top/width 트랜지션(FLIP 없이 absolute+transition). setInterval로 진행</p>
+      <script>
+      (function(){
+        const NAMES=['MSC','Maersk','CMA CGM','COSCO','HMM'];
+        const COLORS=['var(--navy)','var(--teal)','var(--gold)','#8FA6BC','#0B3D66'];
+        const DATA={2020:[60,55,40,45,8],2021:[95,60,55,58,12],2022:[150,70,90,75,16],2023:[190,85,110,88,18],2024:[218,95,125,92,18]};
+        const box=document.getElementById('d12');
+        box.style.cssText='position:relative;height:'+(5*34)+'px';
+        const rows=NAMES.map((n,i)=>{
+          const r=document.createElement('div');
+          r.style.cssText='position:absolute;left:0;right:0;height:26px;transition:top .7s ease';
+          r.innerHTML='<div style="display:flex;align-items:center;gap:8px;height:26px">'+
+            '<span style="width:76px;font-size:12px;font-weight:700;color:var(--navy);text-align:right">'+n+'</span>'+
+            '<div style="flex:1;height:18px;background:var(--card);border-radius:99px;overflow:hidden">'+
+            '<div class="bar" style="height:100%;width:0;border-radius:99px;background:'+COLORS[i]+';transition:width .7s ease"></div></div>'+
+            '<span class="val" style="width:44px;font-family:var(--mono);font-size:11px;color:var(--muted)">0</span></div>';
+          box.appendChild(r);return r;
+        });
+        function show(y){
+          document.getElementById('d12y').textContent=y;
+          const v=DATA[y], max=Math.max(...Object.values(DATA).flat());
+          const order=NAMES.map((_,i)=>i).sort((a,b)=>v[b]-v[a]);
+          NAMES.forEach((_,i)=>{
+            rows[i].style.top=order.indexOf(i)*34+'px';
+            rows[i].querySelector('.bar').style.width=(v[i]/max*100)+'%';
+            rows[i].querySelector('.val').textContent=v[i];
+          });
+        }
+        let timer=null;
+        document.getElementById('d12b').addEventListener('click',function(){
+          clearInterval(timer);const ys=Object.keys(DATA);let k=0;show(ys[0]);
+          timer=setInterval(()=>{k++;if(k>=ys.length){clearInterval(timer);return}show(ys[k])},900);
+        });
+        show(2020);
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 13 범프 차트 ═══ -->
+    <section class="demo" id="p13">
+      <h3>13 · 범프 차트 (순위 흐름)</h3>
+      <p class="use"><b>용도:</b> 국가·기업의 <b>순위 역전 스토리</b>. 선 위에 마우스를 올리면 그 주체만 하이라이트되어 "언제 추월당했는가"가 또렷해집니다.</p>
+      <div class="box"><svg id="d13" viewBox="0 0 600 190" style="width:100%"></svg></div>
+      <p class="src">핵심: 순위 = y좌표. hover 시 다른 선 opacity 낮춤. 조선 수주 점유율 역전 서사에 그대로 재사용</p>
+      <script>
+      (function(){
+        const E=[['한국',[1,1,2,2,2],'var(--navy)'],['중국',[2,2,1,1,1],'var(--gold)'],['일본',[3,3,3,3,3],'var(--teal)']];
+        const YRS=[2005,2010,2015,2020,2025];
+        const x=i=>70+i*115, y=r=>30+(r-1)*55;
+        const svg=document.getElementById('d13');
+        svg.innerHTML=YRS.map((yr,i)=>'<text x="'+x(i)+'" y="182" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--muted)">'+yr+'</text>').join('')+
+          E.map(([n,rs,c],ei)=>{
+            const pts=rs.map((r,i)=>x(i)+','+y(r)).join(' ');
+            return '<g class="bump" data-e="'+ei+'" style="transition:opacity .25s">'+
+              '<polyline points="'+pts+'" fill="none" stroke="'+c+'" stroke-width="3" stroke-linejoin="round"/>'+
+              rs.map((r,i)=>'<circle cx="'+x(i)+'" cy="'+y(r)+'" r="5.5" fill="'+c+'" stroke="#fff" stroke-width="2"/>').join('')+
+              '<text x="'+(x(4)+14)+'" y="'+(y(rs[4])+4)+'" font-size="12" font-weight="700" fill="'+c+'">'+n+'</text></g>';
+          }).join('');
+        svg.addEventListener('mouseover',e=>{const g=e.target.closest('.bump');if(!g)return;
+          svg.querySelectorAll('.bump').forEach(x=>x.style.opacity=x===g?1:.18)});
+        svg.addEventListener('mouseleave',()=>svg.querySelectorAll('.bump').forEach(x=>x.style.opacity=1));
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 14 히트맵 매트릭스 ═══ -->
+    <section class="demo" id="p14">
+      <h3>14 · 히트맵 매트릭스</h3>
+      <p class="use"><b>용도:</b> 두 축의 조합에서 뜨거운 곳 찾기. 항로 × 규제 비용, 조선소 × 시나리오 매트릭스에. 칸에 올리면 값이 표시됩니다.</p>
+      <div class="box">
+        <div style="margin-bottom:8px"><span style="display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 8px;border-radius:3px;background:#FBF3E4;color:#8a6d1f;border:1px solid #A7C8EB">예시 · 규제비용 가상값</span></div>
+        <div id="d14" style="display:grid;grid-template-columns:110px repeat(5,1fr);gap:4px;font-size:11px"></div>
+        <p id="d14t" style="font-family:var(--mono);font-size:12px;color:var(--navy);margin-top:12px;min-height:18px"></p>
+      </div>
+      <p class="src">핵심: 값→색 보간(연한 하늘→네이비). CSS grid라 데이터 크기만 바꾸면 자동 확장</p>
+      <script>
+      (function(){
+        const ROWS=['부산–로테르담','부산–LA','부산–싱가포르','인트라아시아'];
+        const COLS=['2026','2028','2030','2032','2035'];
+        const V=[[12,19,27,36,52],[6,9,13,18,26],[4,7,10,14,21],[1,2,4,6,9]];
+        const max=52, box=document.getElementById('d14');
+        const mix=t=>{const a=[235,245,251],b=[12,53,106];return 'rgb('+a.map((av,i)=>Math.round(av+(b[i]-av)*t)).join(',')+')'};
+        box.innerHTML='<span></span>'+COLS.map(c=>'<span style="text-align:center;font-family:var(--mono);color:var(--muted)">'+c+'</span>').join('')+
+          ROWS.map((r,ri)=>'<span style="color:var(--muted)">'+r+'</span>'+V[ri].map((v,ci)=>
+            '<div data-t="'+r+' · '+COLS[ci]+'년: 규제비용 $'+v+'M (예시)" style="height:34px;border-radius:6px;cursor:default;background:'+mix(v/max)+';transition:transform .15s"></div>').join('')).join('');
+        box.addEventListener('mouseover',e=>{const c=e.target.closest('[data-t]');if(!c)return;
+          c.style.transform='scale(1.08)';document.getElementById('d14t').textContent=c.dataset.t});
+        box.addEventListener('mouseout',e=>{const c=e.target.closest('[data-t]');if(c)c.style.transform=''});
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 15 Gap & Trap 사분면 ═══ -->
+    <section class="demo" id="p15">
+      <h3>15 · Gap &amp; Trap 사분면 산점도</h3>
+      <p class="use"><b>용도:</b> 련의 핵심 프레임을 좌표계로. X = 체감 우위, Y = 실제 위치. 점에 올리면 이름과 좌표가 뜨고, <b>우하단(체감↑·실제↓)이 Trap 구역</b>입니다.</p>
+      <div class="box"><svg id="d15" viewBox="0 0 600 240" style="width:100%"></svg>
+        <p id="d15t" style="font-family:var(--mono);font-size:12px;color:var(--navy);min-height:18px;margin-top:8px"></p></div>
+      <p class="src">핵심: 사분면 배경 tint + 산점 hover. 축 라벨만 바꾸면 어떤 2×2 프레임에도 재사용</p>
+      <script>
+      (function(){
+        const P=[['LNG선 기술',82,78],['친환경 신조 점유',75,38],['컨테이너 선대',60,22],['벙커링 인프라',55,18],['기자재 국산화',48,52],['R&D 인력',66,44]];
+        const x=v=>60+v*4.9, y=v=>210-v*1.9;
+        const svg=document.getElementById('d15');
+        svg.innerHTML=
+          '<rect x="'+x(50)+'" y="'+y(100)+'" width="'+(x(100)-x(50))+'" height="'+(y(50)-y(100))+'" fill="var(--teal)" opacity=".07"/>'+
+          '<rect x="'+x(50)+'" y="'+y(50)+'" width="'+(x(100)-x(50))+'" height="'+(y(0)-y(50))+'" fill="var(--gold)" opacity=".14"/>'+
+          '<line x1="'+x(50)+'" y1="'+y(0)+'" x2="'+x(50)+'" y2="'+y(100)+'" stroke="var(--line)"/>'+
+          '<line x1="'+x(0)+'" y1="'+y(50)+'" x2="'+x(100)+'" y2="'+y(50)+'" stroke="var(--line)"/>'+
+          '<text x="'+x(98)+'" y="'+y(3)+'" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--muted)">TRAP: 체감↑ 실제↓</text>'+
+          '<text x="'+x(98)+'" y="'+y(96)+'" text-anchor="end" font-family="var(--mono)" font-size="10" fill="var(--muted)">진짜 우위</text>'+
+          '<text x="'+x(50)+'" y="232" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--muted)">체감 우위 →</text>'+
+          P.map(([n,px,py])=>'<circle data-n="'+n+' (체감 '+px+' · 실제 '+py+')" cx="'+x(px)+'" cy="'+y(py)+'" r="8" fill="'+(px>50&&py<50?'var(--gold)':'var(--navy)')+'" stroke="#fff" stroke-width="2" style="cursor:default;transition:r .15s"/>').join('');
+        svg.addEventListener('mouseover',e=>{const c=e.target.closest('circle');if(!c)return;
+          c.setAttribute('r',11);document.getElementById('d15t').textContent=c.dataset.n});
+        svg.addEventListener('mouseout',e=>{const c=e.target.closest('circle');if(c)c.setAttribute('r',8)});
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 16 링 게이지 ═══ -->
+    <section class="demo" id="p16">
+      <h3>16 · 링 게이지 애니메이션</h3>
+      <p class="use"><b>용도:</b> 목표 대비 달성률 하나를 크게. 대시보드 첫 화면의 얼굴. 버튼으로 값을 바꿔 보세요.</p>
+      <div class="box" style="display:flex;gap:30px;align-items:center;flex-wrap:wrap">
+        <svg viewBox="0 0 140 140" style="width:150px">
+          <circle cx="70" cy="70" r="58" fill="none" stroke="var(--card)" stroke-width="13"/>
+          <circle id="d16r" cx="70" cy="70" r="58" fill="none" stroke="url(#g16)" stroke-width="13" stroke-linecap="round"
+            pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 70 70)" style="transition:stroke-dasharray 1s ease"/>
+          <defs><linearGradient id="g16"><stop offset="0%" stop-color="var(--teal)"/><stop offset="100%" stop-color="var(--gold)"/></linearGradient></defs>
+          <text id="d16v" x="70" y="78" text-anchor="middle" font-family="var(--serif)" font-weight="700" font-size="26" fill="var(--navy)">0%</text>
+        </svg>
+        <div>
+          <button class="btn btn-ghost" onclick="d16set(34)">34%</button>
+          <button class="btn btn-ghost" onclick="d16set(69)">69%</button>
+          <button class="btn btn-primary" onclick="d16set(92)">92%</button>
+        </div>
+      </div>
+      <p class="src">핵심: pathLength=100 원에 dasharray "v 100". 그라데이션 stroke + rotate(-90)로 12시 시작</p>
+      <script>
+      function d16set(v){document.getElementById('d16r').setAttribute('stroke-dasharray',v+' 100');
+        document.getElementById('d16v').textContent=v+'%'}
+      d16set(69);
+      </script>
+    </section>
+
+    <!-- ═══ 17 캔버스 파도 ═══ -->
+    <section class="demo" id="p17">
+      <h3>17 · 캔버스 파도 (화려)</h3>
+      <p class="use"><b>용도:</b> 히어로·섹션 전환부의 살아있는 배경. 세 겹의 사인파가 서로 다른 속도로 흐릅니다. 마우스를 올리면 물결이 거칠어져요.</p>
+      <div class="box" style="padding:0;overflow:hidden"><canvas id="d17" style="width:100%;height:150px;display:block"></canvas></div>
+      <p class="src">핵심: requestAnimationFrame + 3겹 sin 합성. prefers-reduced-motion이면 정지 프레임 1장만 그림</p>
+      <script>
+      (function(){
+        const cv=document.getElementById('d17'),ctx=cv.getContext('2d');
+        let amp=1, t=0;
+        cv.addEventListener('mouseenter',()=>amp=2.2);
+        cv.addEventListener('mouseleave',()=>amp=1);
+        function size(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=150*devicePixelRatio;ctx.scale(devicePixelRatio,devicePixelRatio)}
+        size();addEventListener('resize',size);
+        const layers=[['rgba(12,53,106,.85)',18,.012,1.0,95],['rgba(58,109,166,.55)',14,.017,1.6,88],['rgba(167,200,235,.5)',10,.023,2.3,82]];
+        function frame(){
+          const W=cv.clientWidth;ctx.clearRect(0,0,W,150);
+          layers.forEach(([c,a,f,sp,base])=>{
+            ctx.beginPath();ctx.moveTo(0,150);
+            for(let x=0;x<=W;x+=4){
+              ctx.lineTo(x, base - Math.sin(x*f + t*sp)*a*amp - Math.sin(x*f*0.5 + t*sp*0.7)*a*0.5*amp);
+            }
+            ctx.lineTo(W,150);ctx.closePath();ctx.fillStyle=c;ctx.fill();
+          });
+          t+=0.03;
+          if(!matchMedia('(prefers-reduced-motion: reduce)').matches) requestAnimationFrame(frame);
+        }
+        frame();
+      })();
+      </script>
+    </section>
+
+    <!-- ═══ 18 시나리오 모핑 바 ═══ -->
+    <section class="demo" id="p18">
+      <h3>18 · 시나리오 모핑 바</h3>
+      <p class="use"><b>용도:</b> 두 시나리오(기준 vs 전환)를 토글하면 막대가 <b>제자리에서 모핑</b>됩니다. "무엇이 줄고 무엇이 새로 생기는가"가 이동으로 읽힙니다.</p>
+      <div class="box">
+        <div class="tabs" style="margin-bottom:16px">
+          <button class="tab on" id="d18a">기준 (S0)</button>
+          <button class="tab" id="d18b">전환 (S2)</button>
+        </div>
+        <div id="d18"></div>
+      </div>
+      <p class="src">핵심: 같은 DOM의 width만 트랜지션. 항목이 늘거나 줄어도 배열 갱신으로 대응. 비용 구성·연료 믹스 비교에</p>
+      <script>
+      (function(){
+        const CATS=['연료비','유지보수','EU ETS','FuelEU 벌금','IMO NZF','조치 OPEX'];
+        const A=[62,10,14,8,6,0], B=[48,10,9,0,2,7];
+        const box=document.getElementById('d18');
+        box.innerHTML=CATS.map((c,i)=>'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+          '<span style="width:92px;font-size:12px;color:var(--muted);text-align:right">'+c+'</span>'+
+          '<div style="flex:1;height:16px;background:var(--card);border-radius:99px;overflow:hidden">'+
+          '<div class="mb" style="height:100%;border-radius:99px;background:'+(i<2?'var(--navy)':i<5?'var(--gold)':'var(--teal)')+';width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)"></div></div>'+
+          '<span class="mv" style="width:40px;font-family:var(--mono);font-size:11px;color:var(--muted)">0</span></div>').join('');
+        function show(V){box.querySelectorAll('.mb').forEach((b,i)=>b.style.width=V[i]+'%');
+          box.querySelectorAll('.mv').forEach((s,i)=>s.textContent=V[i]+'%')}
+        const ta=document.getElementById('d18a'),tb=document.getElementById('d18b');
+        ta.addEventListener('click',()=>{ta.classList.add('on');tb.classList.remove('on');show(A)});
+        tb.addEventListener('click',()=>{tb.classList.add('on');ta.classList.remove('on');show(B)});
+        show(A);
+      })();
+      </script>
+    </section>
+
+  </div>
+</section>
+
+<div class="wrap tool-note">Interaction Lab · 내부 참고용 부품 모음입니다.</div>
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="index.html">Home</a></li><li><a href="story.html">Story</a></li><li><a href="policy.html">Policy</a></li><li><a href="insight.html">Insight</a></li><li><a href="project.html">Project</a></li><li><a href="tool.html">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="index.html#s1">01 Regulation</a></li><li><a href="index.html#s2">02 Transition</a></li><li><a href="index.html#s3">03 Scale up</a></li><li><a href="index.html#s4">04 Governance</a></li><li><a href="index.html#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@planit.institute">contact@planit.institute</a></li>
+        <li>Hyeryoun Chi, Lead Researcher</li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

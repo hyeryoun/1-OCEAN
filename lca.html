@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · Marine Fuel LCA</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+  :root{
+    --navy:#0B3D66; --gold:#A7C8EB; --teal:#3A6DA6;
+    --card:#F1F6FA; --hl:#EBF5FB; --gray:#5B6F84;
+    --teal-d:#2B5A8C; --teal-l:#B8D6EA; --red:#C0504D; --green:#2E8B57;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Pretendard Variable',Pretendard,Arial,sans-serif; background:#fff; color:#222; line-height:1.55;}
+
+  header.lca-hero{background:var(--navy); color:#fff; padding:28px 24px 24px;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 8px;}
+  .lca-hero .eyebrow{font-size:12px; letter-spacing:2.5px; color:var(--gold); text-transform:uppercase; margin-bottom:6px;}
+  .lca-hero h1{font-size:26px; font-weight:bold; letter-spacing:-0.3px;}
+  .lca-hero p{font-size:13.5px; color:#c9d6e8; margin-top:8px; max-width:640px;}
+  .lca-hero .btnrow{margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;}
+  .btn{display:inline-block; border:none; cursor:pointer; font-family:inherit; font-size:13.5px; padding:9px 18px; border-radius:4px;}
+  .btn-gold{background:var(--gold); color:var(--navy); font-weight:bold;}
+  .btn-ghost{background:transparent; color:#fff; border:1px solid rgba(255,255,255,.45);}
+  .btn:focus-visible{outline:3px solid var(--gold); outline-offset:2px;}
+
+  main{padding:26px 24px 60px;}
+  section{background:var(--card); border-radius:8px; padding:20px 22px; margin-bottom:18px; position:relative;}
+  .sec-tag{display:inline-block; background:var(--navy); color:#fff; font-size:11.5px; font-weight:bold; padding:3px 10px; border-radius:3px; letter-spacing:1px; margin-bottom:10px;}
+  section h2{font-size:17px; color:var(--navy); margin-bottom:4px;}
+  section .sub{font-size:12.5px; color:var(--gray); margin-bottom:14px;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media(max-width:720px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+  .chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;}
+  .chip{border:1.5px solid var(--navy); background:#fff; color:var(--navy); font-size:12.5px; padding:7px 14px; border-radius:20px; cursor:pointer; font-family:inherit;}
+  .chip.on{background:var(--navy); color:#fff;}
+  .chip:focus-visible{outline:3px solid var(--gold); outline-offset:2px;}
+
+  label{display:block; font-size:12px; color:var(--gray); font-weight:bold; margin-bottom:4px;}
+  input[type=number], select{width:100%; padding:8px 10px; border:1px solid #cfd6dd; border-radius:4px; font-size:14px; font-family:inherit; background:#fff; color:#222;}
+  input[type=number]:focus, select:focus{outline:2px solid var(--teal); border-color:var(--teal);}
+  input[type=range]{width:100%; accent-color:var(--teal); margin-top:6px;}
+  .field{background:#fff; border-radius:6px; padding:12px 14px; border:1px solid #e3e8ec;}
+  .field .unit{font-size:11px; color:var(--gray); font-weight:normal;}
+  .field .val{font-size:15px; font-weight:bold; color:var(--navy); margin-top:4px;}
+
+  .badge{display:inline-block; font-size:11px; padding:3px 9px; border-radius:3px; font-weight:bold; vertical-align:middle;}
+  .badge-reg{background:var(--hl); color:var(--navy); border:1px solid #bcd7ec;}
+  .badge-ex{background:#FBF3E4; color:#8a6d1f; border:1px solid var(--gold);}
+
+  .note{background:var(--hl); border-left:4px solid var(--teal); padding:10px 14px; font-size:12.5px; color:#33475b; border-radius:0 4px 4px 0; margin-top:12px;}
+  .warn{background:#FBF3E4; border-left:4px solid var(--gold); padding:10px 14px; font-size:12.5px; color:#5d4a12; border-radius:0 4px 4px 0; margin-top:12px;}
+
+  .sumline{margin-top:14px; background:#fff; border:1px dashed var(--teal); border-radius:6px; padding:10px 14px; font-size:13.5px; color:var(--navy); display:flex; justify-content:space-between; align-items:center;}
+  .sumline b{font-size:18px;}
+
+  /* result */
+  .result-head{display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; margin-bottom:14px;}
+  .big-num{font-size:44px; font-weight:bold; color:var(--navy); letter-spacing:-1px;}
+  .big-num small{font-size:14px; color:var(--gray); font-weight:normal; letter-spacing:0;}
+  .kv{font-size:13px; color:var(--gray);}
+  .kv b{color:var(--navy);}
+
+  .stackbar{display:flex; height:44px; border-radius:6px; overflow:hidden; margin:8px 0 6px;}
+  .stackbar div{display:flex; align-items:center; justify-content:center; color:#fff; font-size:11.5px; font-weight:bold; white-space:nowrap; overflow:hidden; transition:width .35s;}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--gray); margin-bottom:6px;}
+  .legend span::before{content:""; display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:5px; vertical-align:-1px; background:var(--c);}
+
+  .verdict{font-size:14px; margin-top:10px; padding:10px 14px; border-radius:5px; font-weight:bold;}
+  .verdict.ok{background:#E8F4EE; color:var(--green);}
+  .verdict.no{background:#F9ECEB; color:var(--red);}
+
+  svg text{font-family:Arial, sans-serif;}
+  .chartbox{background:#fff; border:1px solid #e3e8ec; border-radius:6px; padding:14px; margin-top:14px; overflow-x:auto;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; background:#fff;}
+  th{background:var(--navy); color:#fff; padding:8px 10px; text-align:left; font-size:12px;}
+  td{padding:8px 10px; border-bottom:1px solid #e6eaee;}
+  td.num{text-align:right; font-variant-numeric:tabular-nums;}
+
+  details{background:#fff; border:1px solid #e3e8ec; border-radius:6px; margin-top:10px;}
+  details summary{cursor:pointer; padding:12px 16px; font-size:13.5px; font-weight:bold; color:var(--navy);}
+  details .inner{padding:0 16px 14px; font-size:12.5px; color:#444;}
+  details .inner li{margin:6px 0 6px 18px;}
+
+  /* tutorial */
+  #tut-overlay{position:fixed; inset:0; background:rgba(11,61,102,.5); z-index:900; display:none;}
+  .tut-highlight{position:relative; z-index:950; box-shadow:0 0 0 4px var(--gold), 0 0 0 9999px rgba(11,61,102,.5); border-radius:8px;}
+  #tut-card{position:fixed; z-index:960; background:#fff; border-radius:8px; max-width:400px; width:calc(100% - 40px); padding:18px 20px; box-shadow:0 8px 30px rgba(0,0,0,.3); display:none;}
+  #tut-card .step-eyebrow{font-size:11px; letter-spacing:2px; color:var(--teal); font-weight:bold; text-transform:uppercase;}
+  #tut-card h3{font-size:16px; color:var(--navy); margin:6px 0 8px;}
+  #tut-card p{font-size:13px; color:#3d4852;}
+  #tut-card .dots{margin:14px 0 4px; display:flex; gap:6px;}
+  #tut-card .dots i{width:8px; height:8px; border-radius:50%; background:#d6dde3;}
+  #tut-card .dots i.on{background:var(--gold);}
+  #tut-card .row{display:flex; justify-content:space-between; margin-top:12px; gap:8px;}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-line{background:#fff; color:var(--gray); border:1px solid #cfd6dd;}
+
+  footer{background:var(--navy); color:#9fb3cd; font-size:12px; padding:20px 24px; text-align:center;}
+  footer b{color:#fff;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+
+  /* 사이트 크롬 폭 복원 (툴 본문 .wrap은 960px 유지) */
+  .topbar .wrap, header.nav .wrap, footer .wrap{max-width:1160px}
+  .lca-hero{margin-top:0}
+</style>
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="index.html">Home</a>
+      <a href="story.html">Story</a>
+      <a href="policy.html">Policy</a>
+      <a href="insight.html">Insight</a>
+      <a href="project.html">Project</a>
+      <a class="active" aria-current="page" href="tool.html">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<header class="lca-hero">
+  <div class="wrap">
+    <div class="eyebrow" data-i="lc-eye">Tool · Marine Fuel LCA · Stage 02 전환</div>
+    <h1 data-i="lc-h1">선박연료 LCA · 같은 연료, 다른 숫자</h1>
+    <p data-i="lc-lede">Well-to-Wake 온실가스 집약도를 단계별로 분해하고 조정합니다. FuelEU Maritime 기본값을 바탕으로 하되, IMO LCA 지침(개정 중)의 GWP 체계와 비교할 수 있습니다.</p>
+    <div class="btnrow">
+      <button class="btn btn-gold" onclick="startTutorial()">튜토리얼 시작</button>
+      <button class="btn btn-ghost" onclick="resetFuel()">현재 연료 기본값 복원</button>
+      <a class="btn btn-ghost" href="tool.html" style="text-decoration:none">← Tool 목록으로</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ① 기준 체계 -->
+  <section id="sec-basis">
+    <span class="sec-tag">STEP 1</span>
+    <h2>기준 체계 (GWP·보상계수)</h2>
+    <div class="sub">어느 규제의 눈으로 볼지 선택합니다. 같은 연료라도 GWP 값에 따라 결과가 달라집니다.</div>
+    <div class="chips" id="gwp-chips">
+      <button class="chip on" data-gwp="fueleu" onclick="setGWP('fueleu')">FuelEU Maritime (AR4)</button>
+      <button class="chip" data-gwp="imo" onclick="setGWP('imo')">IMO LCA 지침 (AR5)</button>
+      <button class="chip" data-gwp="ar6" onclick="setGWP('ar6')">AR6 참고</button>
+      <button class="chip" data-gwp="custom" id="chip-custom" onclick="setGWP('custom')">사용자 정의</button>
+    </div>
+    <div class="grid3">
+      <div class="field"><label>GWP<sub>100</sub> CH₄ <span class="unit">(CO₂=1)</span></label>
+        <input type="number" id="gwpCH4" step="0.1" value="25" oninput="onGwpEdit()"></div>
+      <div class="field"><label>GWP<sub>100</sub> N₂O <span class="unit">(CO₂=1)</span></label>
+        <input type="number" id="gwpN2O" step="1" value="298" oninput="onGwpEdit()"></div>
+      <div class="field"><label>RFNBO 보상계수 (FuelEU)</label>
+        <select id="rfnbo" onchange="recalc()">
+          <option value="off">미적용</option>
+          <option value="on">적용 (×2, 2033년까지)</option>
+        </select>
+        <div class="unit" id="rfnboNote" style="font-size:11px; color:var(--gray); margin-top:6px; display:none;">RFNBO 연료(e-메탄올, e-암모니아)에서만 쓸 수 있습니다.</div></div>
+    </div>
+    <div class="note">FuelEU는 RED II와 정합한 AR4 값(CH₄ 25, N₂O 298)을, IMO LCA 지침(MEPC.376(80), MEPC.391(81) 개정)은 AR5 값(CH₄ 28, N₂O 265)을 사용합니다. 메탄 슬립이 있는 LNG 계열에서 두 체계의 차이가 가장 큽니다. IMO 지침은 계속 개정 중이므로 사용자 정의 입력으로 최신 값을 반영하세요. "IMO LCA 지침"을 고르면 GWP와 함께 메탄 슬립(MEPC.391(81))과 LCV(MEPC.364(79)) 기본값도 IMO 값으로 바뀝니다.</div>
+    <div class="warn" id="imoWttNote" style="display:none;">IMO 화석연료 WtT 기본값은 아직 확정되지 않아 FuelEU 값을 씁니다 (2026 MEPC 84 기준).</div>
+  </section>
+
+  <!-- ② 연료 선택 -->
+  <section id="sec-fuel">
+    <span class="sec-tag">STEP 2</span>
+    <h2>연료 선택</h2>
+    <div class="sub">FuelEU Annex II 기본값이 자동 입력됩니다. 대체연료 일부는 예시값이므로 인증값(RED II 실제값, FLC 등)으로 수정해 사용하세요.</div>
+    <div class="grid3">
+      <div class="field">
+        <label>연료</label>
+        <select id="fuelSel" onchange="loadFuel()"></select>
+        <div style="margin-top:8px;" id="fuelBadge"></div>
+      </div>
+      <div class="field" id="engineField" style="display:none;">
+        <label>엔진 유형 (LNG 슬립 기본값)</label>
+        <select id="engineSel" onchange="applyEngine()">
+          <option value="otto_ms">LNG Otto (중속 4행정) · 3.1%</option>
+          <option value="otto_ss">LNG Otto (저속 2행정) · 1.7%</option>
+          <option value="diesel_ss">LNG Diesel (저속 2행정) · 0.2%</option>
+          <option value="lbsi">LBSI · 2.6%</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>저위발열량 LCV <span class="unit">MJ/g</span></label>
+        <input type="number" id="lcv" step="0.0001" min="0" oninput="recalc()" onchange="fixLcv()">
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ WtT -->
+  <section id="sec-wtt">
+    <span class="sec-tag">STEP 3</span>
+    <h2>Well-to-Tank (WtT) 단계별 조정</h2>
+    <div class="sub">규정은 WtT 합계 하나만 제시하므로, 세 하위 단계 배분은 문헌 기반 예시 비율입니다. 각 값을 조정하면 합계가 계산에 반영됩니다. 단위: gCO₂eq/MJ</div>
+    <div class="grid3">
+      <div class="field">
+        <label>1. 원료 채취·생산 <span class="unit">(feedstock)</span></label>
+        <input type="number" id="w1" step="0.1" oninput="syncSlider('w1'); recalc()">
+        <input type="range" id="w1r" min="0" max="150" step="0.1" oninput="syncNum('w1')">
+      </div>
+      <div class="field">
+        <label>2. 연료 전환·생산 <span class="unit">(conversion)</span></label>
+        <input type="number" id="w2" step="0.1" oninput="syncSlider('w2'); recalc()">
+        <input type="range" id="w2r" min="0" max="150" step="0.1" oninput="syncNum('w2')">
+      </div>
+      <div class="field">
+        <label>3. 운송·저장·벙커링 <span class="unit">(transport)</span></label>
+        <input type="number" id="w3" step="0.1" oninput="syncSlider('w3'); recalc()">
+        <input type="range" id="w3r" min="0" max="150" step="0.1" oninput="syncNum('w3')">
+      </div>
+    </div>
+    <div class="sumline"><span>WtT 합계</span><b id="wttSum">0.0 gCO₂eq/MJ</b></div>
+  </section>
+
+  <!-- ④ TtW -->
+  <section id="sec-ttw">
+    <span class="sec-tag">STEP 4</span>
+    <h2>Tank-to-Wake (TtW) 조정</h2>
+    <div class="sub">연소 배출계수(연료 1g당 배출 g)와 메탄 슬립을 조정합니다. 슬립은 연료 질량 중 미연소 CH₄로 빠져나가는 비율입니다.</div>
+    <div class="grid2">
+      <div class="field"><label>C<sub>f</sub> CO₂ <span class="unit">gCO₂/g연료</span></label>
+        <input type="number" id="cfCO2" step="0.001" oninput="recalc()"></div>
+      <div class="field"><label>C<sub>f</sub> CH₄ <span class="unit">gCH₄/g연료</span></label>
+        <input type="number" id="cfCH4" step="0.00001" oninput="recalc()"></div>
+      <div class="field"><label>C<sub>f</sub> N₂O <span class="unit">gN₂O/g연료</span></label>
+        <input type="number" id="cfN2O" step="0.00001" oninput="recalc()"></div>
+      <div class="field">
+        <label>메탄 슬립 <span class="unit">% (연료 질량 기준)</span></label>
+        <input type="number" id="slip" step="0.1" min="0" max="10" oninput="syncSlider('slip'); recalc()" onchange="fixSlip()">
+        <input type="range" id="slipr" min="0" max="10" step="0.1" oninput="syncNum('slip')">
+      </div>
+    </div>
+    <div class="warn" id="nh3warn" style="display:none;">암모니아의 연소 N₂O와 미연소 NH₃ 슬립 계수는 아직 규제상 확정되지 않았습니다. 기본값 0은 "미확정"의 의미이므로, 엔진 실측 문헌값을 직접 입력해 민감도를 확인하세요. N₂O는 GWP가 커서 소량으로도 결과가 크게 움직입니다.</div>
+  </section>
+
+  <!-- ⑤ 결과 -->
+  <section id="sec-result">
+    <span class="sec-tag">RESULT</span>
+    <h2>Well-to-Wake 결과</h2>
+    <div class="result-head">
+      <div class="big-num"><span id="wtwVal">0.0</span> <small>gCO₂eq/MJ</small></div>
+      <div class="kv">WtT <b id="rWtt">0.0</b> + TtW <b id="rTtw">0.0</b><br>
+      기준선 대비: FuelEU 2020 (91.16) <b id="vsEU">0%</b> · IMO NZF 초안 기준선 93.3 <b id="vsIMO">0%</b><br>
+      <span style="font-size:11.5px;">IMO NZF 초안 (2025.4 MEPC 83 승인, 2025.10 채택 연기 · 미채택)</span></div>
+    </div>
+    <div class="kv" id="setNote" style="margin:-4px 0 12px; font-size:12px;"></div>
+    <div class="legend">
+      <span style="--c:#2B5A8C">원료 채취·생산</span>
+      <span style="--c:#3A6DA6">연료 전환·생산</span>
+      <span style="--c:#B8D6EA">운송·저장·벙커링</span>
+      <span style="--c:#0B3D66">TtW (선상 연소)</span>
+    </div>
+    <div class="stackbar" id="stackbar"></div>
+    <div class="kv" id="stackNote"></div>
+    <div class="verdict" id="verdict"></div>
+
+    <div class="chartbox" id="chartbox">
+      <div style="font-size:13px; font-weight:bold; color:var(--navy); margin-bottom:6px;">FuelEU 목표 경로 대비 위치 (2025~2050)</div>
+      <div id="chart"></div>
+      <div class="kv" style="margin-top:6px;">계단선: FuelEU GHG 집약도 목표 (기준 91.16 gCO₂eq/MJ 대비 감축률 적용) · 점선: IMO NZF 초안 (2025.4 MEPC 83 승인, 2025.10 채택 연기 · 미채택)의 GFI 기준선 93.3과 ZNZ 문턱값 (2034년까지 19.0, 2035년부터 14.0 gCO₂eq/MJ) · 굵은 가로선: 현재 설정 연료</div>
+    </div>
+  </section>
+
+  <!-- ⑥ 컴플라이언스 -->
+  <section id="sec-compliance">
+    <span class="sec-tag">STEP 5</span>
+    <h2>FuelEU 컴플라이언스 밸런스·페널티 추정</h2>
+    <div class="sub">연간 연료 사용량을 넣으면 해당 연도 목표 대비 잉여·부족분(CB)과 페널티를 추정합니다. 단일 연료 가정의 근사치입니다.</div>
+    <div class="grid3">
+      <div class="field"><label>연간 연료 사용량 <span class="unit">톤</span></label>
+        <input type="number" id="fuelMass" value="20000" step="100" min="0" oninput="fixMass(); recalc()"></div>
+      <div class="field"><label>대상 연도</label>
+        <select id="targetYear" onchange="recalc()">
+          <option value="2025">2025 (−2%)</option>
+          <option value="2030" selected>2030 (−6%)</option>
+          <option value="2035">2035 (−14.5%)</option>
+          <option value="2040">2040 (−31%)</option>
+          <option value="2045">2045 (−62%)</option>
+          <option value="2050">2050 (−80%)</option>
+        </select></div>
+      <div class="field"><label>에너지 사용량 <span class="unit">자동 계산</span></label>
+        <div class="val" id="energyOut">0 TJ</div></div>
+    </div>
+    <table>
+      <thead><tr><th>항목</th><th style="text-align:right">값</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>목표 집약도</td><td class="num" id="cTarget">–</td><td>gCO₂eq/MJ</td></tr>
+        <tr><td>실적 집약도 (보상계수 반영)</td><td class="num" id="cActual">–</td><td>gCO₂eq/MJ</td></tr>
+        <tr><td>컴플라이언스 밸런스 (CB)</td><td class="num" id="cCB">–</td><td>tCO₂eq (양수=잉여, 음수=부족)</td></tr>
+        <tr><td>페널티 추정</td><td class="num" id="cPen">–</td><td>EUR, |CB|/(집약도×41,000)×2,400</td></tr>
+      </tbody>
+    </table>
+    <div class="warn">페널티는 한 해, 보고 범위 100% 기준의 추정치입니다. 연속 미준수 시 n번째 해에는 ×(1+(n−1)/10)가 붙습니다 (제23조 2항).</div>
+    <div class="note">CB가 양수면 풀링·뱅킹으로 활용 가능한 잉여입니다. 페널티 공식은 FuelEU Annex IV의 VLSFO 에너지 등가(41,000 MJ/t) 기준입니다. 실제 정산은 항차 범위(역내 100%·역외 50%), OPS 의무, 풀링 구성에 따라 달라집니다.</div>
+  </section>
+
+  <!-- 방법론 -->
+  <section id="sec-method">
+    <span class="sec-tag">근거</span>
+    <h2>방법론·출처</h2>
+    <details>
+      <summary>계산식</summary>
+      <div class="inner">
+        <li>WtW = WtT + TtW (gCO₂eq/MJ)</li>
+        <li>TtW = [ (1−s)·(C<sub>f,CO₂</sub> + C<sub>f,CH₄</sub>·GWP<sub>CH₄</sub> + C<sub>f,N₂O</sub>·GWP<sub>N₂O</sub>) + s·GWP<sub>CH₄</sub> ] ÷ LCV, s = 슬립 비율</li>
+        <li>CB = (목표 집약도 − 실적 집약도) × 사용 에너지(MJ)</li>
+        <li>RFNBO 보상계수: 2033년까지 해당 에너지를 2배로 계상(FuelEU 제5조). 본 툴은 단일 연료 가정에서 실적 집약도를 2로 나누는 방식으로 근사합니다.</li>
+      </div>
+    </details>
+    <details>
+      <summary>데이터 출처와 한계</summary>
+      <div class="inner">
+        <li>화석연료 LCV·WtT·배출계수: Regulation (EU) 2023/1805 (FuelEU Maritime) Annex II 기본값.</li>
+        <li>IMO 값 세트: LCV는 MEPC.364(79), LNG 메탄 슬립은 MEPC.391(81) 기본값(Otto 중속 3.5%, Otto 저속 1.7%, Diesel 저속 0.15%, LBSI 2.6%). IMO 화석연료 WtT 기본값은 아직 확정되지 않아 FuelEU 값을 씁니다 (2026 MEPC 84 기준).</li>
+        <li>GWP: AR4 (FuelEU·RED II 정합), AR5 (IMO LCA 지침 MEPC.376(80)·MEPC.391(81)), AR6 참고값.</li>
+        <li>IMO 기준선: IMO NZF 초안 (2025.4 MEPC 83 승인, 2025.10 채택 연기 · 미채택). GFI 기준 93.3 gCO₂eq/MJ (2008), ZNZ 문턱값 2034년까지 19.0, 2035년부터 14.0 gCO₂eq/MJ. 확정된 규정이 아니므로 채택 문서로 재확인 필요.</li>
+        <li>바이오·e-연료의 WtT는 예시값입니다. 실제 컴플라이언스에는 RED II 인증 실제값 또는 IMO FLC(연료 라이프사이클 라벨) 값을 사용해야 합니다.</li>
+        <li>WtT의 3단계 분해 비율은 설명용 예시 배분이며, 규정 기본값은 합계만 제공합니다.</li>
+      </div>
+    </details>
+  </section>
+
+</main>
+
+<div class="wrap tool-note">선박연료 LCA · 연구·교육용 도구이며, 규제 정산의 법적 근거가 아닙니다.</div>
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="index.html">Home</a></li><li><a href="story.html">Story</a></li><li><a href="policy.html">Policy</a></li><li><a href="insight.html">Insight</a></li><li><a href="project.html">Project</a></li><li><a href="tool.html">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="index.html#s1">01 Regulation</a></li><li><a href="index.html#s2">02 Transition</a></li><li><a href="index.html#s3">03 Scale up</a></li><li><a href="index.html#s4">04 Governance</a></li><li><a href="index.html#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@planit.institute">contact@planit.institute</a></li>
+        <li>Hyeryoun Chi, Lead Researcher</li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+
+
+
+<!-- tutorial -->
+<div id="tut-overlay" onclick="endTutorial()"></div>
+<div id="tut-card" role="dialog" aria-modal="true">
+  <div class="step-eyebrow" id="tutEyebrow"></div>
+  <h3 id="tutTitle"></h3>
+  <p id="tutBody"></p>
+  <div class="dots" id="tutDots"></div>
+  <div class="row">
+    <button class="btn btn-line" onclick="endTutorial()">닫기</button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-line" id="tutPrev" onclick="tutStep(-1)">이전</button>
+      <button class="btn btn-navy" id="tutNext" onclick="tutStep(1)">다음</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- 데이터 ---------- */
+const FUELS = {
+  hfo:  {name:"HFO (중유, ISO 8217 RME~RMK)", reg:true,  lcv:0.0405, wtt:13.5, split:[0.55,0.35,0.10], cfCO2:3.114, cfCH4:0.00005, cfN2O:0.00018, slip:0},
+  lfo:  {name:"LFO (경질중유, RMA~RMD)",      reg:true,  lcv:0.0410, wtt:13.2, split:[0.55,0.35,0.10], cfCO2:3.151, cfCH4:0.00005, cfN2O:0.00018, slip:0},
+  mgo:  {name:"MDO / MGO",                    reg:true,  lcv:0.0427, wtt:14.4, split:[0.55,0.35,0.10], cfCO2:3.206, cfCH4:0.00005, cfN2O:0.00018, slip:0},
+  lng:  {name:"LNG (화석)",                   reg:true,  lcv:0.0491, wtt:18.5, split:[0.40,0.45,0.15], cfCO2:2.750, cfCH4:0,       cfN2O:0.00011, slip:3.1, engine:true},
+  meoh: {name:"메탄올 (천연가스 기반)",        reg:true,  lcv:0.0199, wtt:31.3, split:[0.30,0.60,0.10], cfCO2:1.375, cfCH4:0.00005, cfN2O:0.00018, slip:0},
+  biomeoh:{name:"바이오메탄올 (예시)",         reg:false, lcv:0.0199, wtt:12.0, split:[0.50,0.40,0.10], cfCO2:0,     cfCH4:0,       cfN2O:0,       slip:0, bio:true},
+  emeoh:{name:"e-메탄올 (RFNBO, 예시)",        reg:false, lcv:0.0199, wtt:3.0,  split:[0.80,0.15,0.05], cfCO2:0,     cfCH4:0,       cfN2O:0,       slip:0, rfnbo:true},
+  hvo:  {name:"HVO / 바이오디젤 (폐식용유 기반, 예시)", reg:false, lcv:0.0440, wtt:16.0, split:[0.55,0.35,0.10], cfCO2:0, cfCH4:0.00005, cfN2O:0.00018, slip:0, bio:true},
+  nh3g: {name:"암모니아 (그레이, 예시)",       reg:false, lcv:0.0186, wtt:121.0,split:[0.30,0.60,0.10], cfCO2:0,     cfCH4:0,       cfN2O:0,       slip:0, nh3:true},
+  nh3b: {name:"암모니아 (블루, 예시)",         reg:false, lcv:0.0186, wtt:50.0, split:[0.30,0.60,0.10], cfCO2:0,     cfCH4:0,       cfN2O:0,       slip:0, nh3:true},
+  enh3: {name:"e-암모니아 (RFNBO, 예시)",      reg:false, lcv:0.0186, wtt:3.0,  split:[0.80,0.15,0.05], cfCO2:0,     cfCH4:0,       cfN2O:0,       slip:0, rfnbo:true, nh3:true}
+};
+const GWPS = {fueleu:{ch4:25, n2o:298}, imo:{ch4:28, n2o:265}, ar6:{ch4:29.8, n2o:273}};
+const EU_REF = 91.16, IMO_REF = 93.3;
+/* ZNZ 문턱값 (IMO NZF 초안, 미채택): 2034년까지 19.0, 2035년부터 14.0 */
+const ZNZ_PRE = 19.0, ZNZ_POST = 14.0, ZNZ_STEP = 2035;
+/* 값 세트: GWP 외에 LCV·LNG 슬립 기본값. WtT는 두 세트 모두 FuelEU 값 */
+const ENGINES = {
+  fueleu:{otto_ms:3.1, otto_ss:1.7, diesel_ss:0.2,  lbsi:2.6},
+  imo:   {otto_ms:3.5, otto_ss:1.7, diesel_ss:0.15, lbsi:2.6}
+};
+const ENGINE_NAMES = {otto_ms:"LNG Otto (중속 4행정)", otto_ss:"LNG Otto (저속 2행정)", diesel_ss:"LNG Diesel (저속 2행정)", lbsi:"LBSI"};
+const IMO_LCV = {hfo:0.0402, lfo:0.0412, mgo:0.0427, lng:0.0480};  /* MEPC.364(79) */
+let basis = "fueleu";   /* 선택된 칩 */
+let valueSet = "fueleu"; /* 적용 중인 LCV·슬립 세트 */
+const EU_TARGETS = [[2025,0.02],[2030,0.06],[2035,0.145],[2040,0.31],[2045,0.62],[2050,0.80]];
+
+const $ = id => document.getElementById(id);
+let curFuel = "hfo";
+
+/* ---------- 초기화 ---------- */
+(function init(){
+  const sel = $("fuelSel");
+  for (const k in FUELS){
+    const o = document.createElement("option");
+    o.value = k; o.textContent = FUELS[k].name;
+    sel.appendChild(o);
+  }
+  loadFuel();
+  /* 튜토리얼은 처음 방문했을 때만 자동으로 엽니다 */
+  let seen=null; try{ seen=localStorage.getItem('lca-tut-seen'); localStorage.setItem('lca-tut-seen','1'); }catch(e){}
+  if(!seen) setTimeout(()=>{ startTutorial(); }, 600);
+})();
+
+function loadFuel(){
+  curFuel = $("fuelSel").value;
+  const f = FUELS[curFuel];
+  $("lcv").value = defLcv();
+  /* 앞 두 단계는 반올림, 마지막 단계는 잔여값: 표시 합계가 규정 WtT와 같도록 */
+  const a = +(f.wtt*f.split[0]).toFixed(1), b = +(f.wtt*f.split[1]).toFixed(1);
+  $("w1").value = a.toFixed(1);
+  $("w2").value = b.toFixed(1);
+  $("w3").value = Math.max(0, f.wtt - a - b).toFixed(1);
+  ["w1","w2","w3"].forEach(syncSlider);
+  $("cfCO2").value = f.cfCO2;
+  $("cfCH4").value = f.cfCH4;
+  $("cfN2O").value = f.cfN2O;
+  $("engineField").style.display = f.engine ? "" : "none";
+  if (f.engine){ $("engineSel").value = "otto_ms"; }
+  $("slip").value = defSlip(); syncSlider("slip");
+  $("nh3warn").style.display = f.nh3 ? "" : "none";
+  $("rfnbo").value = f.rfnbo ? "on" : "off";
+  $("rfnbo").disabled = !f.rfnbo;
+  $("rfnboNote").style.display = f.rfnbo ? "none" : "";
+  updateSetUI();
+  recalc();
+}
+function resetFuel(){ loadFuel(); }
+function applyEngine(){ $("slip").value = defSlip(); syncSlider("slip"); recalc(); }
+/* 현재 값 세트의 기본값 */
+function defLcv(){ return (valueSet==="imo" && IMO_LCV[curFuel]) || FUELS[curFuel].lcv; }
+function defSlip(){ return FUELS[curFuel].engine ? ENGINES[valueSet][$("engineSel").value] : FUELS[curFuel].slip; }
+/* 값 세트 전환: LCV·슬립만 바꾸고 WtT·Cf 입력은 그대로 둡니다 */
+function applyValueSet(vs){
+  if (vs === valueSet) return;
+  valueSet = vs;
+  $("lcv").value = defLcv();
+  $("slip").value = defSlip(); syncSlider("slip");
+}
+function updateSetUI(){
+  const sl = ENGINES[valueSet];
+  [...$("engineSel").options].forEach(o=>{ o.textContent = ENGINE_NAMES[o.value]+" · "+sl[o.value]+"%"; });
+  $("engineField").querySelector("label").textContent = "엔진 유형 (LNG 슬립 기본값 · "+(valueSet==="imo"?"IMO MEPC.391(81)":"FuelEU Annex II")+")";
+  const f = FUELS[curFuel];
+  $("fuelBadge").innerHTML = !f.reg
+    ? '<span class="badge badge-ex">예시값 · 인증값으로 수정 필요</span>'
+    : valueSet==="imo"
+      ? '<span class="badge badge-reg">IMO LCV·슬립 + FuelEU WtT</span>'
+      : '<span class="badge badge-reg">FuelEU Annex II 기본값</span>';
+  $("imoWttNote").style.display = valueSet==="imo" ? "" : "none";
+  const g = basis==="custom" ? "사용자 정의 GWP" : basis==="ar6" ? "AR6 GWP (참고)" : basis==="imo" ? "AR5 GWP" : "AR4 GWP";
+  $("setNote").innerHTML = valueSet==="imo"
+    ? "적용 값: <b>IMO LCA 지침</b> ("+g+" · LCV MEPC.364(79) · 슬립 MEPC.391(81)) + WtT는 FuelEU 값 (IMO 기본값 미확정)"
+    : "적용 값: <b>FuelEU Maritime Annex II</b> ("+g+" · LCV · 슬립 · WtT)";
+}
+/* 입력 보정 */
+function fixLcv(){ const v=parseFloat($("lcv").value); if (!(v>0)) $("lcv").value = defLcv(); recalc(); }
+function fixSlip(){ const v=parseFloat($("slip").value); $("slip").value = isNaN(v) ? defSlip() : Math.min(10, Math.max(0, v)); syncSlider("slip"); recalc(); }
+function fixMass(){ const v=parseFloat($("fuelMass").value); if (v<0) $("fuelMass").value = 0; }
+
+function syncSlider(id){ const r=$(id+"r"); if(r) r.value = $(id).value; }
+function syncNum(id){ $(id).value = $(id+"r").value; recalc(); }
+
+/* ---------- GWP ---------- */
+function setGWP(key){
+  document.querySelectorAll("#gwp-chips .chip").forEach(c=>c.classList.toggle("on", c.dataset.gwp===key));
+  basis = key;
+  if (GWPS[key]){ $("gwpCH4").value = GWPS[key].ch4; $("gwpN2O").value = GWPS[key].n2o; }
+  if (key!=="custom") applyValueSet(key==="imo" ? "imo" : "fueleu");
+  updateSetUI();
+  recalc();
+}
+function onGwpEdit(){
+  document.querySelectorAll("#gwp-chips .chip").forEach(c=>c.classList.toggle("on", c.dataset.gwp==="custom"));
+  basis = "custom";
+  updateSetUI();
+  recalc();
+}
+
+/* ---------- 계산 ---------- */
+function num(id){ return parseFloat($(id).value) || 0; }
+
+function compute(){
+  const lv = num("lcv");
+  const lcv = lv > 0 ? lv : defLcv();  /* 빈칸·0·음수면 기본값 */
+  const gch4 = num("gwpCH4"), gn2o = num("gwpN2O");
+  const s = Math.min(10, Math.max(0, num("slip")))/100;
+  const per_g = (1-s)*(num("cfCO2") + num("cfCH4")*gch4 + num("cfN2O")*gn2o) + s*gch4;
+  const ttw = per_g / lcv;
+  const w1 = num("w1"), w2 = num("w2"), w3 = num("w3");
+  const wtt = w1+w2+w3;
+  return {w1,w2,w3,wtt,ttw,wtw:wtt+ttw,lcv};
+}
+function euTarget(year){
+  const t = EU_TARGETS.find(x=>x[0]===+year);
+  return EU_REF*(1-(t?t[1]:0));
+}
+function adjIntensity(r, year){
+  const on = $("rfnbo").value==="on" && FUELS[curFuel].rfnbo;
+  return (on && year<=2033) ? r.wtw/2 : r.wtw;
+}
+
+function recalc(){
+  const r = compute();
+  $("wttSum").textContent = r.wtt.toFixed(1)+" gCO₂eq/MJ";
+  $("wtwVal").textContent = r.wtw.toFixed(1);
+  $("rWtt").textContent = r.wtt.toFixed(1);
+  $("rTtw").textContent = r.ttw.toFixed(1);
+  const pctTxt = ref => { const p = Math.round(r.wtw/ref*100-100) || 0; return (p>0?"+":"")+p+"%"; };
+  $("vsEU").textContent = pctTxt(EU_REF);
+  $("vsIMO").textContent = pctTxt(IMO_REF);
+
+  // stacked bar
+  const segs = [[r.w1,"#2B5A8C","원료"],[r.w2,"#3A6DA6","생산"],[r.w3,"#B8D6EA","운송"],[r.ttw,"#0B3D66","TtW"]];
+  const total = Math.max(r.wtw, 0.001);
+  $("stackbar").innerHTML = segs.map(([v,c,l])=>{
+    const pct = v/total*100;
+    return `<div style="width:${pct}%;background:${c}" title="${l} ${v.toFixed(1)} gCO₂eq/MJ">${pct>9?l+" "+v.toFixed(1):""}</div>`;
+  }).join("");
+  $("stackNote").textContent = `WtT 비중 ${ (r.wtt/total*100).toFixed(0) }% · TtW 비중 ${ (r.ttw/total*100).toFixed(0) }%`;
+
+  // verdict: 마지막 충족 연도
+  let lastOK = null;
+  for (const [y] of EU_TARGETS){ if (adjIntensity(r,y) <= euTarget(y)) lastOK = y; else break; }
+  const v = $("verdict");
+  if (lastOK === null){ v.className="verdict no"; v.textContent="이 설정으로는 2025년 FuelEU 목표(−2%)부터 미충족입니다. 컴플라이언스 밸런스가 부족(적자)으로 계산됩니다."; }
+  else if (lastOK === 2050){ v.className="verdict ok"; v.textContent="2050년 목표(−80%)까지 전 구간 충족하는 설정입니다."; }
+  else { v.className="verdict ok"; v.textContent=`${lastOK}년 목표까지 충족, ${lastOK+5}년 목표부터 미충족입니다.`; }
+
+  drawChart(r);
+
+  // compliance
+  const year = +$("targetYear").value;
+  const target = euTarget(year);
+  const actual = adjIntensity(r, year);
+  const energyMJ = Math.max(0, num("fuelMass"))*1e6*r.lcv;
+  $("energyOut").textContent = (energyMJ/1e6).toLocaleString(undefined,{maximumFractionDigits:0})+" TJ";
+  const cb_g = (target-actual)*energyMJ;
+  $("cTarget").textContent = target.toFixed(2);
+  $("cActual").textContent = actual.toFixed(2);
+  const cb_t = cb_g/1e6;
+  $("cCB").textContent = (cb_t>=0?"+":"")+cb_t.toLocaleString(undefined,{maximumFractionDigits:0});
+  $("cPen").textContent = cb_g<0 && actual>0
+    ? Math.round(Math.abs(cb_g)/(actual*41000)*2400).toLocaleString()+" EUR"
+    : "0 (잉여)";
+}
+
+/* ---------- 차트 ---------- */
+function drawChart(r){
+  const W=680, H=260, mL=46, mR=14, mT=14, mB=28;
+  const x0=2025, x1=2050;
+  const yMax = Math.max(100, r.wtw*1.15, IMO_REF+8);
+  const X = y => mL + (y-x0)/(x1-x0)*(W-mL-mR);
+  const Y = v => mT + (1-v/yMax)*(H-mT-mB);
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FuelEU 목표 경로 차트">`;
+  // grid + y labels
+  for (let g=0; g<=yMax; g+=20){
+    s += `<line x1="${mL}" y1="${Y(g)}" x2="${W-mR}" y2="${Y(g)}" stroke="#e6eaee"/>`;
+    s += `<text x="${mL-6}" y="${Y(g)+4}" font-size="10" fill="#5B6F84" text-anchor="end">${g}</text>`;
+  }
+  // x labels
+  EU_TARGETS.forEach(([y])=>{ s += `<text x="${X(y)}" y="${H-8}" font-size="10" fill="#5B6F84" text-anchor="middle">${y}</text>`; });
+  // IMO ref lines
+  s += `<line x1="${mL}" y1="${Y(IMO_REF)}" x2="${W-mR}" y2="${Y(IMO_REF)}" stroke="#5B6F84" stroke-dasharray="5 4"/>`;
+  s += `<text x="${W-mR-2}" y="${Y(IMO_REF)-4}" font-size="10" fill="#5B6F84" text-anchor="end">IMO NZF 초안 기준 93.3 (미채택)</text>`;
+  s += `<polyline points="${mL},${Y(ZNZ_PRE)} ${X(ZNZ_STEP)},${Y(ZNZ_PRE)} ${X(ZNZ_STEP)},${Y(ZNZ_POST)} ${W-mR},${Y(ZNZ_POST)}" fill="none" stroke="#3A6DA6" stroke-dasharray="5 4"/>`;
+  s += `<text x="${X(ZNZ_STEP)-4}" y="${Y(ZNZ_PRE)-4}" font-size="10" fill="#3A6DA6" text-anchor="end">ZNZ 19.0 (~2034)</text>`;
+  s += `<text x="${W-mR-2}" y="${Y(ZNZ_POST)-4}" font-size="10" fill="#3A6DA6" text-anchor="end">ZNZ 14.0 (2035~)</text>`;
+  // FuelEU step line
+  let pts = "";
+  EU_TARGETS.forEach(([y,red],i)=>{
+    const v = EU_REF*(1-red);
+    const nx = (i<EU_TARGETS.length-1) ? X(EU_TARGETS[i+1][0]) : W-mR;
+    pts += `${X(y)},${Y(v)} ${nx},${Y(v)} `;
+    s += `<circle cx="${X(y)}" cy="${Y(v)}" r="3.2" fill="#A7C8EB" stroke="#0B3D66"/>`;
+  });
+  s += `<polyline points="${pts}" fill="none" stroke="#A7C8EB" stroke-width="2.5"/>`;
+  // fuel line(s)
+  const on = $("rfnbo").value==="on" && FUELS[curFuel].rfnbo;
+  if (on){
+    s += `<line x1="${mL}" y1="${Y(r.wtw/2)}" x2="${X(2033)+ (X(2034)-X(2033))}" y2="${Y(r.wtw/2)}" stroke="#0B3D66" stroke-width="3"/>`;
+    s += `<line x1="${X(2034)}" y1="${Y(r.wtw)}" x2="${W-mR}" y2="${Y(r.wtw)}" stroke="#0B3D66" stroke-width="3"/>`;
+    s += `<text x="${mL+4}" y="${Y(r.wtw/2)-6}" font-size="10.5" fill="#0B3D66" font-weight="bold">보상계수 반영 ${(r.wtw/2).toFixed(1)}</text>`;
+    s += `<text x="${W-mR-2}" y="${Y(r.wtw)-6}" font-size="10.5" fill="#0B3D66" text-anchor="end">2034년 이후 ${r.wtw.toFixed(1)}</text>`;
+  } else {
+    s += `<line x1="${mL}" y1="${Y(r.wtw)}" x2="${W-mR}" y2="${Y(r.wtw)}" stroke="#0B3D66" stroke-width="3"/>`;
+    s += `<text x="${mL+4}" y="${Y(r.wtw)-6}" font-size="10.5" fill="#0B3D66" font-weight="bold">현재 연료 ${r.wtw.toFixed(1)}</text>`;
+  }
+  // compliance dots
+  EU_TARGETS.forEach(([y])=>{
+    const ok = adjIntensity(r,y) <= euTarget(y);
+    s += `<circle cx="${X(y)}" cy="${H-mB+6}" r="4" fill="${ok?"#2E8B57":"#C0504D"}"><title>${y}: ${ok?"충족":"미충족"}</title></circle>`;
+  });
+  s += `</svg>`;
+  $("chart").innerHTML = s;
+}
+
+/* ---------- 튜토리얼 ---------- */
+const TUT = [
+  {el:null, title:"이 툴이 하는 일", body:"선박연료 1MJ당 온실가스(gCO₂eq/MJ)를 Well-to-Tank(생산·공급)와 Tank-to-Wake(선상 연소)로 나눠 계산하고, 합계인 Well-to-Wake를 FuelEU 목표 경로와 IMO 기준선에 대조합니다. 모든 단계의 값을 직접 조정할 수 있어 민감도 분석에 쓸 수 있습니다."},
+  {el:"sec-basis", title:"1. 기준 체계부터 고른다", body:"FuelEU는 AR4 GWP(CH₄ 25), IMO LCA 지침은 AR5(CH₄ 28)를 씁니다. IMO 지침은 개정이 진행 중이므로, 새 값이 나오면 사용자 정의로 입력하세요. RFNBO 보상계수는 e-연료 선택 시 자동으로 켜집니다."},
+  {el:"sec-fuel", title:"2. 연료를 선택한다", body:"화석연료 5종은 FuelEU Annex II 규정 기본값이 그대로 들어갑니다. 바이오·e-연료는 예시값이므로 배지가 노란색으로 표시되며, RED II 인증값이나 IMO FLC 값으로 바꿔 쓰는 것이 원칙입니다. LNG는 엔진 유형별 슬립 기본값을 제공합니다."},
+  {el:"sec-wtt", title:"3. WtT를 단계별로 조정한다", body:"규정은 WtT 합계만 주지만, 이 툴은 원료·생산·운송의 3단계로 분해해 보여줍니다. 분해 비율은 예시이므로 절대값보다 '어느 단계를 바꾸면 합계가 얼마나 움직이는가'를 보는 용도입니다. 예: e-연료는 전력(원료) 단계가 지배적입니다."},
+  {el:"sec-ttw", title:"4. TtW와 슬립을 조정한다", body:"메탄 슬립 1%p 변화가 LNG의 WtW를 얼마나 움직이는지 슬라이더로 확인해 보세요. 기준 체계를 IMO로 바꾸면 GWP(AR5)와 슬립·LCV 기본값이 함께 바뀝니다. 암모니아는 N₂O 계수가 미확정이라 직접 입력 항목입니다."},
+  {el:"sec-result", title:"5. 결과 읽는 법", body:"스택 바는 WtW를 4개 단계로 분해한 것입니다. 화석연료는 TtW(남색)가, e-연료는 WtT가 지배적임을 한눈에 볼 수 있습니다. 아래 판정문은 FuelEU 목표를 몇 년도까지 충족하는지 알려줍니다."},
+  {el:"chartbox", title:"6. 목표 경로와 대조한다", body:"금색 계단선이 FuelEU 목표(2025년 −2%에서 2050년 −80%까지), 남색 가로선이 현재 설정 연료입니다. 회색 점선은 IMO NZF 초안(미채택)의 GFI 기준선(93.3), 청록 점선은 ZNZ 문턱값(2034년까지 19.0, 2035년부터 14.0)입니다. 하단 점이 연도별 충족 여부입니다."},
+  {el:"sec-compliance", title:"7. 컴플라이언스 밸런스", body:"연간 연료량을 넣으면 목표 연도 기준 CB(tCO₂eq)와 페널티를 추정합니다. 양수면 풀링·뱅킹 가능한 잉여, 음수면 부족분입니다. 단일 연료·전체 에너지 적용 가정의 근사치라는 점만 유의하세요."},
+  {el:null, title:"활용 팁", body:"같은 연료를 두고 GWP 체계만 바꿔 결과 차이를 기록하면, FuelEU와 IMO 지침의 정합성 이슈를 수치로 보여주는 자료가 됩니다. 값은 모두 초기화 버튼으로 되돌릴 수 있습니다. 이제 직접 사용해 보세요."}
+];
+let tutIdx = 0, tutEl = null;
+
+function startTutorial(){ tutIdx = 0; showTut(); }
+function tutStep(d){
+  tutIdx += d;
+  if (tutIdx < 0) tutIdx = 0;
+  if (tutIdx >= TUT.length){ endTutorial(); return; }
+  showTut();
+}
+function showTut(){
+  clearHL();
+  const t = TUT[tutIdx];
+  $("tut-overlay").style.display = t.el ? "none" : "block";
+  if (t.el){
+    tutEl = $(t.el);
+    tutEl.classList.add("tut-highlight");
+    tutEl.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+  $("tutEyebrow").textContent = `튜토리얼 ${tutIdx+1} / ${TUT.length}`;
+  $("tutTitle").textContent = t.title;
+  $("tutBody").textContent = t.body;
+  $("tutDots").innerHTML = TUT.map((_,i)=>`<i class="${i===tutIdx?"on":""}"></i>`).join("");
+  $("tutPrev").style.visibility = tutIdx===0 ? "hidden" : "visible";
+  $("tutNext").textContent = tutIdx===TUT.length-1 ? "시작하기" : "다음";
+  const card = $("tut-card");
+  card.style.display = "block";
+  // position: center for intro, bottom-right of viewport otherwise
+  setTimeout(()=>{
+    if (!t.el){
+      card.style.left = "50%"; card.style.top = "50%";
+      card.style.transform = "translate(-50%,-50%)";
+    } else {
+      card.style.transform = "none";
+      card.style.left = Math.max(20, window.innerWidth/2 - 200) + "px";
+      card.style.top = (window.innerHeight - card.offsetHeight - 28) + "px";
+    }
+  }, 250);
+}
+function clearHL(){ if (tutEl){ tutEl.classList.remove("tut-highlight"); tutEl = null; } }
+function endTutorial(){
+  clearHL();
+  $("tut-overlay").style.display = "none";
+  $("tut-card").style.display = "none";
+}
+document.addEventListener("keydown", e=>{
+  if ($("tut-card").style.display==="block"){
+    if (e.key==="Escape") endTutorial();
+    if (e.key==="ArrowRight") tutStep(1);
+    if (e.key==="ArrowLeft") tutStep(-1);
+  }
+});
+</script>
+<script src="site.js"></script>
+<script src="i18n.js"></script>
+</body>
+</html>

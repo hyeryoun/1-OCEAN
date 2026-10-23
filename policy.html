@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · Policy</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="description" content="각국 정부의 해운·조선 탈탄소 정책을 같은 틀로 정리한 연표.">
+
+<!-- ═══════════════════════════════════════════════
+  ✏️ 수정 가이드 (policy.html)
+  · 근거 목록: 하단 <script> 의 S 객체 (제목, 매체, 날짜, URL)
+  · 항목: A('층위id', 줄번호, [[시작연도,끝연도,'상태','칸 글자']], {h,k,sum,pts,f,fo})
+    상태: s-act 이행 확인 / s-plan 계획·예산안 / s-goal 목표 / s-fin 정책금융 / s-ctx 국제 맥락 / s-none 미확인
+  · 나라 추가: 상단 .pl-tabs 에 탭을 더하고, 같은 층위(R)로 데이터를 만듭니다.
+═══════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── Policy: 국가별 정책 연표 ── */
+.pl-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px}
+.pl-tab{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;font:inherit;font-size:14px;color:var(--ocean-deep)}
+.pl-tab.on{background:var(--ocean-deep);border-color:var(--ocean-deep);color:#fff;font-weight:600}
+.pl-tab[aria-disabled="true"]{color:#8BA0B5;border-style:dashed;cursor:default}
+.pl-tab small{font-size:11px;opacity:.8}
+.pl-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.pl-head h2,.pl aside h2{font-family:"Pretendard Variable",Pretendard,sans-serif}
+.pl-head h2{font-size:26px;font-weight:600;color:var(--ocean-deep);letter-spacing:-.01em}
+.pl-head p{color:var(--muted);font-size:14.5px;max-width:66ch;word-break:keep-all;margin-top:6px}
+.pl-head .asof{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.plw{--bg:#F7FBFD;--surface:#FFFFFF;--ink:#0B3D66;--muted:#5B7690;--faint:#8BA0B5;--rule:#DCE7F0;--rule-strong:#9DB4CB;--accent:#4E7DB7;--accent-soft:#E6EFF8;--fin:#6B4FA3;--fin-soft:#EEE9F7;--ok:#1F7A55;--ok-soft:#E3F2EA;--no:#B23A2E;--no-soft:#F8E6E3;--key:#EEF5FB;--f-data:inherit;color:var(--ink)}
+.pl{display:grid;grid-template-columns:minmax(0,2.3fr) minmax(300px,1fr);gap:20px;align-items:start;color:var(--ink);font-size:14px;line-height:1.55}
+.pl .board{background:var(--surface);border:1px solid var(--rule);border-radius:14px;min-width:0}
+.pl .scroll{overflow-x:auto}
+.pl .tl{min-width:780px;padding:8px 12px 12px}
+.pl .row{display:flex;border-top:1px solid var(--rule)}
+.pl .row:first-child{border-top:0}
+.pl .lb{width:104px;flex:none;padding:10px 10px 10px 2px;display:grid;gap:2px;align-content:start}
+.pl .lb b{font-weight:600;font-size:13px}
+.pl .lb span{font-size:11px;color:var(--faint);line-height:1.35}
+.pl .gr{flex:1;display:grid;grid-template-columns:repeat(15,minmax(0,1fr));grid-auto-rows:minmax(28px,auto);gap:4px 0;padding:8px 0;background-image:linear-gradient(to right,var(--rule) 1px,transparent 1px);background-size:calc(100%/15) 100%}
+.pl .gr.head{background:none;padding:4px 0}
+.pl .yh{text-align:center;font-size:11px;color:var(--faint)}
+.pl .yh.k{color:var(--accent);font-weight:600}
+.pl .it{all:unset;box-sizing:border-box;margin:0 1px;border-radius:6px;padding:4px 2px;font-size:10.5px;letter-spacing:-.02em;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;text-align:center;color:var(--ink);font-variant-numeric:tabular-nums}
+.pl .it:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.pl .it:hover{filter:brightness(.97)}
+.pl .it.on{outline:2px solid var(--accent);outline-offset:-1px}
+.pl .s-act{background:var(--surface);border:1.5px solid var(--rule-strong);font-weight:500}
+.pl .s-plan{border:1px solid var(--rule-strong);background:var(--bg)}
+.pl .s-goal{border:1px dashed var(--rule-strong)}
+.pl .s-fin{border:1px dotted var(--fin);background:var(--fin-soft);color:var(--fin)}
+.pl .s-ctx{background:var(--bg);border:1px solid var(--rule);color:var(--muted)}
+.pl .s-none{border:1px dashed var(--rule);color:var(--faint);font-style:italic}
+.pl .legend{display:flex;flex-wrap:wrap;gap:8px 16px;padding:12px 14px;border-top:1px solid var(--rule);font-size:12px;color:var(--muted);align-items:center}
+.pl .sw{display:inline-block;width:22px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.pl aside{position:sticky;top:96px;max-height:calc(100vh - 112px);overflow:auto;background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:18px 20px;min-width:0}
+.pl .meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.pl .tag{font-size:11px;padding:1px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.pl aside h2{font-size:18px;font-weight:600;margin-bottom:8px;word-break:keep-all}
+.pl .sum{background:var(--bg);border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:13.5px;word-break:keep-all}
+.pl .sum b{display:block;font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:2px}
+.pl aside h3{font-size:11.5px;letter-spacing:.08em;color:var(--muted);font-weight:600;margin:16px 0 6px}
+.pl aside ul{margin:0;padding-left:18px;display:grid;gap:4px;word-break:keep-all}
+.pl .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pl .fgp{font-size:11px;color:var(--faint);margin-bottom:3px}
+.pl .chip{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;margin:2px 3px 2px 0;border:1px solid var(--rule);color:var(--faint)}
+.pl .chip.in{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pl .chip.out{background:var(--no-soft);color:var(--no);border-color:transparent;text-decoration:line-through}
+.pl .note{font-size:12px;color:var(--faint);margin-top:12px}
+.pl sup.fn{font-size:10px;color:var(--accent);margin-left:2px}
+.pl .fns{list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:12.5px;border-top:1px solid var(--rule);padding-top:10px}
+.pl .fns li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:4px}
+.pl .fns .n{color:var(--accent)}
+.pl .fns a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:2px}
+.pl .fns small{color:var(--faint);font-size:11px}
+.pl .lb2{font-size:12px;font-weight:600;margin:12px 0 4px}
+.plw .ins{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:4px 0;margin-bottom:18px;padding:0}
+.plw .ins-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:12px 16px 8px}
+.plw .ins-head h3{font-size:15px;font-weight:600;color:var(--ink);font-family:"Pretendard Variable",Pretendard,sans-serif}
+.plw .ins-head span{font-size:12px;color:var(--faint)}
+.plw .ins-list{display:grid}
+.plw .ic{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:8px 16px;border-top:1px solid var(--rule)}
+.plw .ic:hover{background:var(--bg)}
+.plw .ic:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.plw .ic.on{background:var(--accent-soft)}
+.plw .ic .tg{font-size:11.5px;color:var(--accent);white-space:nowrap;font-weight:600}
+.plw .ic b{font-size:13.5px;font-weight:500;line-height:1.5;color:var(--ink);word-break:keep-all}
+.plw .ic .qs{display:flex;gap:4px}
+.plw .ic .qs i{font-style:normal;font-size:10.5px;padding:0 6px;border-radius:4px;border:1px solid var(--rule);color:var(--muted);white-space:nowrap}
+.plw .ic.x .tg{color:var(--muted)}
+@media (max-width:600px){.plw .ic{grid-template-columns:1fr;gap:2px}.plw .ic .qs{display:none}}
+.pl .tl.focus .it:not(.rel){opacity:.28}
+.pl .it.rel{outline:2px solid var(--accent);outline-offset:-1px}
+.pl .qlist{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.pl .qlist li{background:var(--accent-soft);border-radius:8px;padding:7px 10px;font-size:13px;word-break:keep-all}
+.pl .qlist li em{font-style:normal;font-size:11px;color:var(--accent);margin-right:6px;font-weight:600}
+.plw .ic{grid-template-columns:96px minmax(0,1fr) 20px!important}
+.plw .ic .tw{color:var(--faint);font-size:15px;text-align:center;transition:transform .2s}
+.plw .ic.on .tw{transform:rotate(45deg);color:var(--accent)}
+.plw .iq{background:var(--accent-soft);padding:6px 16px 12px 124px;border-top:1px solid var(--rule)}
+.plw .iq p{font-size:11.5px;font-weight:600;color:var(--accent);margin:4px 0 6px}
+.plw .iq ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.plw .iq li{font-size:13px;line-height:1.55;color:var(--ink);word-break:keep-all}
+@media (max-width:600px){.plw .ic{grid-template-columns:1fr 20px!important}.plw .ic .tg{grid-column:1/-1}.plw .iq{padding-left:16px}}
+.pl-ref{font-size:13px;color:var(--muted);margin-top:8px;padding-top:12px;border-top:1px solid var(--line);word-break:keep-all}
+.pl-ref a{color:var(--ocean-deep);text-decoration:underline;text-underline-offset:3px}
+:root:lang(en) .plw .ic{grid-template-columns:190px minmax(0,1fr) 20px!important}
+:root:lang(en) .plw .iq{padding-left:218px}
+.pl-note{font-size:12.5px;color:var(--muted);margin-top:14px;word-break:keep-all}
+@media (max-width:860px){.pl{grid-template-columns:1fr}.pl aside{position:static;max-height:none}}
+</style>
+</head>
+<body>
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="index.html">Home</a>
+      <a href="story.html">Story</a>
+      <a class="active" aria-current="page" href="policy.html">Policy</a>
+      <a href="insight.html">Insight</a>
+      <a href="project.html">Project</a>
+      <a href="tool.html">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="page-hero-oc">
+  <div class="wrap">
+    <p class="kicker">POLICY</p>
+    <h1>Policy on the route</h1>
+  </div>
+</section>
+
+<section style="padding-top:48px">
+  <div class="wrap">
+    <div class="pl-tabs" role="tablist" aria-label="국가 선택">
+      <button type="button" class="pl-tab on" role="tab" aria-selected="true">대한민국</button>
+      <button type="button" class="pl-tab" role="tab" aria-selected="false" aria-disabled="true">국제 · IMO · EU <small>준비 중</small></button>
+    </div>
+    <div class="pl-head">
+      <div>
+        <h2>한국 친환경선박 정책 연표 · 2021–2035</h2>
+      </div>
+      <span class="asof">기준일 2026.10</span>
+    </div>
+    <div class="plw">
+    <section class="ins" aria-label="핵심 인사이트">
+      <div class="ins-head"><h3>핵심 인사이트</h3><span>누르면 연표에서 관련 칸만 강조되고, 한 번 더 누르면 전체가 보입니다</span></div>
+      <div class="ins-list" id="insGrid"></div>
+    </section>
+    <div class="pl">
+      <div class="board" role="region" aria-label="정책 연표">
+        <div class="scroll"><div class="tl" id="pl-tl"></div></div>
+        <div class="legend">
+      <span><span class="sw" style="background:var(--surface);border:1.5px solid var(--rule-strong)"></span>이행 확인 (집행·실적 보도 있음)</span>
+      <span><span class="sw" style="background:var(--bg);border:1px solid var(--rule-strong)"></span>계획·예산안 (집행 전)</span>
+      <span><span class="sw" style="border:1px dashed var(--rule-strong)"></span>목표 (달성 실적 미공개 또는 미래)</span>
+      <span><span class="sw" style="background:var(--fin-soft);border:1px dotted var(--fin)"></span>정책금융</span>
+      <span><span class="sw" style="background:var(--bg);border:1px solid var(--rule)"></span>국제 맥락</span>
+      <span><span class="sw" style="border:1px dashed var(--rule)"></span>공개자료 미확인</span>
+      <span>한 계획이 두 칸으로 나뉜 경우: 앞은 이행 기간, 뒤는 목표 기간 · * 집계 범위 다름 · 금액 억원</span>
+    </div>
+      </div>
+      <aside id="pl-panel" aria-live="polite"></aside>
+    </div>
+    </div>
+    <p class="pl-note">근거는 정부 보도자료와 언론 보도로 한정했습니다. 연도별 시행계획 총액 중 보도로 확인되지 않은 해는 "미확인"으로 두었습니다.</p>
+    <p class="pl-ref">이 연표는 기후솔루션(SFOC)의 <a href="https://forourclimate.org/ko/research/700" target="_blank" rel="noopener">「대한민국 해운의 탈탄소 경쟁력을 위한 녹색선박연료 보조금 정책 제언」</a>(2026.10) 보고서를 참고해 정리하고, 보완 방향을 제안했습니다.</p>
+  </div>
+</section>
+
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="index.html" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="index.html">Home</a></li><li><a href="story.html">Story</a></li><li><a href="policy.html">Policy</a></li><li><a href="insight.html">Insight</a></li><li><a href="project.html">Project</a></li><li><a href="tool.html">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="index.html#s1">01 Regulation</a></li><li><a href="index.html#s2">02 Transition</a></li><li><a href="index.html#s3">03 Scale up</a></li><li><a href="index.html#s4">04 Governance</a></li><li><a href="index.html#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@planit.institute">contact@planit.institute</a></li>
+        <li>Hyeryoun Chi, Lead Researcher</li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const G=[["화석·배출저감",["배출저감","탄소포집","풍력","LPG","LNG"]],["혼합·과도기",["LNG+수소","LNG+암모니아","LNG+탄소포집","LNG+하이브리드","하이브리드","메탄올+LNG"]],["무탄소·녹색",["메탄올","수소","암모니아","전기","바이오·e-fuel"]],["기타",["구분불가"]]];
+const R=[
+ {id:'ctx',n:'국제 규제',d:'IMO 감축 목표와 중기조치'},
+ {id:'law',n:'법·제도',d:'친환경·녹색선박의 법적 정의'},
+ {id:'plan',n:'계획·전략',d:'정부 기본계획과 범부처 전략'},
+ {id:'rd',n:'재정: 개발',d:'산업부 개발시행계획·R&D'},
+ {id:'sup',n:'재정: 보급',d:'해수부 보급시행계획·예산'},
+ {id:'ship',n:'보급 척수',d:'실제 지원 실적과 목표'},
+ {id:'fin',n:'정책금융',d:'해진공·산은·수은 금융, 펀드'},
+ {id:'inf',n:'연료공급 인프라',d:'벙커링·저장·항만'},
+ {id:'perf',n:'성과·검증',d:'집행 실적과 배출 관리'}];
+const S={
+ m18:['조선산업 활력제고 방안(11.22일 발표)은 중소조선사와 중소기자재 업체를 지원하기 위한 대책','산업통상자원부 보도설명자료','2018.12.20','https://www.motir.go.kr/attach/down/095a2dda9c864e1d90d751f7668a1117/1d8fd1c4f911da668db545e9cdb61032'],
+ dl19:['“항만미세먼지, 2022년까지 50% 이상 감축 목표”','데일리안','2019.6.28','https://www.dailian.co.kr/news/view/806595/'],
+ dl18:['국내 최초, 친환경 LNG 추진 선박 도입','데일리안','2018.10.12','https://m.dailian.co.kr/news/view/744683'],
+ mt20:['[기고]친환경선박, 탄소중립 시대를 향한 초석이 되길 희망한다','머니투데이','2020.12.15','https://www.mt.co.kr/economy/2020/12/15/2020121414241645393'],
+ cb:['Q&A: How countries got the global ‘net-zero’ shipping deal ‘back on track’','Carbon Brief','2026.5.5','https://www.carbonbrief.org/qa-how-countries-got-the-global-net-zero-shipping-deal-back-on-track'],
+ gcap:['IMO Net-Zero Talks Resume With Carbon Pricing at Center of Debate','gCaptain','2026.8.28','https://gcaptain.com/imo-net-zero-talks-resume-with-carbon-pricing-at-center-of-debate/'],
+ law:['환경친화적 선박의 개발 및 보급 촉진에 관한 법률','국가법령정보센터','법령 원문','https://www.law.go.kr/법령/환경친화적선박의개발및보급촉진에관한법률'],
+ gsc:['친환경선박 확산으로 ‘녹색해운항로’ 시대를 향해','산업통상부·해양수산부 보도자료','2026.8.27','https://www.motir.go.kr/kor/article/ATCL3f49a5a8c/172134/view'],
+ asia:['2035년까지 친환경선박 889척 전환…‘녹색해운항로’ 제도화','아시아투데이','2026.8.27','https://www.asiatoday.co.kr/kn/view.php?key=20260827010009433'],
+ etd26:['세계 첫 ‘녹색해운항로법’ 내년 시행…친환경선박 889척 전환','이투데이','2026.8.27','https://www.etoday.co.kr/news/view/2618735'],
+ haesa:['세계 첫 ‘녹색해운항로법’ 내년 시행…2035년까지 친환경선박 889척 전환 지원','해사신문','2026.8','http://www.haesanews.com/news/articleView.html?idxno=150510'],
+ jae:['무탄소선 시장 50% 노린다...HD현대·한화오션·삼성重 친환경 기술 ‘각축’','중앙이코노미뉴스','2026.8.28','https://www.joongangenews.com/news/articleView.html?idxno=543704'],
+ npim:['정부, 친환경선박 확대 속도…2035년까지 889척 지원','뉴스핌','2026.8.27','https://www.newspim.com/news/view/20260827000342'],
+ dl1:['정부 ‘그린쉽-K’ 추진…친환경선박기술로 10년 내 온실가스 70% 줄인다','데일리안','2020.12.23','https://www.dailian.co.kr/news/view/949156/'],
+ nt21:['공공·민간선박 39척, 친환경선박 ‘본격화’…‘그린십-K’ 2050억 투입','뉴스토마토','2021.1.12','https://newstomato.com/ReadNews.aspx?no=1018000'],
+ dl21:['친환경 선박시장 주도…한국형 국제 표준화 ‘시동’','데일리안','2021.1.12','https://m.dailian.co.kr/news/view/954743'],
+ etd21:['국가어업지도선 연료 LNG로 바꾼다…미세먼지ㆍ황산화물질 배출 25%↓','이투데이','2021.4.14','https://www.etoday.co.kr/news/view/2015251'],
+ imo1:['MEPC 80 sets new GHG reduction targets for shipping','Marine Log','2023.7','https://www.marinelog.com/news/mepc-80-sets-new-ghg-reduction-targets-for-shipping/'],
+ imo2:['MEPC 80 agrees on revised GHG strategy','SAFETY4SEA','2023.7','https://safety4sea.com/mepc-80-agrees-on-revised-ghg-strategy'],
+ imo3:['Marine Environment Protection Committee (MEPC 80), 3-7 July 2023','Hellenic Shipping News','2023.7','https://www.hellenicshippingnews.com/?p=993580'],
+ imo4:['Report of the 80th session of the IMO’s Marine Environment Protection Committee (MEPC 80)','IUMI','2023.9','https://iumi.com/news/iumi-eye-newsletter-september-2023/report-of-the-80th-session-of-the-imos-marine-environment-protection-committee-mepc-80'],
+ nzf1:['Negotiations at International Maritime Organization adjourn without a decision on shipping’s Net-Zero Framework','Global Maritime Forum','2025.10','https://globalmaritimeforum.org/press/negotiations-at-IMO-adjourn-without-a-decision-on-NZF/'],
+ nzf2:['IMO’s MEPC adjourns discussion on net-zero shipping for one year','DieselNet','2025.10.17','https://dieselnet.com/news/2025/10imo.php'],
+ nzf3:['IMO’s Net-Zero Framework - Adoption adjourned, and consensus building continues','Hill Dickinson','2025.10.30','https://www.hilldickinson.com/our-view/articles/imo-s-net-zero-framework-adoption-adjourned-and-consensus-building-continues/'],
+ nzf4:['IMO Postpones Adoption of Net Zero Framework','Vinson & Elkins','2025.10.24','https://www.velaw.com/insights/imo-postpones-adoption-of-net-zero-framework/'],
+ dc1:['Korea’s All International Navigation Vessels to Go Green by 2050','Hellenic Shipping News (BusinessKorea)','2023.2','https://www.hellenicshippingnews.com/?p=969473'],
+ dc2:['South Korea Sets out Stall on Maritime Decarbonisation','Ship & Bunker','2023.2','https://shipandbunker.com/news/apac/357457-south-korea-sets-out-stall-on-maritime-decarbonisation'],
+ dc3:['158조원짜리 해운산업 탈탄소화, 초기 전략이 성패 가른다','데일리안','2023.2.14','https://www.dailian.co.kr/news/view/1202075/'],
+ dc4:['해운업계, 메탄올 추진선 수주전 치열…한국도 발주 본격화','뉴스토마토','2023.2.15','https://newstomato.com/ReadNews.aspx?no=1177420'],
+ kj:['정부, 조선 산업 초격차 2028년까지 7100억 투입(종합)','아시아경제','2023.11.15','https://core.asiae.co.kr/article/2023111508424510227'],
+ nsx:['2030년까지 국내 항만 친환경 선박 연료 공급 비율 30%로 확대','뉴시스','2023.11.15','https://www.newsis.com/view/NISX20231114_0002520718'],
+ nt23:['항만 친환경연료 공급 30%로 늘린다…공급거점 ‘울산항’','뉴스토마토','2023.11.15','https://newstomato.com/ReadNews.aspx?no=1208523'],
+ cel932:['2030년까지 선박연료 친환경 비율 30%까지 늘린다','물류신문 (Cello Square 재게시)','2023.11','https://www.cello-square.com/kr/blog/view-932.do'],
+ kidd:['친환경 선박 관련 예산 전년대비 52% 증가…“선박 기술 개발의 마중물”','산업일보','2023.1.30','https://kidd.co.kr/news/231157'],
+ mo22:['2022년도 친환경선박 전환대응 미세먼지저감 성능평가기반 구축 신규사업 시행계획 공고','산업통상자원부 공고 제2022-375호','2022.4.25','https://www.motir.go.kr/attach/down/c26df36c4f964b1523b31be51e734922/387a532f84fdf25092806690f4e93e2a'],
+ nd26:['산업부 “K-조선 초격차 기술에 올해 3200억원 투자 … 역대 최대 규모”','뉴데일리','2026.2.24','https://biz.newdaily.co.kr/site/data/html/2026/02/24/2026022400149.amp.html'],
+ mo26:['K-조선 초격차 기술에 올해 3,200억 원 집중 투입','산업통상부 보도자료','2026.2.24','https://www.motir.go.kr/kor/article/ATCL3f49a5a8c/171533/view'],
+ fs27:['산업부, 13조2573억원 예산 편성… AI·자동차·조선·이차전지 등 육성','Finance Scope','2026.9.1','https://www.finance-scope.com/article/view/scp202609010018'],
+ mo27:['2027년 산업통상부 예산 역대 최대 편성!','산업통상부','2026.9.1','https://www.motir.go.kr/kor/article/ATCL4fcf3d8c6/795/view'],
+ etdR:['정부, 2031년까지 2540억 투입해 친환경 선박 개발ㆍ실증 추진','이투데이','2022.7.15','https://www.etoday.co.kr/news/view/2153984'],
+ jkn:['[기후위기와 산업] ‘10년 후 친환경선박 조기 상용화’…무탄소 추진 핵심기술 개발','재경일보','2022.7','https://news.jkn.co.kr/post/836103'],
+ metR:['친환경선박전주기혁신기술 개발사업 통합사업단, KORIES 세미나 개최','메트로신문','2023.12.8','https://www.metroseoul.co.kr/article/20231208500246'],
+ n1sm:['내년 해양수산분야 예산 6.6조 편성, 3%↑…오염수 대응·지원 대폭 확대','뉴스1 (다음 재게시)','2023.8.29','https://v.daum.net/v/20230829110217568'],
+ cel26:['2026년 ‘728조 슈퍼예산’ 편성, 물류 관련 예산은','물류신문 (Cello Square 재게시)','2025.9.9','https://www.cello-square.com/kr/blog/view-1776.do'],
+ ft26:['해수부, 내년 예산 7.3조 확정…북극항로·스마트양식 투자 확대','푸드투데이','2025.9.2','https://www.foodtoday.or.kr/news/article.html?no=197916'],
+ sbs27:['해수부, 해양수도권 육성 본격화…북극항로도 고삐 [2027 예산안]','SBS Biz','2026.9.1','https://biz.sbs.co.kr/amp/article/20000332003'],
+ fn27:['2027년 해수부 예산안 8조 2636억원...재출범 이후 최대 증가율','파이낸셜뉴스','2026.9.1','https://www.fnnews.com/news/202609010940524896'],
+ ns27:['‘바다에서 여는 대한민국의 새로운 성장’ 2027년 해수부 정부 예산안 8.3조 원 편성','뉴스서울','2026.9.1','https://newsseoul.co.kr/news/view/1065609014754755'],
+ nc24:['친환경선박 건조비용 최대 30% 지원…취득세도 최대 2%p 경감','노컷뉴스','2024.9.5','https://www.nocutnews.co.kr/news/6207158'],
+ ns24:['해양수산부, 친환경선박 건조비용의 최대 30% 지원','뉴스서울','2024.9.6','https://newsseoul.co.kr/news/view/1065568817542490'],
+ fn26:['해양수산부, 친환경인증선박 보급지원사업 연안선사 모집','파이낸셜뉴스','2026.2.26','https://www.fnnews.com/news/202602261100116632'],
+ ns26:['친환경인증선박 보급지원사업 참여 선사 모집','뉴스서울','2026.7.26','https://newsseoul.co.kr/news/view/1065603016224931'],
+ met23:['HJ중공업, 9000TEU급 메탄올 추진 컨선 2척 수주…친환경 선박 수주 기대감↑','메트로신문','2023.2.15','https://www.metroseoul.co.kr/article/20230215500286'],
+ hr26:['해진공, 친환경 선박금융 지원…‘라임호’ 명명식','헤럴드경제','2026.4.8','https://www.heraldk.com/article/2026040823141346454'],
+ sg21:['“2030년까지 매출 70조 이상 달성” (해운산업 리더국가 실현전략)','세계일보','2021.6.29','https://www.segye.com/newsView/20210629515372'],
+ nd24:['해운산업 경영안정 및 활력 제고 방안 발표…체질개선에 3.5조 투입','뉴데일리','2024.4.15','https://biz.newdaily.co.kr/site/data/html/2024/04/15/2024041500195.html'],
+ dl24:['정부, 해운산업에 2030년까지 민간 펀드 바탕 3.5조원 투입','데일리안','2024.4.15','https://www.dailian.co.kr/news/view/1350594/'],
+ ns24b:['해양수산부, 위기를 넘어 글로벌 TOP4 친환경 해운강국으로, 정부와 민간이 함께 이룬다','뉴스서울','2024.4.15','https://newsseoul.co.kr/news/view/1065573015541284'],
+ mh23:['한국해양진흥공사 친환경 설비 개량 이차보전·특별보증 사업 공고 보도','문화일보','2023.12','https://www.munhwa.com/article/11403524'],
+ hr26a:['“암모니아로 배 움직인다”…울산항서 세계 첫 벙커링 실증','헤럴드경제','2026.4.22','https://www.heraldk.com/article/2026042218000053066'],
+ hr26b:['BPA, ‘부산항 친환경 선박 인프라 구축 간담회’ 개최','헤럴드경제','2026.5.13','https://www.heraldk.com/article/2026051222013461701'],
+ nt22:['“친환경 선박, 금융 지원과 업계 간 협력 필요”','뉴스토마토','2022.11.28','https://newstomato.com/ReadNews.aspx?no=1163056']
+};
+const I=[];
+function A(r,l,seg,o){I.push(Object.assign({r,l,seg},o))}
+/* seg: [[start,end,status,label], ...] · 한 항목을 이행 구간과 목표 구간으로 나눌 수 있음 */
+
+A('ctx',1,[[2023,2035,'s-ctx','IMO 2023 온실가스 감축전략']],{h:'IMO 2023 온실가스 감축전략',k:'국제 맥락',sum:'국제해운 넷제로를 2050년 무렵으로 잡고, 2030·2040년 중간 점검치를 둔 IMO 전략입니다.',pts:[
+ ['2023년 7월 MEPC 80에서 채택',['imo3']],
+ ['2030년: 2008년 대비 최소 20% 감축, 30%까지 노력',['imo2','imo4']],
+ ['2040년: 최소 70% 감축, 80%까지 노력',['imo1','imo2']],
+ ['2030년까지 무탄소·저탄소 연료 도입 약속',['imo1']],
+ ['2027년 여름 MEPC 86에서 전략 재검토 시작, 2028년 가을 MEPC 88에서 개정 전략 채택 예정',['imo1']]]});
+A('ctx',2,[[2025,2025,'s-ctx','NZF']],{h:'IMO Net-Zero Framework 승인과 채택 연기',k:'국제 맥락',sum:'연료 표준과 온실가스 가격제를 묶은 IMO 중기조치가 2025년 4월 승인됐지만, 10월 채택 회의가 1년 연기됐습니다.',pts:[
+ ['2025년 4월 MEPC 83에서 MARPOL 부속서 VI 신설 5장으로 승인',['nzf2']],
+ ['두 요소: 전 세계 선박 연료 표준, 온실가스 배출 가격 메커니즘',['nzf2']],
+ ['2025년 10월 특별회기에서 1년 연기 동의안 가결(57개국 찬성, 49개국 반대)',['nzf2','nzf3']],
+ ['미국 정부가 채택 반대를 공개 표명',['nzf4']],
+ ['연기 기간에도 이행 지침 작업은 계속',['nzf1']]]});
+A('ctx',2,[[2026,2026,'s-ctx','MEPC84'],[2027,2035,'s-ctx','MEPC 85(2026.12) 채택 재시도 · 발효 미정']],{h:'NZF 2026년 재논의',k:'국제 맥락',sum:'2026년 4월 MEPC 84에서도 채택되지 않았지만 유일한 최종안으로 남았고, 2026년 11월 30일~12월 3일 MEPC 85에서 채택을 다시 시도합니다.',pts:[
+ ['2026년 4월 MEPC 84: 채택 불발, 원안이 논의의 기본 바탕으로 유지',['cb']],
+ ['탄소가격을 뺀 대안들은 과반 지지를 얻지 못함',['cb']],
+ ['2026년 9월 1~4일 런던 중간회기 실무그룹, 결과는 MEPC 85에 보고',['gcap']],
+ ['MEPC 85: 2026년 11월 30일~12월 3일 예정',['gcap']],
+ ['쟁점: 탄소가격 구조와 강도, 기금 형태, 연 100억~150억 달러 수입의 징수·배분',['gcap']],
+ ['채택되더라도 묵시적 수락 절차상 최소 10개월이 지나야 수락된 것으로 간주',['nzf3']]]});
+
+A('law',1,[[2021,2035,'s-act','친환경선박법 (2020.1 시행) · LNG·LPG도 “친환경”']],{h:'친환경선박법',k:'법·제도',sum:'친환경선박 개발·보급 지원의 근거법입니다. LNG 등 화석연료 추진선도 친환경선박 범위에 들어갑니다.',pts:[
+ ['2018년 12월 제정, 2020년 1월 시행',['etd21']],
+ ['산업부(개발)·해수부(보급)가 기본계획과 연도별 시행계획을 수립',['law','dl21']],
+ ['친환경인증 1~5등급, 연안 보조 대상은 LNG·전기·하이브리드 3등급 이상',['fn26']],
+ ['2022년 국회 토론회에서 해수부는 선박 조세리스·투자자 과세특례 도입 추진을 언급',['nt22']]],f:['배출저감','LPG','LNG','LNG+하이브리드','하이브리드','메탄올','수소','암모니아','전기']});
+A('law',2,[[2026,2026,'s-act','공포'],[2027,2035,'s-plan','녹색해운항로법 (2027.4 시행) · LNG 제외']],{h:'녹색해운항로 구축 지원 특별법',k:'법·제도',sum:'저탄소·무탄소 연료 선박과 연료공급 항만을 잇는 “녹색해운항로”를 지정·지원하는 법입니다. 녹색선박 범위에 LNG가 없습니다.',pts:[
+ ['2024.10.2 발의 → 2026.3.31 공포 → 2027.4.1 시행',['gsc','asia']],
+ ['하위법령 입법예고 2026.9.2~10.13, 2027년 2월까지 국무회의 확정 예정',['gsc','asia']],
+ ['녹색선박: 메탄올·수소·암모니아·바이오연료·재생합성연료 추진선, 전기·연료전지 추진선',['asia','etd26']],
+ ['출발·도착 항만은 친환경 연료공급 체계를 갖춰야 지정 가능',['asia']],
+ ['녹색해운항로 기본계획·예산은 아직 공개되지 않음',[]]],f:['메탄올','수소','암모니아','전기','바이오·e-fuel'],fo:['배출저감','LPG','LNG']});
+
+A('plan',1,[[2021,2025,'s-act','제1차 기본계획 이행 (시행계획·예산 집행)'],[2026,2030,'s-goal','2030 목표 528척 · 40만t']],{h:'제1차 친환경선박 개발·보급 기본계획 (2021~2030)',k:'계획',sum:'2030년까지 528척을 친환경선박으로 바꾸는 첫 10년 계획입니다. 2021~2025년 이행 기록은 확인되고, 2030년 목표의 달성 실적은 공개되지 않았습니다.',pts:[
+ ['## 계획 내용 (2020.12.23 발표)'],
+ ['대상 3,542척 중 528척 전환(15%), 온실가스 40만 톤 감축',['dl1']],
+ ['관공선 388척: 노후선 199척 대체건조 + 선령 10년 미만 189척 DPF 장착',['dl1']],
+ ['## 이행이 확인된 것 (2021~2025)'],
+ ['2021년 보급 시행계획 고시: 24개 사업 2,050억, 공공 23척·민간 16척',['nt21','dl21']],
+ ['친환경선박 인증제도 도입',['dl21']],
+ ['LNG 복합추진 국가어업지도선 2척 표준설계 착수(2024년까지 973억)',['etd21']],
+ ['2022·2023년 개발시행계획 956억 → 1,454억',['kidd']],
+ ['2022년 미세먼지저감 성능평가기반 구축 착수(국비 170억, 2022~2025)',['mo22']],
+ ['2022년 전주기 혁신기술개발사업 통합사업단 출범',['etdR']],
+ ['연안 친환경인증선박 보조 2021~2025년 누적 22척·514억',['fn26']],
+ ['## 미확인·목표로 남은 것'],
+ ['528척·40만t 목표 대비 누적 전환 척수와 감축량: 공개 자료 없음',[]],
+ ['2026년부터 제2차 기본계획(2026~2035)이 이어받음',['gsc']]],f:['배출저감','LNG','LNG+하이브리드','하이브리드','수소','암모니아','전기']});
+A('plan',2,[[2023,2026,'s-act','탈탄소화 추진전략 이행'],[2027,2035,'s-goal','→ 2050 외항선 867척']],{h:'국제해운 탈탄소화 추진전략 (2023.2)',k:'계획',sum:'5,000톤 이상 국적 외항선 867척을 2050년까지 친환경선으로 바꾸는 범부처 전략입니다. 발표 직후 메탄올선 발주와 금융 지원이 이어졌습니다.',pts:[
+ ['## 계획 내용'],
+ ['2030년 118척 전환, 이 중 미주·유럽 정기선 60%(26척) 우선',['dc1','dc2']],
+ ['신조는 e-메탄올·LNG 등, 암모니아·수소선은 개발 병행',['dc1']],
+ ['2030년까지 선사 추가비용 약 1.8조, 해진공·산은·수은·캠코 약 4.5조 금융',['dc1']],
+ ['## 이행이 확인된 것'],
+ ['발표 당일 HMM 메탄올 추진 컨테이너선 9척 발주',['dc4']],
+ ['해진공 협조금융으로 9척 중 8척 인도(2026.4)',['hr26']],
+ ['## 미확인'],
+ ['118척 목표 대비 전환 실적, 4.5조 집행액: 공개 자료 없음',[]]],f:['LNG','메탄올','메탄올+LNG','수소','암모니아']});
+A('plan',3,[[2024,2028,'s-plan','K-조선 차세대 선도전략 7,100억']],{h:'K-조선 차세대 선도전략 (2023.11)',k:'계획',sum:'조선업 초격차를 위해 2028년까지 7,100억을 투입하는 산업부 전략입니다.',pts:[
+ ['2023년 11월 15일 비상경제장관회의 발표, 2028년까지 7,100억',['kj']],
+ ['LNG·암모니아·수소 기술 상용화에 5년간 2,000억',['kj']],
+ ['LNG선 메탄슬립 저감, 암모니아 연료공급 시스템·시험평가 설비',['kj']],
+ ['연도별 집행 내역은 공개되지 않음',[]]],f:['LNG','수소','암모니아']});
+A('plan',4,[[2026,2026,'s-plan','수립'],[2027,2035,'s-goal','제2차 기본계획 · 5대 전략 13과제 → 889척']],{h:'제2차 친환경선박 개발·보급 기본계획 (2026~2035)',k:'계획',sum:'2035년까지 889척 전환, 외항선대 배출 61% 감축, 무탄소선 시장 점유율 50%를 목표로 한 두 번째 10년 계획입니다.',pts:[
+ ['2026년 8월 27일 산업부·해수부 공동 발표',['gsc']],
+ ['조선: 세계 점유율 25%, 무탄소선 시장 점유율 50%',['asia','jae']],
+ ['해운: 외항선대 2008년 대비 61%↓, 국내 해운 2018년 대비 20.2%↓',['asia']],
+ ['5대 전략 13개 세부과제(연구개발, 상용화, 연료공급 인프라, 보급, 생태계)',['gsc','asia']],
+ ['인프라: 기존 저탄소 연료 공급망 확대 + 수소·암모니아 저장·공급 기반 단계적 구축',['asia']],
+ ['중소 조선·기자재사 설계·실증 지원, 조선-해운 상생발전 전략협의회로 국내 건조 연계',['gsc','asia']],
+ ['총사업비·연도별 재원·연료별 척수·2030 중간목표는 공개되지 않음',[]]],f:['LNG','LNG+수소','LNG+암모니아','메탄올','수소','암모니아'],note:'LNG 표시는 “저탄소 연료 공급 인프라 확대”, “혼합연료 기자재” 과제에서 추정한 것입니다.'});
+
+A('rd',1,[[2022,2022,'s-act','956']],{h:'2022 친환경선박 개발시행계획 956억',k:'재정 · 개발',sum:'산업부가 수립한 개발시행계획의 2022년 예산입니다.',pts:[
+ ['2023년 계획 보도에서 전년도 투입액을 956억으로 명시',['kidd']],
+ ['신규: 친환경선박 전환대응 미세먼지저감 성능평가기반 구축(총 국비 170억, 2022년 29억)',['mo22']],
+ ['연료별 사업 금액은 보도로 확인되지 않음',[]]],f:['배출저감']});
+A('rd',1,[[2023,2023,'s-act','1,454']],{h:'2023 친환경선박 개발시행계획 1,454억',k:'재정 · 개발',sum:'전년보다 약 52% 늘었고, 증액분은 수소·암모니아·전기 등 무탄소 기술에 집중됐습니다.',pts:[
+ ['산업부·해수부·중기부 합동, 2023년 1월 30일 공고',['kidd']],
+ ['수소·암모니아 선박 엔진, 전기 선박 추진기 등 무탄소 핵심기술 예산 확대',['kidd']],
+ ['해상실증 기술검증·시장진입 155억, 수소·암모니아 시범선박 건조 195억',['kidd']]],f:['수소','암모니아','전기']});
+A('rd',1,[[2024,2024,'s-none','미확인']],{h:'2024 개발시행계획 총액',k:'재정 · 개발',sum:'2024년 개발시행계획 총액을 밝힌 정부 보도자료·언론 보도를 찾지 못했습니다.',pts:[
+ ['참고: 2024년 해수부 R&D 중 미래선박기술개발 369억 → 444억(정부안)',['n1sm']],
+ ['확인 방법: 산업부 “2024년도 친환경선박 개발시행계획” 공고 원문',[]]],f:[]});
+A('rd',1,[[2025,2025,'s-none','미확인']],{h:'2025 개발시행계획 총액',k:'재정 · 개발',sum:'2025년 개발시행계획 총액을 밝힌 정부 보도자료·언론 보도를 찾지 못했습니다.',pts:[
+ ['참고: 2026년 조선 R&D가 전년 대비 약 23% 늘어 3,200억이므로 2025년 조선 R&D는 약 2,600억 수준(조선 R&D 전체, 친환경 개발시행계획 금액 아님)',['nd26']],
+ ['확인 방법: 산업부 “2025년도 친환경선박 개발시행계획” 공고 원문',[]]],f:[]});
+A('rd',1,[[2026,2026,'s-plan','3,200*']],{h:'2026 산업부 조선 R&D 3,200억',k:'재정 · 개발',sum:'역대 최대 조선 R&D 예산입니다. AI·자율운항 등이 함께 들어 있어 2022·2023 친환경선박 개발시행계획과 직접 비교할 수 없습니다.',pts:[
+ ['전년 대비 약 23% 증가, 신규 34개 과제 427억',['nd26']],
+ ['친환경: 암모니아 터빈·수소 엔진, 배출가스 CO₂ 포집·저장, 중대형 전기추진 기자재',['nd26','mo26']],
+ ['전주기사업 신규: 15MW급 암모니아 전소 가스터빈 연소기 120억/33개월',['mo26']],
+ ['2026 친환경선박 개발시행계획 총액은 공개되지 않음',[]]],f:['탄소포집','수소','암모니아','전기']});
+A('rd',1,[[2027,2027,'s-plan','2,134안']],{h:'2027 산업부 예산안 (국회 심의 중)',k:'재정 · 개발',sum:'무탄소·AI 자율운항 선박 R&D 2,134억이 신설 편성됐습니다.',pts:[
+ ['산업부 2027년 예산안 13조 2,573억(전년 대비 40.5% 증액)',['fs27','mo27']],
+ ['무탄소·AI 자율운항 선박 R&D 2,134억 신설(무탄소·AI 구분 금액 없음)',['fs27']],
+ ['조선-해운 상생협력 36억 신설, 미국 현지 진출 지원 107억 증액',['fs27']]],f:['수소','암모니아']});
+A('rd',2,[[2022,2026,'s-act','전주기 혁신기술개발 진행'],[2027,2031,'s-plan','~2031 · 총 2,540억']],{h:'친환경선박 전주기 혁신기술개발사업 (2022~2031)',k:'재정 · 개발',sum:'산업부(개발)와 해수부(실증)가 10년간 함께 추진하는 무탄소 추진 핵심기술 R&D입니다.',pts:[
+ ['2022년 7월 통합사업단 출범, 10년간 총 2,540억(국비 1,873억)',['etdR']],
+ ['1차 기본계획 단계에서는 약 9,600억 규모로 계획',['dl1']],
+ ['2030년까지 수소·암모니아 기반 무탄소 추진 핵심기술 개발',['jkn']],
+ ['2023년 2차년도 진행, 2026년 신규 과제 공모',['metR','mo26']]],f:['수소','암모니아','전기']});
+
+A('sup',1,[[2021,2021,'s-act','2,050']],{h:'2021 친환경선박 보급 시행계획 2,050억',k:'재정 · 보급',sum:'첫 보급 시행계획입니다. 24개 사업, 공공 23척·민간 16척 전환에 2,050억이 편성됐습니다.',pts:[
+ ['2021년 1월 12일 고시, 24개 사업 약 2,050억',['nt21','dl21']],
+ ['공공 23척 건조, 민간 102척 지원(보조금 16척, 이차보전 86척)',['nt21']],
+ ['LNG 벙커링 전용선 건조 확대',['nt21']],
+ ['친환경 관공선 기술자문단 7억, 친환경선박 인증제도 도입',['nt21','dl21']]],f:['배출저감','LNG','LNG+하이브리드','하이브리드','전기']});
+[[2022,'2022년 계획상 민간 친환경설비 장착 보조 280척 중 실제 지원은 4척',['nt22']],[2023,'연안 친환경인증선박 보조 2021~2023년 누적 14척·212억',['nc24']],[2024,'국가어업지도선 LNG 복합추진 2척 건조에 2024년까지 973억(2021년 발표)',['etd21']],[2025,'연안 친환경인증선박 보조 2021~2025년 누적 22척·514억',['fn26']]].forEach(([y,t,k])=>A('sup',1,[[y,y,'s-none','미확인']],{h:y+' 보급 시행계획 총액',k:'재정 · 보급',sum:y+'년 보급 시행계획 총액을 밝힌 정부 보도자료·언론 보도를 찾지 못했습니다.',pts:[['참고: '+t,k],['확인 방법: 해수부 “'+y+'년 친환경선박 보급 시행계획” 고시 원문',[]]],f:[]}));
+A('sup',1,[[2026,2026,'s-plan','445*']],{h:'2026 해수부 친환경선박 보급 445억 (정부안)',k:'재정 · 보급',sum:'IMO 규제 대응 “친환경선박 보급” 예산이 335억에서 445억으로 늘었습니다. 관공선 건조가 포함된 보급 시행계획 총액과는 범위가 다릅니다.',pts:[
+ ['2026년 해수부 예산안 7조 3,287억(전년 대비 8.1%)',['ft26']],
+ ['친환경선박 보급 335억 → 445억',['cel26']],
+ ['연안 인증선박 보조율 최대 30%(척당 35억 한도)로 상향',['ns26']],
+ ['국회 확정액·연료별 배분은 공개되지 않음',[]]],f:['LNG','LNG+하이브리드','하이브리드','전기']});
+A('sup',1,[[2027,2027,'s-plan','121안']],{h:'2027 해수부 예산안 (국회 심의 중)',k:'재정 · 보급',sum:'지방으로 이전하는 선사의 친환경선박 건조를 지원하는 121억이 새로 편성됐습니다.',pts:[
+ ['해수부 2027년 예산안 8조 2,636억(전년 대비 10.8%)',['fn27','ns27']],
+ ['지방이전 선사 대상 친환경선박 건조 지원 121억 신규',['sbs27','fn27']],
+ ['해양수도권 육성 사업 전체 6,228억',['sbs27']],
+ ['지원 대상 연료 기준은 공개되지 않음',[]]],f:[]});
+
+A('ship',1,[[2021,2025,'s-act','연안 친환경인증선박 보조 누적 22척 · 514억'],[2026,2026,'s-plan','보조율 30%']],{h:'친환경인증선박 보급지원사업 (연안)',k:'보급 실적',sum:'중소 연안선사의 친환경선박 건조에 보조금을 주는 사업입니다. 5년간 22척을 지원했습니다.',pts:[
+ ['2021~2023년 14척, 212억',['nc24','ns24']],
+ ['2021~2025년 누적 22척, 514억',['fn26','ns26']],
+ ['대상: LNG·전기·하이브리드 등 친환경인증 3등급 이상',['ns26']],
+ ['2024년 보조율 최대 30%(척당 50억 한도), 취득세 최대 2%p 경감',['nc24']],
+ ['2026년 2월 공고는 선가 10%, 7월 공고부터 최대 30%(척당 35억 한도)',['fn26','ns26']]],f:['LNG','LNG+하이브리드','하이브리드','전기']});
+A('ship',2,[[2023,2026,'s-act','HMM 메탄올 이중연료선 9척']],{h:'HMM 메탄올 이중연료 컨테이너선 9척',k:'보급 실적',sum:'국적선사 최초의 메탄올 추진선 발주입니다. 해진공 협조금융으로 자금이 조달됐습니다.',pts:[
+ ['2023년 2월 탈탄소화 전략 발표와 같은 날 발주',['dc4']],
+ ['9,000TEU급, HD현대·HJ중공업 건조',['met23','hr26']],
+ ['해진공 주도 국내외 9개 금융기관 협조금융',['hr26']],
+ ['2026년 4월 8번째 선박 “라임호” 명명식, 1척 인도 남음',['hr26']]],f:['메탄올+LNG','메탄올']});
+A('ship',3,[[2021,2030,'s-goal','1차 목표 528척 (관공선 388척)']],{h:'1차 기본계획 보급 목표',k:'목표',sum:'2030년까지 528척을 친환경선박으로 전환하는 목표입니다.',pts:[
+ ['대상 3,542척 중 528척(15%)',['dl1']],
+ ['관공선 388척(대체건조 199척, DPF 개조 189척)',['dl1']],
+ ['누적 전환 실적은 정부 공개자료 없음',[]]],f:['배출저감']});
+A('ship',4,[[2023,2030,'s-goal','외항 118척 · 외항+관공선 317척']],{h:'2030 외항선·관공선 전환 목표',k:'목표',sum:'탈탄소화 전략은 외항 118척, 공급망 구축방안은 외항·관공선 317척을 2030년 목표로 제시했습니다.',pts:[
+ ['국제해운 탈탄소화 추진전략: 2030년 외항 118척(정기선 26척 포함)',['dc1','dc2']],
+ ['친환경 선박연료 공급망 구축방안: 2030년 국적 외항선·관공선 317척',['nsx']],
+ ['두 수치의 포함 관계는 보도로 확인되지 않음',[]]],f:['LNG','메탄올']});
+A('ship',5,[[2026,2035,'s-goal','2차 목표 889척']],{h:'2차 기본계획 보급 목표',k:'목표',sum:'2035년까지 민간·공공 선박 889척 전환을 지원합니다. 1차보다 361척 많습니다.',pts:[
+ ['2035년까지 889척, 1차 목표 528척 대비 361척 증가',['gsc','jae']],
+ ['내항·외항·공공 선박을 운항 특성과 규모에 맞춰 전환',['asia']],
+ ['유형별·연료별 척수 구성은 공개되지 않음',[]]],f:[]});
+
+A('fin',1,[[2021,2030,'s-fin','해운 리더국가 실현전략 · 최대 3.4조']],{h:'해운산업 리더국가 실현전략 (2021.6)',k:'정책금융',sum:'2030년까지 최대 3.4조 정책금융으로 고효율 신규 선박 확보를 돕는 전략입니다.',pts:[
+ ['2021년 6월 29일 발표, 2030년까지 최대 3.4조 정책금융',['sg21']],
+ ['산은·수은·캠코·해진공 신조 지원, 우선 15억 달러 → 수요에 따라 30억 달러',['sg21']],
+ ['친환경선박 몫은 공개되지 않음',[]]],f:[]});
+A('fin',2,[[2021,2025,'s-fin','해진공 친환경설비 이차보전·특별보증']],{h:'친환경설비 개량 이차보전·특별보증',k:'정책금융',sum:'선박평형수처리설비·스크러버 등 설비 장착 자금의 이자 일부와 보증을 지원합니다.',pts:[
+ ['대출 이자 최대 2% 보전(해수부 위탁, 해진공 수행)',['mh23']],
+ ['특별보증으로 설치자금 최대 80%까지 대출',['mh23']],
+ ['대상: BWTS, 스크러버, 육상전원(AMP), 에너지효율개선장치',['mh23']],
+ ['2019.4~2023년 말 45개 선사 284대, 보증 약 5,612억',['mh23']]],f:['배출저감']});
+A('fin',3,[[2023,2030,'s-fin','탈탄소화 전략 금융 · 약 4.5조']],{h:'국제해운 탈탄소화 전략 금융',k:'정책금융',sum:'외항선 친환경 전환 추가비용을 덜어주기 위한 정책금융 패키지입니다.',pts:[
+ ['친환경선 건조비는 일반선의 약 130%',['dc1']],
+ ['2030년까지 선사 추가비용 약 1.8조 추산, 해진공·산은·수은·캠코 약 4.5조',['dc1']],
+ ['HMM 메탄올선 9척 협조금융이 대표 사례',['hr26']],
+ ['전체 집행 실적·연료별 배분은 공개되지 않음',[]]],f:['LNG','메탄올','메탄올+LNG']});
+A('fin',4,[[2024,2030,'s-fin','해운 활력 제고방안 · 3.5조']],{h:'해운산업 경영안정·활력 제고방안 (2024.4)',k:'정책금융',sum:'저시황 대응과 친환경 선대 전환을 위해 2030년까지 3.5조를 추가 투자하는 방안입니다.',pts:[
+ ['2024년 4월 15일 비상경제장관회의',['ns24b']],
+ ['2022년 3조 경영안전판에 더해 약 3.5조 추가 투자',['nd24','dl24']],
+ ['컨테이너 선복 120만 → 200만TEU(2030), 주요 선사 완전 탈탄소화 조기 달성',['ns24b']]],f:[]});
+A('fin',5,[[2024,2030,'s-fin','친환경 선박연료 인프라 펀드 1조(가칭)']],{h:'친환경 선박연료 인프라 펀드',k:'정책금융',sum:'벙커링 등 친환경 연료 인프라에 민간투자를 끌어오기 위한 1조 규모 펀드 구상입니다.',pts:[
+ ['2023년 11월 공급망 구축방안에서 1조 펀드(가칭) 신설 발표',['nsx','cel932']],
+ ['친환경 연료 공급선 신조 시 선가 10~30% 보조 추진',['nt23']],
+ ['해진공 투자·지급보증으로 민간투자 유도',['nt23']],
+ ['조성 실적은 공개되지 않음',[]]],f:['LNG','메탄올','수소','암모니아']});
+
+A('inf',1,[[2021,2025,'s-act','LNG 벙커링 전용선 확대']],{h:'LNG 벙커링 인프라',k:'인프라',sum:'1차 계획 초기 인프라 투자는 LNG 벙커링 전용선과 육상터미널에 맞춰져 있었습니다.',pts:[
+ ['LNG 운반·벙커링 겸용선 1척 운영, 2022년 말 전용선 2척 추가, 이후 2척 추가 건조',['dl1']],
+ ['부산·울산 등 주요 항만 육상터미널 구축 계획',['dl1']],
+ ['2021 보급 시행계획에 벙커링 전용선 건조 확대 포함',['nt21']]],f:['LNG']});
+A('inf',2,[[2024,2026,'s-act','공급망 구축방안 이행'],[2027,2030,'s-goal','공급 30% · 저장 100만t']],{h:'친환경 선박연료 공급망 구축방안 (2023.11)',k:'인프라',sum:'2030년까지 국내 항만의 친환경 선박연료 공급 비중을 30%로, 저장능력을 100만t으로 늘리는 계획입니다.',pts:[
+ ['## 계획 내용'],
+ ['2030년 공급 비중 30%, 항만 저장능력 100만t',['nsx','cel932']],
+ ['울산항을 공급 거점항만으로 지정',['nsx','nt23']],
+ ['암모니아·수소는 기존 인프라 우선 활용, 항만개발 단계에서 입지 선배정',['nsx','cel932']],
+ ['녹색해운항로를 한-미에서 한-호주, 한-EU로 확대',['nsx']],
+ ['## 이행이 확인된 것'],
+ ['울산항 그린메탄올 1,000t 컨테이너선 공급(2023.7, 발표 이전)',['nsx']],
+ ['울산항 암모니아 벙커링 실증(2026.4)',['hr26a']],
+ ['## 미확인'],
+ ['“친환경연료”에 LNG 포함 여부, 연료별 목표, 공급 비중 진척',[]]],f:['LNG','메탄올','수소','암모니아']});
+A('inf',3,[[2026,2026,'s-act','울산 NH₃']],{h:'울산항 암모니아 벙커링 실증',k:'인프라',sum:'세계 처음으로 암모니아 추진선에 연료를 공급하는 실증이 울산항에서 진행됐습니다.',pts:[
+ ['2026년 4월 23일, 울산본항 2부두',['hr26a']],
+ ['육상 설비에서 선박으로 직접 공급(PTS), 청정 암모니아 약 600t',['hr26a']],
+ ['HD현대중공업 건조 4.5만㎥급 암모니아 추진 가스선 시운전용',['hr26a']],
+ ['암모니아 선박연료공급업 임시 기준 마련, 입출항료 면제 등 지원',['hr26a']]],f:['암모니아']});
+A('inf',4,[[2026,2032,'s-plan','부산신항 LNG 37만㎥ + 메탄올 15만㎥']],{h:'부산항 친환경 선박연료 벙커링 인프라',k:'인프라',sum:'부산항만공사가 2032년까지 신항에 LNG와 그린메탄올 저장탱크를 함께 짓는 계획입니다.',pts:[
+ ['부산신항 남컨테이너 항만배후단지 약 12.3만㎡',['hr26b']],
+ ['LNG 저장탱크 37만㎥, 그린메탄올 저장탱크 15만㎥, 벙커링선 접안시설',['hr26b']],
+ ['2026년 5월 계획수립 간담회, 이후 자체 예비타당성평가',['hr26b']],
+ ['2차 계획의 “저탄소 연료 공급 인프라 확대” 과제와 맞물림',['asia']],
+ ['사업비는 공개되지 않음',[]]],f:['LNG','메탄올']});
+
+A('perf',1,[[2021,2021,'s-none','·']],{h:'2021~2025 감축 성과 공개',k:'성과',sum:'예산 투입으로 줄어든 온실가스 양을 연도별로 공개한 정부 자료를 찾지 못했습니다.',pts:[
+ ['1차 계획 목표는 2030년 40만 톤 감축',['dl1']],
+ ['연도별 감축 실적·전환 척수 누계는 공개 자료 미확인',[]]],f:[]});
+A('perf',1,[[2022,2022,'s-act','280→4']],{h:'2022 민간 설비 보조 집행',k:'성과',sum:'2022년 민간 친환경설비 장착 보조는 계획 280척 중 4척에만 실제 지원됐습니다.',pts:[
+ ['2022년 11월 국회 친환경 운송수단 법제화 토론회에서 발표',['nt22']],
+ ['연료 불확실성으로 민간 보조금 집행이 저조하다는 지적',['nt22']],
+ ['정부는 선박 조세리스·투자자 과세특례 도입 추진 언급',['nt22']]],f:['배출저감']});
+A('perf',1,[[2026,2035,'s-goal','2차 5-③ 전주기 탄소배출량 관리체계']],{h:'전주기 탄소배출량 관리체계 구축',k:'성과',sum:'2차 기본계획 전략 5의 세부과제입니다. 연료 생산부터 운항까지의 배출량을 관리하는 체계를 만듭니다.',pts:[
+ ['2차 기본계획 13개 세부과제 중 하나',['gsc']],
+ ['IMO 2023 전략도 전과정 배출 기준으로 감축을 산정',['imo2']],
+ ['공개 범위·지표·LCA 기준은 공개되지 않음',[]]],f:[]});
+
+const Q={1:'목적 재정의: 지원 기준을 전과정 온실가스로 바꾸고, 미세먼지·산업 목적은 별도 수단으로 분리할 것인가',2:'락인 한도: 이미 짓거나 지을 LNG 자산(관공선·벙커링선·항만 탱크)을 어디까지 허용할 것인가',3:'산업 목적과의 충돌: 관공선 등 공공 수요를 무탄소 선도시장으로 쓸 것인가',4:'국제 불확실성: NZF 채택 여부와 무관하게 유효한 조치는 무엇인가',0:'공개 요구: 사업별 집행액·전환 척수·감축량을 연도별로 공개하게 할 것인가'};
+const INS=[
+ {tag:'기원',h:'“친환경선박”은 온실가스 정책으로 시작되지 않았다',line:'조선 일감(2018), IMO 황 규제(2018~2020), 항만 미세먼지(2019)가 먼저였고 탄소 목표는 뒤에 얹혔습니다. 그래서 LNG·DPF가 “친환경”에 들어가 있고, 2027년부터는 LNG를 뺀 녹색해운항로법과 정의가 갈립니다.',q:[1],rel:['친환경선박법','녹색해운항로 구축','제1차 친환경선박'],pts:[
+  ['2018년 조선산업 활력제고 방안: 공공선박 친환경 발주 의무화 추진, 2025년까지 중소 LNG연료추진선 140척(약 1조) 발주로 중소조선 시장 창출',['m18']],
+  ['2018년 IMO 2020 황 규제(3.5%→0.5%) 대응: 노후 외항선을 LNG 추진선으로 대체하면 선가 5~10% 보조',['dl18']],
+  ['2019년 항만 미세먼지 대책: 해수부 관공선 139척을 2030년까지 대체건조 또는 저감장치 부착, 민간 2025년까지 100척 이상 발주',['dl19']],
+  ['2020년 1월 친환경선박법 시행: 해양오염물질 저감·에너지효율 개선·LNG 등 친환경에너지 적용 기술을 지원',['mt20']],
+  ['2020년 7월 그린뉴딜 선정, 12월 1차 기본계획에서 2030년 온실가스 40만 톤 감축 목표가 붙음',['etd21','dl1']],
+  ['2027년 4월 시행 녹색해운항로법의 녹색선박은 메탄올·수소·암모니아·바이오·재생합성연료·전기로 한정, LNG 없음',['asia']]]},
+ {tag:'재정',h:'보도로 확인되는 가장 큰 재정사업은 관공선 건조다',line:'LNG 복합추진 어업지도선 2척에만 973억으로, 연안 민간 보조 5년 누계(514억)의 약 1.9배입니다. 정부가 연료를 직접 고르는 유일한 시장이 LNG·하이브리드·저감장치로 채워졌습니다.',q:[3,2],rel:['2021 친환경선박 보급 시행계획','1차 기본계획 보급 목표','제1차 친환경선박','2030 외항선·관공선'],pts:[
+  ['2021년 첫 보급 시행계획 2,050억: 공공 23척 건조가 중심, 민간은 16척 보조',['nt21']],
+  ['LNG 복합추진 국가어업지도선 2척 건조에 2024년까지 973억',['etd21']],
+  ['연안 친환경인증선박 보조는 2021~2025년 누계 22척·514억',['fn26']],
+  ['1차 계획 관공선 목표 388척 중 189척은 DPF 장착 개조, 199척은 대체건조',['dl1']],
+  ['관공선은 정부가 발주 기준을 정하므로, 기준만 바꾸면 곧바로 무탄소 선도시장이 될 수 있음',[]]]},
+ {tag:'개발 vs 보급',h:'개발은 무탄소로 가는데 보급은 LNG·하이브리드에 머문다',line:'2023년 개발예산은 수소·암모니아·전기 중심으로 52% 늘었지만, 연안 보급 보조 대상은 2026년에도 LNG·전기·하이브리드 3등급 이상입니다.',q:[1,3],rel:['2022 친환경선박 개발시행계획','2023 친환경선박 개발시행계획','2026 산업부 조선','친환경선박 전주기','친환경인증선박 보급지원사업','2026 해수부 친환경선박 보급'],pts:[
+  ['2023 개발시행계획 1,454억(+52%): 수소·암모니아 엔진, 전기 추진기 중심 증액, 수소·암모니아 시범선 건조 195억',['kidd']],
+  ['2026 조선 R&D 신규 과제: 암모니아 터빈·수소 엔진, CO₂ 포집, 중대형 전기추진 기자재',['nd26']],
+  ['전주기 혁신기술개발사업: 2030년까지 수소·암모니아 기반 무탄소 추진 핵심기술 개발',['jkn']],
+  ['연안 보급 보조 대상: LNG·전기·하이브리드 등 친환경인증 3등급 이상(2026년 공고 기준)',['ns26']],
+  ['개발된 무탄소 기술을 보급 사업 기준으로 넘기는 연결 장치는 보도된 바 없음',[]]]},
+ {tag:'집행·성과',h:'계획은 발표되지만 집행과 성과는 보이지 않는다',line:'2022년 민간 설비 보조는 계획 280척 중 4척만 집행됐습니다. 1차 목표 528척에 대한 누적 전환 척수와 감축량은 공개되지 않습니다.',q:[0],rel:['2022 민간 설비','친환경인증선박 보급지원사업','1차 기본계획 보급 목표','2021~2025 감축 성과','2022 보급','2023 보급','2024 보급','2025 보급','2024 개발','2025 개발'],pts:[
+  ['2022년 민간 친환경설비 장착 보조: 계획 280척, 실제 지원 4척(국회 토론회 발표)',['nt22']],
+  ['연안 보조 5년 누계 22척 대 1차 계획 목표 528척',['fn26','dl1']],
+  ['2022~2025 보급 시행계획 총액, 2024·2025 개발시행계획 총액은 보도로 확인되지 않음',[]],
+  ['연도별 누적 전환 척수와 온실가스 감축량을 공개한 정부 자료 없음',[]]]},
+ {tag:'목표 vs 재원',h:'목표는 2035년까지 커졌지만 재원은 2027년까지만 보인다',line:'2차 계획은 889척(+361)·외항선대 61% 감축을 세웠지만 총사업비와 연도별 재원은 공개되지 않았습니다. 가장 큰 숫자는 갚는 돈인 정책금융이고, 그 집행과 연료별 배분도 공개되지 않습니다.',q:[1,2],rel:['제2차 친환경선박','2차 기본계획 보급 목표','국제해운 탈탄소화 전략 금융','해운산업 경영안정','친환경 선박연료 인프라 펀드','해운산업 리더국가','2027 산업부','2027 해수부'],pts:[
+  ['2차 계획: 2035년까지 889척, 외항선대 2008년 대비 61%↓, 무탄소선 시장 점유율 50%',['gsc','jae','asia']],
+  ['총사업비·연도별 재원·연료별 척수·2030 중간목표는 공개되지 않음',['gsc']],
+  ['2027 예산안의 신규 항목: 무탄소·AI 자율운항 선박 R&D 2,134억, 지방이전 선사 건조 지원 121억',['fs27','sbs27']],
+  ['정책금융: 탈탄소화 전략 약 4.5조, 해운 활력 제고 3.5조, 연료 인프라 펀드 1조(가칭)',['dc1','nd24','nsx']]]},
+ {tag:'락인',h:'인프라는 LNG “확대”와 무탄소 “구축”이 함께 간다',line:'2차 계획은 저탄소 연료 공급망을 확대하면서 무탄소 기반을 단계적으로 구축합니다. 부산신항은 LNG 37만㎥와 메탄올 15만㎥를 함께 짓고, 암모니아는 울산에서 실증 단계입니다.',q:[2],rel:['LNG 벙커링 인프라','친환경 선박연료 공급망','울산항','부산항','제2차 친환경선박'],pts:[
+  ['1차 계획 인프라는 LNG 벙커링 전용선과 부산·울산 LNG 육상터미널로 출발',['dl1']],
+  ['2차 계획: 기존 저탄소 연료 공급망 확대 + 수소·암모니아 저장·공급 기반 단계적 구축',['asia']],
+  ['부산신항 2032년까지 LNG 저장 37만㎥, 그린메탄올 저장 15만㎥',['hr26b']],
+  ['울산항 암모니아 벙커링은 2026년 4월 약 600t 실증',['hr26a']],
+  ['2030년 친환경연료 공급 30% 목표에 LNG가 포함되는지는 공개되지 않음',['nsx']]]}];
+const EXT={tag:'외부 변수',h:'IMO 중기조치(NZF)가 아직 확정되지 않았다',line:'2025년 승인 후 두 번 채택이 미뤄졌고, 2026년 11월 30일~12월 3일 MEPC 85에서 다시 시도합니다.',q:[4],rel:['IMO 2023','IMO Net-Zero','NZF 2026'],pts:[
+  ['2025년 4월 MEPC 83 승인 → 10월 특별회기에서 1년 연기(57 대 49)',['nzf2']],
+  ['2026년 4월 MEPC 84에서도 미채택, 원안은 유일한 최종안으로 유지',['cb']],
+  ['MEPC 85(2026.11.30~12.3)에서 채택 재시도, 쟁점은 탄소가격 구조·기금 형태·연 100억~150억 달러 배분',['gcap']],
+  ['IMO 2023 전략: 2030년 최소 20%, 2040년 최소 70% 감축(2008년 대비)',['imo2']]]};
+function chips(it){const fi=new Set(it.f||[]),fo=new Set(it.fo||[]);return '<div class="fgrid">'+G.map(([g,fs])=>'<div><div class="fgp">'+g+'</div>'+fs.map(f=>'<span class="chip '+(fi.has(f)?'in':fo.has(f)?'out':'')+'">'+f+'</span>').join('')+'</div>').join('')+'</div>'}
+function span(it){const a=it.seg[0][0],b=it.seg[it.seg.length-1][1];return a===b?a+'':a+'–'+b}
+function render(o){const order=[];const num=k=>{let n=order.indexOf(k);if(n<0){order.push(k);n=order.length-1}return n+1};
+ let body='',open=false;
+ o.pts.forEach(p=>{if(p[0].startsWith('## ')){if(open)body+='</ul>';body+='<div class="lb2">'+p[0].slice(3)+'</div><ul>';open=true;return}
+  if(!open){body+='<ul>';open=true}
+  body+='<li>'+p[0]+(p[1]||[]).map(k=>'<sup class="fn">'+num(k)+'</sup>').join('')+'</li>'});
+ if(open)body+='</ul>';
+ const fns=order.map((k,n)=>{const s=S[k];return '<li><span class="n">'+(n+1)+'</span><span><a href="'+s[3]+'" target="_blank" rel="noopener">'+s[0]+'</a> <small>'+s[1]+' · '+s[2]+'</small></span></li>'}).join('');
+ const qs='';
+ document.getElementById('pl-panel').innerHTML='<div class="body"><div class="meta">'+o.tags.map(t=>'<span class="tag">'+t+'</span>').join('')+'</div><h2>'+o.h+'</h2><p class="sum"><b>'+(o.sumLabel||'요약')+'</b>'+o.sum+'</p><h3>'+(o.ptsLabel||'세부 내용')+'</h3>'+body+qs+(o.f!==undefined?'<h3>연료 16종</h3>'+chips(o):'')+(o.note?'<p class="note">'+o.note+'</p>':'')+(fns?'<h3>각주</h3><ol class="fns">'+fns+'</ol>':'')+'</div>'}
+let CUR=null;
+function clearSel(){document.querySelectorAll('.it.on,.it.rel,.ic.on').forEach(x=>x.classList.remove('on','rel'));document.querySelectorAll('.iq').forEach(x=>x.hidden=true);document.querySelectorAll('.ic').forEach(x=>x.setAttribute('aria-expanded','false'));document.getElementById('pl-tl').classList.remove('focus');CUR=null}
+function save(v){try{localStorage.setItem('pl-kr-view',v)}catch(e){}}
+function show(i){const it=I[i];clearSel();render(Object.assign({},it,{tags:[it.k,span(it)]}));document.querySelectorAll('.it[data-i="'+i+'"]').forEach(b=>b.classList.add('on'));save('i'+i)}
+function showIns(n){if(CUR===n){clearSel();save('');return}
+ const o=n<0?EXT:INS[n];clearSel();CUR=n;
+ render({tags:['인사이트',o.tag],h:o.h,sum:o.line,sumLabel:'핵심',pts:o.pts,ptsLabel:'근거가 되는 사실'});
+ const iq=document.querySelector('.iq[data-n="'+n+'"]');if(iq)iq.hidden=false;
+ const idx=new Set();I.forEach((it,i)=>{if(o.rel.some(p=>it.h.startsWith(p)))idx.add(i)});
+ document.getElementById('pl-tl').classList.add('focus');document.querySelectorAll('.it').forEach(b=>{if(idx.has(+b.dataset.i))b.classList.add('rel')});
+ {const c=document.querySelector('.ic[data-n="'+n+'"]');c.classList.add('on');c.setAttribute('aria-expanded','true');}save('n'+n)}
+const row=(o,n)=>'<button type="button" class="ic'+(n<0?' x':'')+'" data-n="'+n+'" aria-expanded="false"><span class="tg">'+o.tag+'</span><b>'+o.h+'</b><span class="tw" aria-hidden="true">+</span></button>'+(o.q&&o.q.length?'<div class="iq" data-n="'+n+'" hidden><p>이 인사이트가 묻는 질문</p><ul>'+o.q.map(x=>'<li>'+Q[x]+'</li>').join('')+'</ul></div>':'');
+document.getElementById('insGrid').innerHTML=INS.map(row).join('')+row(EXT,-1);
+document.getElementById('insGrid').addEventListener('click',e=>{const c=e.target.closest('.ic');if(c)showIns(+c.dataset.n)});
+let h='<div class="row"><div class="lb"></div><div class="gr head">';
+for(let y=2021;y<=2035;y++)h+='<div class="yh'+(y==2030||y==2035?' k':'')+'">’'+String(y).slice(2)+'</div>';
+h+='</div></div>';
+R.forEach(r=>{h+='<div class="row"><div class="lb"><b>'+r.n+'</b><span>'+r.d+'</span></div><div class="gr">';
+ I.forEach((it,i)=>{if(it.r!==r.id)return;it.seg.forEach(([s,e,st,t])=>{h+='<button type="button" class="it '+st+'" data-i="'+i+'" title="'+(it.h+' · '+it.sum).replace(/"/g,'')+'" style="grid-column:'+(s-2020)+'/'+(e-2019)+';grid-row:'+it.l+'">'+t+'</button>'})});
+ h+='</div></div>'});
+const tl=document.getElementById('pl-tl');tl.innerHTML=h;
+tl.addEventListener('click',e=>{const b=e.target.closest('.it');if(b)show(+b.dataset.i)});
+/* 처음에는 전체가 보이도록: 인사이트 강조 없이 제1차 기본계획을 오른쪽에 보여 줍니다 */
+show(Math.max(0,I.findIndex(x=>x.h.startsWith('제1차 친환경선박'))));
+</script>
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+</body>
+</html>
