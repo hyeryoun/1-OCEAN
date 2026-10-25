@@ -7,7 +7,8 @@ window.addEventListener('load', () => document.body.classList.add('loaded'));
 /* 스크롤 리빌 */
 const io = new IntersectionObserver(es => {
   es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-}, { threshold: .12 });
+}, { threshold: 0, rootMargin: '0px 0px -10% 0px' });
+/* 긴 요소(브리프 본문 등)도 화면에 들어오면 바로 나타나도록 threshold 0 + 하단 10% 여유 */
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 /* 진행 바 (.pbar .fill, .series-progress .fill) */
