@@ -424,7 +424,7 @@ const BRIEF_ID='brief-1';
 const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
 
 const ORGS=['1-OCEAN','PLANiT','하인리히 뵐 재단','Pacific Environment','SFOC (기후솔루션)','세종대학교','KRISO (선박해양플랜트연구소)','RIMS (중소조선연구원)','대형조선소','중형조선소','해운사','기타 (직접 입력)'];
-document.getElementById('c-org').innerHTML='<option value="" disabled selected>기관 선택</option>'+ORGS.map(o=>`<option>${o}</option>`).join('');
+document.getElementById('c-org').innerHTML='<option value="" disabled selected>기관 선택</option>'+ORGS.map(o=>`<option value="${o}">${o}</option>`).join('');
 const $c=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function fmtDate(iso){const d=new Date(iso);return isNaN(d)?'':`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
