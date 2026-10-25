@@ -475,6 +475,19 @@ async function setUser(u){
 }
 $c('c-org').addEventListener('change',e=>{$c('c-org2').hidden=e.target.value!=='기타 (직접 입력)'});
 
+/* 로그인 링크가 만료·재사용된 경우 이유를 보여줌 */
+(function(){
+  const h=new URLSearchParams((location.hash||'').replace(/^#/,'')),q=new URLSearchParams(location.search);
+  const code=h.get('error_code')||q.get('error_code'),desc=h.get('error_description')||q.get('error_description');
+  if(!code&&!desc)return;
+  const msg=code==='otp_expired'
+    ?'이 로그인 링크는 이미 사용됐거나 만료됐습니다. 링크는 한 번만, 받은 뒤 1시간 안에 쓸 수 있어요. 아래에서 새 링크를 받아 주세요.'
+    :'로그인하지 못했습니다: '+desc;
+  $c('a-msg').innerHTML='⚠ '+esc(msg);
+  history.replaceState(null,'',location.pathname);
+})();
+const authErr=m=>/rate limit/i.test(m)?'잠시 메일 발송 한도에 걸렸습니다. 조금 뒤 다시 시도해 주세요.':m;
+
 if(sb){
   $c('c-mode').textContent='실시간';$c('c-mode').classList.add('on');
   sb.auth.getSession().then(({data})=>setUser(data.session&&data.session.user));
@@ -490,7 +503,7 @@ $c('a-send').addEventListener('click',async()=>{
   $c('a-send').disabled=true;$c('a-msg').textContent='보내는 중…';
   const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
   $c('a-send').disabled=false;
-  $c('a-msg').innerHTML=error?'⚠ '+esc(error.message):`<b>${esc(email)}</b>로 로그인 링크를 보냈습니다. 메일의 링크를 누르면 이 페이지로 돌아와 로그인됩니다.`;
+  $c('a-msg').innerHTML=error?'⚠ '+esc(authErr(error.message)):`<b>${esc(email)}</b>로 로그인 링크를 보냈습니다. 메일의 링크를 누르면 이 페이지로 돌아와 로그인됩니다.`;
 });
 $c('a-email').addEventListener('keydown',e=>{if(e.key==='Enter')$c('a-send').click()});
 $c('a-out').addEventListener('click',()=>sb.auth.signOut());
