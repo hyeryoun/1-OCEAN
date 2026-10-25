@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · FuelEU 풀링 계산기</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="description" content="선박 한 척의 CII 등급, EU ETS·FuelEU 비용, EEXI를 규정 원문 기준으로 계산하는 도구.">
+
+<!-- ═══════════════════════════════════════════════
+  ✏️ 수정 가이드 (tool.html)
+  · 기본 입력값: 각 <input value="..."> 숫자, 기본 연료는 fuelRows
+  · 연료 기본값(FUELS), CII 계수(ciiRef, CII_Z), EEXI(EEXI_REF, eexiY),
+    ETS·FuelEU(ETS_PHASE, FEU_TARGET), NZF 초안(NZF_*)은
+    하단 <script> 맨 위에 근거 조항과 함께 모여 있습니다.
+═══════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<script src="js/basis.js"></script>
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="/" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="/">Home</a>
+      <a href="/story">Story</a>
+      <a href="/policy">Policy</a>
+      <a href="/insight">Insight</a>
+      <a href="/project">Project</a>
+      <a class="active" aria-current="page" href="/tool">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<header class="tool-top">
+  <div class="wrap">
+    <p class="eyebrow"><span><a href="/tool">Tool</a> · FuelEU Pooling Calculator · Stage 01 규제</span></p>
+    <h1>FuelEU 풀링 · 함께 묶으면 <em>얼마를 아끼나</em></h1>
+    <p class="tl">여러 선박의 FuelEU 컴플라이언스 밸런스를 한 풀로 묶어 잉여와 부족을 상계합니다. 선박별 잉여·부족, 풀 전체 합계, 풀링 전후 벌금 차이를 계산합니다.</p>
+    <div class="btnrow"><button type="button" class="tbtn pri" onclick="startTutorial()">튜토리얼 시작</button><button type="button" class="tbtn" onclick="location.href=location.pathname">초기값 복원</button><a class="tbtn" href="/tool">← Tool 목록으로</a></div>
+  </div>
+</header>
+<section class="fp"><div class="wrap"><div class="sc" style="margin:0">
+  <div class="sc-card" id="pl-set">
+    <h2 class="sc-h"><em>1</em>평가 연도</h2>
+    <div class="row2"><div class="f"><label for="pl-year">FuelEU 목표</label><div class="inp sel"><select id="pl-year"></select></div></div>
+    <div class="f"><label>연속 미준수 가산</label><div class="tg" style="border:0;padding:8px 0"><span>미준수 n년째 벌금 × (1 + (n−1)/10)</span><label class="sw"><input type="checkbox" id="pl-consec"><i></i></label></div></div></div>
+  </div>
+  <div class="sc-card" id="pl-fleet">
+    <h2 class="sc-h"><em>2</em>풀에 넣을 선박 <span class="lite">최대 10척</span></h2>
+    <div class="pl-head"><span>선박</span><span>연료</span><span>연간 사용량</span><span>EU 과금 비중</span><span>미준수 연차</span><span></span></div>
+    <div id="pl-rows"></div>
+    <button type="button" class="add" id="pl-add">+ 선박 추가</button>
+    <button type="button" class="cx-go" id="pl-go">풀링 계산하기</button>
+  </div>
+  <div id="pl-out"></div>
+  <p class="cx-foot" style="margin-top:16px;font-size:12.5px;color:var(--muted)">연구용 추정 도구입니다. 실제 컴플라이언스 밸런스와 벌금은 검증기관이 확인한 FuelEU 보고값으로 정해집니다.</p>
+</div></div></section>
+<style>
+.fp{padding:48px 0 72px}
+.pl-head,.pl-row{display:grid;grid-template-columns:1.1fr 1.6fr 1fr .9fr .8fr 32px;gap:8px;align-items:center}
+.pl-head{font-size:11.5px;color:var(--muted);margin:4px 0 6px}.pl-row{margin-bottom:8px}
+.pl-row .x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:14px}
+.cx-go{display:block;width:100%;margin-top:16px;font:inherit;font-size:15px;font-weight:700;padding:13px;border-radius:10px;border:0;background:var(--ocean-deep);color:#fff;cursor:pointer}.cx-go.stale{background:#A7C8EB;color:var(--ocean-deep)}
+.pl-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0 16px}
+.pl-sum div{background:var(--ocean-deep);color:#fff;border-radius:14px;padding:16px 18px}.pl-sum b{display:block;font-size:24px}.pl-sum span{font-size:12px;color:#C9DCEF}
+.pl-say{background:#F2F6FA;border-radius:12px;padding:14px 18px;font-size:14px;color:var(--ocean-deep);line-height:1.7;margin-bottom:16px;word-break:keep-all}
+.pl-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:20px 22px;margin-bottom:16px}.pl-card h3{font-size:15px;color:var(--ocean-deep);margin:0 0 4px}.pl-card .s{font-size:12.5px;color:var(--muted);margin:0 0 12px;word-break:keep-all}
+.pl-card svg{width:100%;height:auto;display:block}
+.pl-tb{width:100%;border-collapse:collapse;font-size:13px}.pl-tb th{font-weight:600;color:var(--muted);text-align:right;padding:8px 6px;border-bottom:1px solid var(--line)}.pl-tb th:first-child,.pl-tb td:first-child{text-align:left}
+.pl-tb td{padding:9px 6px;border-bottom:1px solid #EEF2F6;text-align:right;color:var(--ocean-deep)}.pl-tb .neg{color:#B53A40}.pl-tb .pos{color:#2E7D52}
+</style>
+<script>
+const $=id=>document.getElementById(id);
+const nf=(n,d=0)=>isFinite(n)?n.toLocaleString('ko-KR',{maximumFractionDigits:d,minimumFractionDigits:d}):'–';
+/* FuelEU Annex II 기본값 (탄소 비용 계산기와 동일) · GWP AR4(CH₄ 25, N₂O 298) */
+const FUELS={hfo:{n:'HFO (중유)',lcv:.0405,wtt:13.5,cf:3.114,ch4:.00005,n2o:.00018},lfo:{n:'경질연료유 LFO',lcv:.0410,wtt:13.2,cf:3.151,ch4:.00005,n2o:.00018},mgo:{n:'MGO · MDO',lcv:.0427,wtt:14.4,cf:3.206,ch4:.00005,n2o:.00018},
+ lng_os:{n:'LNG · 오토 저속 (슬립 1.7%)',lcv:.0491,wtt:18.5,cf:2.750,ch4:0,n2o:.00011,s:.017},lng_om:{n:'LNG · 오토 중속 (슬립 3.1%)',lcv:.0491,wtt:18.5,cf:2.750,ch4:0,n2o:.00011,s:.031},lng_ds:{n:'LNG · 디젤 저속 (슬립 0.2%)',lcv:.0491,wtt:18.5,cf:2.750,ch4:0,n2o:.00011,s:.002},
+ meoh:{n:'메탄올 (천연가스 기반)',lcv:.0199,wtt:31.3,cf:1.375,ch4:.00005,n2o:.00018}};
+const GW={ch4:25,n2o:298};
+const REF=91.16,RED=y=>y>=2035?14.5:y>=2030?6:2,TGT=y=>REF*(1-RED(y)/100);
+$('pl-year').innerHTML=[2025,2026,2027,2028,2029,2030,2031,2032,2033,2034,2035].map(y=>`<option value="${y}"${y===2027?' selected':''}>${y} · 목표 ${TGT(y).toFixed(2)} gCO₂e/MJ (−${RED(y)}%)</option>`).join('');
+let ships=[{n:'A호 · 컨테이너',f:'hfo',t:9000,c:50,k:1},{n:'B호 · 벌크',f:'lfo',t:5200,c:50,k:1},{n:'C호 · LNG 이중연료',f:'lng_ds',t:2500,c:50,k:1}];
+function draw(){$('pl-rows').innerHTML=ships.map((r,i)=>`<div class="pl-row" data-i="${i}">
+ <div class="inp"><input data-k="n" value="${r.n}"></div>
+ <div class="inp sel"><select data-k="f">${Object.entries(FUELS).map(([k,v])=>`<option value="${k}"${k===r.f?' selected':''}>${v.n}</option>`).join('')}</select></div>
+ <div class="inp"><input data-k="t" type="number" min="0" step="100" value="${r.t}"><span class="u">t</span></div>
+ <div class="inp"><input data-k="c" type="number" min="0" max="100" step="5" value="${r.c}"><span class="u">%</span></div>
+ <div class="inp"><input data-k="k" type="number" min="1" max="10" step="1" value="${r.k}"><span class="u">년째</span></div>
+ <button type="button" class="x" ${ships.length<3?'disabled':''} aria-label="삭제">✕</button></div>`).join('')}
+$('pl-rows').addEventListener('input',e=>{const row=e.target.closest('.pl-row');if(!row)return;const r=ships[+row.dataset.i],k=e.target.dataset.k;r[k]=k==='n'||k==='f'?e.target.value:+e.target.value;stale()});
+$('pl-rows').addEventListener('click',e=>{if(!e.target.classList.contains('x'))return;ships.splice(+e.target.closest('.pl-row').dataset.i,1);draw();stale()});
+$('pl-add').onclick=()=>{if(ships.length<10){ships.push({n:String.fromCharCode(65+ships.length)+'호',f:'mgo',t:3000,c:50,k:1});draw();stale()}};
+['pl-year','pl-consec'].forEach(id=>$(id).addEventListener('change',stale));
+let done=false;function stale(){if(done)$('pl-go').classList.add('stale')}
+const pen=(cb,ghg,k,consec)=>cb<0?Math.abs(cb)/(ghg*41000)*2400*(consec?1+(k-1)/10:1):0;
+function run(){const y=+$('pl-year').value,tg=TGT(y),consec=$('pl-consec').checked;
+ const R=ships.map(r=>{const F=FUELS[r.f],s=F.s||0,g=r.t*1e6,E=g*F.lcv*r.c/100;
+  const ghg=F.wtt+((1-s)*(F.cf+F.ch4*GW.ch4+F.n2o*GW.n2o)+s*GW.ch4)/F.lcv,cb=(tg-ghg)*E;
+  return {...r,F,E,ghg,cb,p0:pen(cb,ghg,r.k,consec)}});
+ const tot=R.reduce((a,r)=>a+r.cb,0),sur=R.filter(r=>r.cb>0).reduce((a,r)=>a+r.cb,0),def=R.filter(r=>r.cb<0).reduce((a,r)=>a-r.cb,0),ok=tot>0;
+ R.forEach(r=>{r.cb1=!ok?r.cb:r.cb<0?0:r.cb-(r.cb/sur)*def;r.p1=ok?0:r.p0});
+ const P0=R.reduce((a,r)=>a+r.p0,0),P1=R.reduce((a,r)=>a+r.p1,0),M=v=>'€ '+(Math.abs(v)>=1e6?(v/1e6).toFixed(2)+'M':nf(v/1e3)+'K'),T=v=>nf(v/1e6)+' t';
+ const mx=Math.max(...R.map(r=>Math.abs(r.cb)),Math.abs(tot))||1,W=900,rh=34,H=R.length*rh+70,X0=W/2,sc=(W/2-150)/mx;
+ let sv=`<line x1="${X0}" x2="${X0}" y1="10" y2="${H-20}" stroke="#8FA3B8"/>`;
+ R.forEach((r,i)=>{const yy=20+i*rh,w=r.cb*sc;sv+=`<text x="10" y="${yy+16}" font-size="13" fill="#0B3D66">${r.n}</text><rect x="${w<0?X0+w:X0}" y="${yy}" width="${Math.abs(w)}" height="22" rx="3" fill="${r.cb<0?'#E66B6B':'#4CAF7A'}"/>${ok&&r.cb<0?`<rect x="${X0+w}" y="${yy}" width="${Math.abs(w)}" height="22" rx="3" fill="none" stroke="#2E7D52" stroke-width="2" stroke-dasharray="4 3"/>`:''}<text x="${w<0?X0+w-6:X0+w+6}" y="${yy+16}" font-size="12" text-anchor="${w<0?'end':'start'}" fill="#0B3D66">${r.cb<0?'':'+'}${T(r.cb)}</text>`});
+ const yy=20+R.length*rh+12,w=tot*sc;sv+=`<line x1="10" x2="${W-10}" y1="${yy-6}" y2="${yy-6}" stroke="#E3EAF1"/><text x="10" y="${yy+16}" font-size="13" font-weight="700" fill="#0B3D66">풀 합계</text><rect x="${w<0?X0+w:X0}" y="${yy}" width="${Math.abs(w)}" height="22" rx="3" fill="${tot<0?'#B53A40':'#2E7D52'}"/><text x="${w<0?X0+w-6:X0+w+6}" y="${yy+16}" font-size="12" font-weight="700" text-anchor="${w<0?'end':'start'}" fill="#0B3D66">${tot<0?'':'+'}${T(tot)}</text>`;
+ $('pl-out').innerHTML=`<div class="pl-sum"><div><b>${tot<0?'':'+'}${T(tot)}</b><span>풀 전체 컴플라이언스 밸런스 (tCO₂e)</span></div><div><b>${ok?'가능':'불가'}</b><span>${ok?'풀 합계가 양수':'풀 합계가 0 이하'}</span></div><div><b>${M(P0)}</b><span>풀링 전 벌금 합계</span></div><div><b>${M(P0-P1)}</b><span>풀링으로 줄어드는 벌금</span></div></div>
+  <p class="pl-say">${ok?`잉여 선박 ${R.filter(r=>r.cb>0).length}척의 잉여 ${T(sur)}로 부족 선박 ${R.filter(r=>r.cb<0).length}척의 부족 ${T(def)}를 모두 메웁니다. 풀링 후 남는 잉여 ${T(tot)}는 다음 해로 이월(뱅킹)할 수 있습니다.`:`잉여 ${T(sur)}가 부족 ${T(def)}보다 작아 풀을 구성할 수 없습니다. 잉여가 <b>${T(-tot)}</b> 이상 더 필요합니다. 이 상태에서는 선박별로 벌금이 그대로 부과됩니다.`}</p>
+  <div class="pl-card"><h3>선박별 컴플라이언스 밸런스</h3><p class="s">초록은 잉여, 빨강은 부족입니다. 점선 테두리는 풀링으로 메워지는 부족분입니다.</p><svg viewBox="0 0 ${W} ${H}">${sv}</svg></div>
+  <div class="pl-card"><h3>풀링 전후 비교</h3><p class="s">잉여는 선박별 잉여 크기에 비례해 부족분 상계에 배분했습니다.</p>
+  <table class="pl-tb"><tr><th>선박</th><th>GHG 원단위 (g/MJ)</th><th>과금 에너지 (GJ)</th><th>풀링 전 밸런스</th><th>풀링 전 벌금</th><th>풀링 후 밸런스</th><th>풀링 후 벌금</th></tr>
+  ${R.map(r=>`<tr><td>${r.n}</td><td>${r.ghg.toFixed(2)}</td><td>${nf(r.E/1000)}</td><td class="${r.cb<0?'neg':'pos'}">${r.cb<0?'':'+'}${T(r.cb)}</td><td>${r.p0?M(r.p0):'–'}</td><td class="${r.cb1<0?'neg':'pos'}">${Math.abs(r.cb1)<.5e6?'0 t':(r.cb1<0?'':'+')+T(r.cb1)}</td><td>${r.p1?M(r.p1):'–'}</td></tr>`).join('')}</table></div>
+  ${BX.BOX({refs:BX.REFS('EU 원문',BX.S.feu),
+   eqs:BX.EQ('GHGIE<sub>target</sub>',BX.FR('100 − R','100')+' · 91.16',BX.S.feu+' Art. 4')
+   +BX.EQ('CB<sub>i</sub>','(GHGIE<sub>target</sub> − GHGIE<sub>i</sub>) · E<sub>i</sub>',BX.S.feu+' Annex IV')
+   +BX.EQ('Pool','Σ<sub>i</sub> CB<sub>i</sub> &gt; 0',BX.S.feu+' Art. 21')
+   +BX.EQ('CB<sub>i</sub><sup>pool</sup>','CB<sub>i</sub> − '+BX.FR('CB<sub>i</sub>','Σ Surplus')+' · Σ Deficit','배분 가정','잉여 선박에만 적용. 부족 선박은 0으로 상계')
+   +BX.EQ('Penalty<sub>i</sub>',BX.FR('|CB<sub>i</sub>|','GHGIE<sub>i</sub> · 41,000')+' · 2,400 EUR',BX.S.feu+' Annex IV',consec?'연속 n년째 미준수 시 × (1 + (n − 1) / 10)':''),
+   defs:BX.DEFS([
+    ['R','감축률','2025~2029년 2%, 2030~2034년 6%, 2035년부터 14.5%. '+y+'년 목표는 '+tg.toFixed(2)+' gCO₂e/MJ',BX.S.feu],
+    ['GHGIE<sub>i</sub>','선박 GHG 원단위','연료별 Well-to-Wake 원단위. FuelEU 기본값, GWP AR4(CH₄ 25, N₂O 298). 탄소 비용 계산기와 같은 값',BX.S.feu+' Annex I·II'],
+    ['E<sub>i</sub>','과금 에너지','연료 사용량 × 저위발열량 × EU 과금 비중(EU 역내 100%, 역외 왕복 50%)',BX.S.feu],
+    ['41,000','VLSFO 환산','부족분을 VLSFO 1톤(41,000 MJ)에 해당하는 양으로 환산하는 값',BX.S.feu]]),
+   warn:BX.WARN([['풀링 조건','부족 선박은 풀링 후 부족이 커지면 안 되고, 잉여 선박은 풀링 후 부족이 되면 안 됩니다. 한 선박은 한 해에 한 풀에만 들어가며, 풀에 들어간 해에는 차입(borrowing)을 할 수 없습니다'],
+    ['배분','실제 배분은 풀 구성원이 정합니다. 여기서는 잉여 크기에 비례해 배분했습니다']])})}`;
+ done=true;$('pl-go').classList.remove('stale')}
+$('pl-go').onclick=run;draw();run();
+window.TOUR=[{el:null,title:"이 계산기가 하는 일",body:"여러 선박의 FuelEU 잉여와 부족을 한 풀로 묶어 상계했을 때 벌금이 얼마나 줄어드는지 계산합니다."},
+{el:"pl-set",title:"1. 평가 연도",body:"연도에 따라 FuelEU 목표 원단위가 바뀝니다. 2030년부터 −6%, 2035년부터 −14.5%입니다."},
+{el:"pl-fleet",title:"2. 선박 추가",body:"선박마다 연료, 연간 사용량, EU 과금 비중을 넣습니다. 잉여가 나는 선박(LNG, 바이오·e-연료)과 부족한 선박을 함께 넣어 보세요."},
+{el:"pl-out",title:"3. 결과",body:"풀 합계가 양수면 풀을 구성할 수 있고, 부족 선박의 벌금이 사라집니다. 표에서 풀링 전후를 선박별로 비교합니다."}];
+</script>
+<script src="js/tour.js"></script>
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="/" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="/">Home</a></li><li><a href="/story">Story</a></li><li><a href="/policy">Policy</a></li><li><a href="/insight">Insight</a></li><li><a href="/project">Project</a></li><li><a href="/tool">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="/#s1">01 Regulation</a></li><li><a href="/#s2">02 Transition</a></li><li><a href="/#s3">03 Scale up</a></li><li><a href="/#s4">04 Governance</a></li><li><a href="/#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

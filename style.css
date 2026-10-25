@@ -928,12 +928,12 @@ h1 em,h2 em{background:none;font-style:italic;color:var(--ocean-blue)}
 .fig .city-names text,.fig .zone-lab text,.fig .sea-names text{paint-order:stroke;stroke:rgba(11,61,102,.85);stroke-width:3px;stroke-linejoin:round}
 
 /* ── 페이지 머리 (Insight · Project · Tool) ── */
-.page-hero-oc{background:linear-gradient(180deg,#EEF5FB 0%,var(--light) 100%);padding:88px 0 64px;border-bottom:1px solid var(--line)}
+.page-hero-oc{background:linear-gradient(180deg,#EEF5FB 0%,var(--light) 100%);padding:88px 0 64px;border-bottom:1px solid var(--line);box-sizing:border-box;min-height:390px}
 .page-hero-oc .kicker{font-size:11px;letter-spacing:.3em;color:var(--ocean-blue);font-weight:500;margin-bottom:22px}
 .page-hero-oc h1{font-family:'Playfair Display',serif;font-weight:400;font-size:clamp(44px,calc(5.4 * var(--vw)),76px);line-height:1.02;letter-spacing:-.02em;margin:0;color:var(--ocean-deep)}
-.page-hero-oc .kr{font-size:clamp(18px,calc(1.9 * var(--vw)),22px);color:var(--ocean-deep);margin-top:20px;letter-spacing:-.02em;word-break:keep-all;line-height:1.55;max-width:40ch}
+.page-hero-oc .kr{font-size:clamp(18px,calc(1.9 * var(--vw)),22px);color:var(--ocean-deep);margin-top:20px;letter-spacing:-.02em;word-break:keep-all;line-height:1.55;max-width:none}
 .page-hero-oc .sub{font-size:15px;color:var(--muted);margin-top:10px;max-width:56ch;word-break:keep-all}
-@media (max-width:640px){.page-hero-oc{padding:60px 0 44px}}
+@media (max-width:640px){.page-hero-oc{padding:60px 0 44px;min-height:0}}
 .tools-feature{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:18px;margin-bottom:48px}
 .tf{position:relative;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:16px;padding:26px 26px 28px;background:#fff;transition:border-color .25s,transform .25s}
 .tf:hover{border-color:#B9CFE4;transform:translateY(-2px)}
@@ -1346,6 +1346,9 @@ h1 em,h2 em{background:none;font-style:italic;color:var(--ocean-blue)}
   html{min-width:1280px;max-width:none;overflow-x:auto}
   body{max-width:none}
   .intro{min-height:760px}
+  /* 창이 넓어져도 그림이 1280px 틀 안 같은 자리에 머물게 */
+  .intro-art{right:max(0px,calc(50% - 640px));width:691px;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 22%,#000 88%,transparent 100%)}
 }
 /* 모바일: 가파른 04·05는 라벨을 점 왼쪽 위로 */
 @media (max-width:860px){
@@ -1353,7 +1356,58 @@ h1 em,h2 em{background:none;font-style:italic;color:var(--ocean-blue)}
   .slides .stopbtn.on[data-slide="3"] .t,.slides .stopbtn.on[data-slide="4"] .t{right:calc(50% + 26px);top:-18px}
 }
 
-/* ── 모바일 최적화 (2026-10) ── */
+/* ═══ Tool 하위 페이지 공통 상단 (진한 배경) ═══ */
+.tool-top{background:var(--ocean-deep);color:#fff;padding:52px 0 46px;margin:0}
+.tool-top>.wrap{max-width:var(--maxw)!important;padding:0 24px!important}
+.tool-top .eyebrow span{display:inline}
+.tool-top .eyebrow{display:flex;align-items:center;gap:22px;font-size:12.5px;letter-spacing:.32em;text-transform:uppercase;color:#C9DCEF;font-weight:600;margin:0 0 26px}
+.tool-top .eyebrow:before{content:"";width:44px;height:1px;background:#C9DCEF;flex:none}
+.tool-top .eyebrow a{color:inherit}
+.tool-top h1{font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:700;font-size:clamp(26px,calc(2.6 * var(--vw)),34px);letter-spacing:-.02em;line-height:1.3;margin:0 0 14px;color:#fff}
+.tool-top h1 em{font-style:normal;color:#A7C8EB}
+.tool-top .tl{font-size:16px;line-height:1.7;color:#D6E2EF;max-width:none;margin:0;word-break:keep-all}
+.tool-top .tl b{color:#fff}
+.tool-top .btnrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px}
+.tool-top .tbtn{display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-size:15px!important;line-height:1.4;font-weight:700;padding:12px 22px;border-radius:5px;cursor:pointer;text-decoration:none;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;transition:background .2s}
+.tool-top .tbtn:hover{background:rgba(255,255,255,.08)}
+.tool-top .tbtn.pri{background:#A7C8EB;border-color:#A7C8EB;color:var(--ocean-deep)}
+.tool-top .tbtn.pri:hover{background:#BCD6F0}
+@media (max-width:640px){.tool-top{padding:40px 0 34px}.tool-top .eyebrow{letter-spacing:.2em;font-size:11px}}
+/* 공통 튜토리얼 */
+#tut-overlay{position:fixed;inset:0;background:rgba(11,61,102,.5);z-index:900;display:none}
+.tut-highlight{position:relative;z-index:950;box-shadow:0 0 0 4px #A7C8EB,0 0 0 9999px rgba(11,61,102,.5);border-radius:10px}
+#tut-card{position:fixed;z-index:960;background:#fff;border-radius:10px;max-width:400px;width:calc(100% - 40px);padding:18px 20px;box-shadow:0 8px 30px rgba(0,0,0,.3);display:none}
+#tut-card .step-eyebrow{font-size:11px;letter-spacing:2px;color:#3A6DA6;font-weight:700;text-transform:uppercase}
+#tut-card h3{font-size:16px;color:var(--ocean-deep);margin:6px 0 8px}
+#tut-card p{font-size:13px;color:#3d4852;line-height:1.65;word-break:keep-all;margin:0}
+#tut-card .dots{margin:14px 0 4px;display:flex;gap:6px}#tut-card .dots i{width:8px;height:8px;border-radius:50%;background:#d6dde3}#tut-card .dots i.on{background:#3A6DA6}
+#tut-card .row{display:flex;justify-content:space-between;margin-top:12px;gap:8px}
+#tut-card .tb{font:inherit;font-size:13px;padding:7px 14px;border-radius:5px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ocean-deep)}#tut-card .tb.go{background:var(--ocean-deep);border-color:var(--ocean-deep);color:#fff}
+
+/* ── 계산 근거 공통 서식 (CII·EEXI 형식) ── */
+details.why2{border:1px solid var(--line);border-radius:14px;background:#F8FAFC;padding:4px 22px;margin-top:16px}
+details.why2 summary{cursor:pointer;font-weight:700;color:var(--ocean-deep);font-size:14px;padding:12px 0}
+.why2 .refs{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 14px}.why2 .refs .rl{font-size:12.5px;color:var(--muted);padding:6px 0}
+.why2 .refs a{font-size:12.5px;border:1px solid #C9DAEC;background:#fff;border-radius:999px;padding:6px 12px;color:var(--ocean-deep);text-decoration:none}.why2 .refs a:after{content:" ↗";color:var(--ocean-blue)}
+.why2 .eqs{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 20px 14px;margin:0 0 14px}
+.why2 .eq{display:grid;grid-template-columns:1fr 190px;align-items:center;gap:16px;padding:16px 0;border-bottom:1px dashed var(--line)}
+.why2 .eq .em{display:flex;align-items:center;justify-content:center;gap:12px;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:21px;color:var(--ocean-deep);flex-wrap:wrap;line-height:1.3}
+.why2 .eq .em sub,.why2 .eq .em sup{font-size:.62em}
+.why2 .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px}
+.why2 .fr>span{padding:2px 8px;white-space:nowrap}.why2 .fr>span:first-child{border-bottom:1.5px solid var(--ocean-deep)}
+.why2 .eq .es{font-size:12px;text-align:right;color:var(--muted)}.why2 .eq .es a{color:var(--ocean-blue);text-decoration:none;border-bottom:1px solid #C9DAEC}
+.why2 .eq .ed{grid-column:1/-1;font-size:12.5px;color:var(--muted);line-height:1.75;word-break:keep-all;margin-top:-4px;text-align:center}.why2 .eq .ed b{color:var(--ocean-deep)}
+.why2 .vals2{margin:14px 0 2px;font-size:13px;color:var(--muted);line-height:1.8}
+.why2 .defs{display:grid;grid-template-columns:100px 1fr;gap:8px 12px;margin:14px 0 0}
+.why2 .defs dt{font-family:Georgia,serif;font-style:italic;font-size:15px;color:var(--ocean-deep)}
+.why2 .defs dd{margin:0;font-size:13px;color:var(--ocean-deep);line-height:1.7;word-break:keep-all}.why2 .defs dd b{font-weight:700}
+.why2 .defs dd span a,.why2 .warn a{color:var(--ocean-blue)}.why2 .defs small{display:block;color:var(--muted);font-size:11.5px}
+.why2 .eqn{font-size:12.5px;color:var(--muted);margin:12px 0 0;line-height:1.8;word-break:keep-all}
+.why2 .warn{font-size:12.5px;color:var(--muted);margin:0 0 16px;padding-left:18px;line-height:1.75;word-break:keep-all;background:none;border:0}.why2 .warn b{color:#A3333A;font-weight:600}
+.why2 .gr{font-style:normal;font-family:inherit;font-weight:700;display:inline-block;padding:0 6px;border-radius:4px;background:#EEF3F8;font-size:.85em}
+@media (max-width:860px){.why2 .eq{grid-template-columns:1fr}.why2 .eq .em{font-size:17px}.why2 .eq .es{text-align:center}}
+
+/* /* ── 모바일 최적화 (2026-10) ── */
 .oc-zoom-hint{display:none}
 @media (max-width:760px){
   .oc-zoomable{cursor:zoom-in}

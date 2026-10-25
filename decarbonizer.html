@@ -132,21 +132,22 @@ input.bad{border-color:#B4442E!important}
   </div>
 </header>
 
-<div class="page-hero" style="padding-bottom:26px">
+<header class="tool-top">
   <div class="wrap">
-    <p class="eyebrow" data-i="dz-eye">Tool · Decarbonizer · Stage 02 전환</p>
-    <h1 data-i="dz-h1">우리 배, <em>뭐부터</em> 하면 되나.</h1>
-    <p class="lede" data-i="dz-lede">다섯 단계로 진행합니다. 선박 제원을 확인하고, 적용 규제를 파악하고, 조치를 조합하고, 비용을 비교한 뒤, 한 장의 결과 요약을 받으세요. 모든 값은 파란 글자를 고쳐 즉시 재계산됩니다.</p>
-
-    <div class="steps" id="steps">
+    <p class="eyebrow"><span><a href="/tool">Tool</a> · Decarbonizer · Stage 02 전환</span></p>
+    <h1>Decarbonizer · 우리 배, <em>뭐부터</em> 하면 되나</h1>
+    <p class="tl">다섯 단계로 진행합니다. 선박 제원을 확인하고, 적용 규제를 파악하고, 조치를 조합하고, 비용을 비교한 뒤, 한 장의 결과 요약을 받으세요. 모든 값은 파란 글자를 고쳐 즉시 재계산됩니다.</p>
+    <div class="btnrow"><button type="button" class="tbtn pri" onclick="startTutorial()">튜토리얼 시작</button><button type="button" class="tbtn" onclick="location.href=location.pathname">초기값 복원</button><a class="tbtn" href="/tool">← Tool 목록으로</a></div>
+  </div>
+</header>
+<div class="wrap" style="padding-top:26px"><div class="steps" id="steps">
       <button class="stepbtn on" data-s="1"><span class="n">STEP 1</span><span class="t" data-i="dz-st1">선박 제원</span></button>
       <button class="stepbtn" data-s="2"><span class="n">STEP 2</span><span class="t" data-i="dz-st2">적용 규제</span></button>
       <button class="stepbtn" data-s="3"><span class="n">STEP 3</span><span class="t" data-i="dz-st3">탈탄소 조치</span></button>
       <button class="stepbtn" data-s="4"><span class="n">STEP 4</span><span class="t" data-i="dz-st4">CAPEX / OPEX</span></button>
       <button class="stepbtn" data-s="5"><span class="n">STEP 5</span><span class="t" data-i="dz-st5">결과 요약</span></button>
-    </div>
-  </div>
-</div>
+    </div></div>
+
 
 <section style="padding-top:34px">
   <div class="wrap">
@@ -176,7 +177,7 @@ input.bad{border-color:#B4442E!important}
           <div class="field">
             <label for="s-fuel">기준 연료</label>
             <select id="s-fuel">
-              <option value="HFO">HFO</option><option value="LFO">VLSFO · LFO</option><option value="MDO" selected>MDO · MGO</option>
+              <option value="HFO">HFO</option><option value="LFO">경질연료유 LFO</option><option value="MDO" selected>MDO · MGO</option>
               <option value="LNG">LNG</option><option value="LPG">LPG</option>
               <option value="B30">바이오 B30</option><option value="B100">바이오 B100</option>
               <option value="MEOH">메탄올 (그린)</option><option value="NH3">암모니아 (그린)</option>
@@ -275,7 +276,7 @@ input.bad{border-color:#B4442E!important}
             <label for="b-fuel">연료 B (대체·혼소)</label>
             <select id="b-fuel">
               <option value="NONE" selected>없음 · 단일 연료 유지</option>
-              <option value="HFO">HFO</option><option value="LFO">VLSFO · LFO</option><option value="MDO">MDO · MGO</option>
+              <option value="HFO">HFO</option><option value="LFO">경질연료유 LFO</option><option value="MDO">MDO · MGO</option>
               <option value="LNG">LNG</option><option value="LPG">LPG</option>
               <option value="B30">바이오 B30</option><option value="B100">바이오 B100</option>
               <option value="MEOH">메탄올 (그린)</option><option value="NH3">암모니아 (그린)</option>
@@ -371,7 +372,6 @@ input.bad{border-color:#B4442E!important}
       <div><h4>Five stages</h4><ul><li><a href="/#s1">01 Regulation</a></li><li><a href="/#s2">02 Transition</a></li><li><a href="/#s3">03 Scale up</a></li><li><a href="/#s4">04 Governance</a></li><li><a href="/#s5">05 Environment</a></li></ul></div>
       <div><h4>Contact</h4><ul>
         <li><a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></li>
-        <li>Hyeryoun Chi, Lead Researcher</li>
         <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
       </ul></div>
     </div>
@@ -880,6 +880,9 @@ $('copybtn').addEventListener('click',async function(){
   setTimeout(()=>this.textContent='결과 요약 복사',2000);
 });
 </script>
+<script>window.TOUR=[{el:null,title:"이 도구가 하는 일",body:"선박 제원부터 적용 규제, 탈탄소 조치, 비용 비교까지 다섯 단계로 진행하며 우리 배에 무엇부터 할지 정리합니다."},
+{el:"steps",title:"다섯 단계",body:"위 단계 버튼으로 이동합니다. 파란 글자로 된 값은 모두 고칠 수 있고, 고치면 즉시 다시 계산됩니다."}];</script>
+<script src="js/tour.js"></script>
 <script src="i18n.js"></script>
 <script src="site.js"></script>
 </body>

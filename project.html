@@ -258,8 +258,8 @@ g[data-wg]:has(.g-hit:focus-visible) .g-fan{opacity:.85}
 <section class="page-hero-oc">
   <div class="wrap">
     <p class="kicker">PROJECT</p>
-    <h1>Research on the route</h1>
-    <p class="kr" data-i="pj2-kr">모든 프로젝트는 다섯 단계 가운데 한 곳에 속합니다.</p>
+    <h1>Research &amp; Initiatives</h1>
+    <p class="kr" data-i="pj2-kr">해양 산업과 정책의 변화를 위한 연구와 협업, 그 과정과 성과를 공유합니다.</p>
   </div>
 </section>
 
@@ -286,7 +286,7 @@ g[data-wg]:has(.g-hit:focus-visible) .g-fan{opacity:.85}
       <button type="button" class="stf on" data-st="">전체</button>
       <button type="button" class="stf" data-st="done"><i class="sd done"></i>완료 <b data-stc="done"></b></button>
       <button type="button" class="stf" data-st="now"><i class="sd now"></i>진행 중 <b data-stc="now"></b></button>
-      <button type="button" class="stf" data-st="plan"><i class="sd plan"></i>기획 <b data-stc="plan"></b></button>
+      <button type="button" class="stf" data-st="plan"><i class="sd plan"></i>기획 진행 중 <b data-stc="plan"></b></button>
     </div>
 
     <div class="grid" id="pgrid"></div>
@@ -464,7 +464,6 @@ g[data-wg]:has(.g-hit:focus-visible) .g-fan{opacity:.85}
       <div><h4>Five stages</h4><ul><li><a href="/#s1">01 Regulation</a></li><li><a href="/#s2">02 Transition</a></li><li><a href="/#s3">03 Scale up</a></li><li><a href="/#s4">04 Governance</a></li><li><a href="/#s5">05 Environment</a></li></ul></div>
       <div><h4>Contact</h4><ul>
         <li><a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></li>
-        <li>Hyeryoun Chi, Lead Researcher</li>
         <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
       </ul></div>
     </div>
@@ -483,11 +482,11 @@ const STAGE_NAMES = {1:'01 규제',2:'02 전환',3:'03 확산',4:'04 거버넌�
 const PROJECTS = [
   {s:1, org:'SFOC × PLANiT', per:'2026.03', t:'해운 탈탄소, 멈춘 게 아니다: 규제 유예 속 한국 해운의 선택', x:'IMO 넷제로 프레임워크가 유예된 상황에서 여섯 시나리오로 한국 해운의 비용을 계산했습니다. 늦출수록 장기 비용이 커지고, 결정적 지렛대는 정부 정책입니다.', st:'done', u:'https://forourclimate.org/ko/research/641'},
   {s:1, org:'SFOC × PLANiT', per:'2025.07', t:'IMO 중기조치가 바꾸는 해운 탄소중립 지도', x:'배출 상한과 탄소 가격을 담은 IMO 중기조치가 선사의 연료 선택과 운송비를 어떻게 바꾸는지 세 시나리오로 추정했습니다.', st:'done', u:'https://forourclimate.org/ko/research/591'},
-  {s:1, org:'Pacific Environment · SFOC', per:'2025', t:'IMO MEPC 83/7/22 기여', x:'2050 국제해운 넷제로를 위한 연료 전환 권고. 감축비용 모델에 근거해 e-연료 조기 사용에 대한 재정 지원, 기존 연료 가격에 탄소 비용 내재화, 더 높은 중간 목표를 제안했습니다.', st:'done'},
+  {s:1, org:'Pacific Environment · SFOC × PLANiT', per:'2025', t:'IMO MEPC 83/7/22 기여', x:'2050 국제해운 넷제로를 위한 연료 전환 권고. 감축비용 모델에 근거해 e-연료 조기 사용에 대한 재정 지원, 기존 연료 가격에 탄소 비용 내재화, 더 높은 중간 목표를 제안했습니다.', st:'done'},
   {s:1, org:'SFOC × PLANiT · KMC', per:'2025.06', t:'IMO 중기조치: 연료 전환 전략과 비용', x:'IMO 넷제로 프레임워크 아래 미준수, 기본 목표, 강화 목표의 세 시나리오를 모델링했습니다. 중기조치가 실질적인 연료 전환을 이끌 수 있는지, 어디에 정책 개입이 필요한지 짚습니다.', st:'done', u:'https://planit.institute/works/imo-fuel'},
   {s:2, org:'SFOC × PLANiT', per:'2025.04', t:'탄소 락인(Carbon Lock-in), 국제해운 탈탄소는 지연 중', x:'LNG 중심의 연료 전환이 해운의 탄소 락인을 부른다는 분석입니다. 총배출을 직접 규제해야 e-연료 중심의 감축이 가능합니다.', st:'done', u:'https://forourclimate.org/ko/research/578'},
   {s:2, org:'SFOC × PLANiT', per:'2026.07', t:'중형 조선소 녹색전환의 대한민국 경제 파급효과 분석', x:'정책 지원 시 2026~2050년 84.7조 원의 추가 수주, 56.5조 원의 부가가치, 약 19.5만 명의 직접 고용. 수주잔량이 바닥나는 2029년 이전이 관건입니다.', st:'done', u:'https://forourclimate.org/ko/research/683'},
-  {s:2, org:'PLANiT', per:'2026–2028', t:'녹색항로의 실현 조건 (Green Shipping Council)', x:'녹색항로를 선언에서 운항으로. 첫 무탄소 상업 운항에 필요한 계약, 연료, 항만, 재원의 조건을 3년간 계량합니다.', st:'now', open:1},
+  {s:2, org:'PLANiT', per:'2026–2028', t:'녹색항로의 실현 조건 (Green Shipping Council)', x:'녹색항로를 선언에서 운항으로. 첫 무탄소 상업 운항에 필요한 계약, 연료, 항만, 재원의 조건을 3년간 계량합니다.', st:'plan', open:1},
   {s:4, org:'Oceans 5', per:'2026', t:'Shadow Fleet과 해양보호구역', x:'규제 밖 그림자 선단이 보호구역을 드나들 때, 모니터링 인프라를 감시에 쓰는 구상입니다.', st:'plan'},
   {s:2, org:'PLANiT · 신규', per:'2026 가을', t:'메탄올·암모니아, 항만은 준비됐나', x:'대체연료 벙커링의 경제성과 환경 영향. 병목은 배가 아니라 항만일 수 있습니다.', st:'plan'},
   {s:3, org:'PLANiT', per:'설계 제안', t:'한국형 CCfD: 그린 프리미엄을 지불하는 순서', x:'공적 보전, 선박금융, 화주 장기계약이 각각 언제 무엇을 지불할지 설계합니다.', st:'plan'},
@@ -497,7 +496,7 @@ const PROJECTS = [
 ];
 
 const grid = document.getElementById('pgrid');
-const STLABEL = {done:'완료', now:'진행 중', plan:'기획'};
+const STLABEL = {done:'완료', now:'진행 중', plan:'기획 진행 중'};
 const STORDER = {done:0, now:1, plan:2};
 
 let CUR_S=0, CUR_ST='';

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · GHG Lens</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="description" content="선박 한 척의 CII 등급, EU ETS·FuelEU 비용, EEXI를 규정 원문 기준으로 계산하는 도구.">
+
+<!-- ═══════════════════════════════════════════════
+  ✏️ 수정 가이드 (tool.html)
+  · 기본 입력값: 각 <input value="..."> 숫자, 기본 연료는 fuelRows
+  · 연료 기본값(FUELS), CII 계수(ciiRef, CII_Z), EEXI(EEXI_REF, eexiY),
+    ETS·FuelEU(ETS_PHASE, FEU_TARGET), NZF 초안(NZF_*)은
+    하단 <script> 맨 위에 근거 조항과 함께 모여 있습니다.
+═══════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="/" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="/">Home</a>
+      <a href="/story">Story</a>
+      <a href="/policy">Policy</a>
+      <a href="/insight">Insight</a>
+      <a href="/project">Project</a>
+      <a class="active" aria-current="page" href="/tool">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<header class="tool-top">
+  <div class="wrap">
+    <p class="eyebrow"><span><a href="/tool">Tool</a> · GHG Lens Dashboard · Stage 01 규제</span></p>
+    <h1>GHG Lens · 같은 배출, <em>다른 숫자</em></h1>
+    <p class="tl">동일한 온실가스 배출도 규제별 GWP 적용 기준에 따라 CO₂ 환산량이 달라집니다. 여기에 대기 중 체류 시간과 배출 지역에 따른 기후 영향까지 함께 비교합니다.</p>
+    <div class="btnrow"><a class="tbtn" href="/tool">← Tool 목록으로</a></div>
+  </div>
+</header>
+<section class="gl"><div class="wrap">
+
+  <!-- 01 -->
+  <div class="gl-h"><span class="n">01</span><h2>규정마다 다른 CO₂ 환산값</h2><p>같은 1톤의 메탄이라도 어떤 제도는 21톤, 어떤 제도는 84톤의 CO₂로 계산합니다. 각 제도가 어느 IPCC 보고서의 지구온난화지수(GWP)를, 몇 년 기준으로 쓰는지가 다르기 때문입니다.</p></div>
+  <div class="gl-ctl">
+    <div class="seg" id="gas"><button class="on" data-g="0">메탄 CH₄</button><button data-g="1">아산화질소 N₂O</button></div>
+    <div class="seg" id="grp"><button class="on" data-f="all">전체</button><button data-f="ship">해운 규제</button><button data-f="nat">국가 제도</button><button data-f="sci">과학 기준</button></div>
+    <label class="amt">배출량 <input id="amt" type="number" value="1" min="0" step="0.1"> t</label>
+  </div>
+  <div class="gap" id="gapline"></div>
+  <div class="bars" id="bars"></div>
+
+  <!-- 02 -->
+  <div class="gl-h"><span class="n">02</span><h2>메탄 슬립: 규정의 가정과 실측</h2><p>LNG 엔진에서 타지 않고 빠져나가는 메탄(메탄 슬립)을 규정은 연료의 몇 %로 가정할까요. 실측은 그보다 높게 나왔습니다. 연간 LNG 사용량을 넣고 슬립 가정을 바꿔 보세요.</p></div>
+  <div class="slip">
+    <div class="sl-in">
+      <label class="amt">연간 LNG 사용량 <input id="lng" type="number" value="10000" min="0" step="500"> t</label>
+      <div class="seg col" id="slipsel">
+        <button class="on" data-s="3.1">FuelEU 기본값 · 3.1%<small>LNG 오토 중속 4행정</small></button>
+        <button data-s="3.5">IMO 가정 · 3.5%<small>ICCT FUMES 보고서 인용</small></button>
+        <button data-s="6.4">실측 평균 · 6.4%<small>ICCT FUMES, 선박 18척, 2024</small></button>
+      </div>
+    </div>
+    <div class="sl-out" id="slipout"></div>
+  </div>
+
+  <!-- 03 -->
+  <div class="gl-h"><span class="n">03</span><h2>대기에 얼마나 머무는가</h2><p>메탄은 강하지만 짧게, CO₂는 약하지만 수백 년 이상 남습니다. 20년 기준(GWP20)과 100년 기준(GWP100)의 숫자가 크게 다른 이유입니다. 배출 1단위가 시간이 지나며 대기에 남는 비율입니다.</p></div>
+  <div class="decay"><svg id="dc" viewBox="0 0 900 300"></svg>
+    <div class="dl"><span><i style="background:#E0464E"></i>CH₄ · 평균 체류 약 12년</span><span><i style="background:#4F7FB5"></i>N₂O · 약 109년</span><span><i style="background:#0B3D66"></i>CO₂ · 단일 수명 없음, 일부는 수천 년</span></div></div>
+
+  <!-- 04 -->
+  <div class="gl-h"><span class="n">04</span><h2>어디서 배출되는가</h2><p>CO₂와 메탄은 지구 전체에 고르게 섞이지만, 함께 나오는 블랙카본과 황·질소산화물은 배출된 곳에서 영향이 갈립니다.</p></div>
+  <div class="reg">
+    <div class="rc"><span class="tag2" style="background:#E8EEF5;color:#0B3D66">북극</span><b>블랙카본이 얼음을 녹인다</b>
+      <p>눈과 얼음 위에 내려앉은 블랙카본은 햇빛 반사율을 낮춰 해빙을 앞당깁니다. 북극 해운의 블랙카본 배출은 <em>2015~2021년 두 배</em>로 늘었습니다.</p>
+      <p>IMO의 북극 중유 금지는 <em>2024년 7월</em> 시행됐지만 예외 조항이 2029년까지 남아, 그 사이에는 중유 운반선의 약 <em>30%</em>에만 적용됩니다.</p><p class="src">ICCT · WWF Arctic</p></div>
+    <div class="rc"><span class="tag2" style="background:#FDECEC;color:#B53A40">연안 · 항만</span><b>황과 미세먼지는 사람에게 닿는다</b>
+      <p>2020년 저황 연료 이전, 선박 대기오염은 해마다 조기 사망 약 <em>40만 명</em>, 소아 천식 약 <em>1,400만 건</em>과 관련된 것으로 추정됐습니다. 저황 연료는 조기 사망을 약 3분의 1, 소아 천식을 약 절반 줄일 것으로 봤습니다.</p>
+      <p>배출규제해역(ECA)에서는 연료 황 함량을 <em>0.10%</em>로 묶습니다.</p><p class="src">Sofiev et al., Nature Communications (2018)</p></div>
+    <div class="rc"><span class="tag2" style="background:#EAF6EF;color:#2E7D52">원양</span><b>깨끗해진 배기가 냉각도 줄였다</b>
+      <p>2020년 IMO 황 상한(3.5% → 0.5%)으로 선박의 이산화황 배출이 약 <em>80%</em> 줄었습니다. 구름을 밝게 하던 황 에어로졸이 줄면서, 바다 위 냉각 효과도 함께 줄었습니다.</p>
+      <p>한 연구는 그 효과가 2020년 이후 지구에 추가로 쌓인 열의 상당 부분에 해당한다고 추정했고, 다른 연구는 관측된 구름 변화의 일부만 설명한다고 봅니다.</p><p class="src">Yuan et al., Commun. Earth Environ. (2024) · Gettelman et al., GRL (2024)</p></div>
+  </div>
+
+  <div class="gl-src">
+    <p class="k">근거 · 2026년 10월 확인</p>
+    <ol>
+      <li>IMO LCA 지침(MEPC.391(81)) 2.4항: GWP100 CH₄ 28, N₂O 265 (AR5), GWP20 CH₄ 84, N₂O 264는 비교용</li>
+      <li>FuelEU Maritime: RED II의 GWP(CH₄ 25, N₂O 298) 적용, 개정 EU MRV와 같은 AR5 값으로 정렬 예정 (ABS FuelEU FAQ)</li>
+      <li>EU ETS · MRV 해운: CH₄ 28, N₂O 265 (AR5)</li>
+      <li>UK ETS 해운(2026년 7월 시행): CO₂·CH₄·N₂O, TtW, CH₄ 28, N₂O 265 (DNV)</li>
+      <li>한국 배출권거래제: 제4차 계획기간(2026~2030) CH₄ 21, N₂O 310(AR2), 제5차부터 28, 265(AR5) (국가 배출권 할당계획)</li>
+      <li>미국 EPA GHGRP: 보고연도 2024부터 AR5 GWP100 (EPA, 2024)</li>
+      <li>호주 NGER: 2020–21 보고연도부터 AR5(CH₄ 28, N₂O 265) (Clean Energy Regulator)</li>
+      <li>파리협정 투명성체계 국가 인벤토리: AR5 GWP100 (UNFCCC). 중국 첫 격년투명성보고서도 AR5 사용 (UNFCCC 검토보고서)</li>
+      <li>IPCC AR6 WG1: GWP100 화석 메탄 29.8, N₂O 273 (GHG Protocol 정리표) · GWP20 화석 메탄 82.5 · 체류 시간 CH₄ 11.8년, N₂O 109년</li>
+      <li>ICCT FUMES (2024): LPDF 4행정 18척 실측 평균 메탄 슬립 6.4%, EU 가정 3.1%, IMO 가정 3.5%</li>
+      <li>CO₂ 체류 곡선: Joos et al. (2013) 반응 함수</li>
+    </ol>
+  </div>
+</div></section>
+<style>
+.gl{padding:56px 0 64px}
+.gl-h{display:grid;grid-template-columns:44px 1fr;column-gap:12px;margin:48px 0 18px}.gl-h:first-child{margin-top:8px}.gl-h .n{font-family:'Playfair Display',serif;color:var(--muted);font-size:15px;grid-row:span 2;padding-top:6px}
+.gl-h h2{font-family:'Playfair Display','Pretendard Variable',serif;font-weight:400;font-size:28px;color:var(--ocean-deep);margin:0}.gl-h p{margin:6px 0 0;color:var(--muted);font-size:14.5px;line-height:1.7;word-break:keep-all;max-width:none}
+.gl-ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 14px 56px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:#fff}.seg button{border:0;background:none;font:inherit;font-size:13px;padding:6px 14px;border-radius:999px;cursor:pointer;color:var(--ocean-deep)}.seg button.on{background:var(--ocean-deep);color:#fff}
+.amt{font-size:13px;color:var(--muted)}.amt input{width:90px;margin:0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;color:var(--ocean-deep)}
+.gap{margin:0 0 12px 56px;font-size:14px;color:var(--ocean-deep);background:#F2F6FA;border-radius:10px;padding:12px 16px}.gap b{font-size:16px}
+.bars{margin-left:56px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:8px 24px}
+.grp-h{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ocean-blue);font-weight:700;padding:16px 0 4px}
+.br{display:grid;grid-template-columns:270px 1fr 120px;align-items:center;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.br .l b{display:block;font-size:14px;color:var(--ocean-deep)}.br .l small{font-size:11.5px;color:var(--muted)}
+.br .t{height:14px;background:#EEF3F8;border-radius:7px;overflow:hidden}.br .t i{display:block;height:100%;border-radius:7px;transition:width .4s}
+.br .v{text-align:right;font-weight:700;color:var(--ocean-deep);font-size:15px}.br .v small{font-weight:400;color:var(--muted);font-size:11px}
+.slip{margin-left:56px;display:grid;grid-template-columns:340px 1fr;gap:18px}
+.sl-in{border:1px solid var(--line);border-radius:16px;background:#fff;padding:20px;display:flex;flex-direction:column;gap:14px}
+.seg.col{flex-direction:column;border-radius:12px;gap:4px}.seg.col button{text-align:left;border-radius:9px;padding:10px 12px;font-weight:600}.seg.col button small{display:block;font-weight:400;font-size:11.5px;opacity:.75;margin-top:2px}
+.sl-out{border:1px solid var(--line);border-radius:16px;background:var(--ocean-deep);color:#fff;padding:22px 24px}
+.sl-out .big{font-size:13px;color:#C9DCEF}.sl-out .big b{display:block;font-size:34px;color:#fff;margin:4px 0 14px;font-weight:700}
+.sl-out table{width:100%;border-collapse:collapse;font-size:13.5px}.sl-out td{padding:9px 0;border-top:1px solid rgba(255,255,255,.15)}.sl-out td:last-child{text-align:right;font-weight:700}
+.sl-out .nt{font-size:12px;color:#C9DCEF;margin:12px 0 0;word-break:keep-all}
+.decay{margin-left:56px;border:1px solid var(--line);border-radius:16px;background:#fff;padding:18px 22px}.decay svg{width:100%;height:auto;display:block}
+.dl{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:8px}.dl i{display:inline-block;width:14px;height:3px;margin-right:6px;vertical-align:middle}
+.reg{margin-left:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.rc{border:1px solid var(--line);border-radius:16px;background:#fff;padding:20px 22px;display:flex;flex-direction:column;gap:8px}
+.rc .tag2{align-self:flex-start;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 10px}.rc b{font-size:17px;color:var(--ocean-deep);margin-top:2px}.rc p{margin:0;font-size:13px;color:var(--muted);line-height:1.7;word-break:keep-all}.rc em{font-style:normal;color:var(--ocean-deep);font-weight:700}.rc .src{margin-top:auto;padding-top:8px;font-size:11.5px;color:#8FA3B8}
+.gl-src{margin:44px 0 0 56px;border-top:1px solid var(--line);padding-top:18px}.gl-src .k{font-size:11px;letter-spacing:.2em;color:var(--ocean-blue);font-weight:700;margin:0 0 8px}.gl-src ol{margin:0;padding-left:18px;font-size:12px;color:var(--muted);line-height:1.8;word-break:keep-all}
+@media (max-width:860px){.gl-ctl,.bars,.slip,.decay,.reg,.gap,.gl-src{margin-left:0}.slip,.reg{grid-template-columns:1fr}.br{grid-template-columns:1fr 90px}.br .t{grid-column:1/-1;grid-row:2}}
+</style>
+<script>
+/* [이름, 설명, 그룹, CH4, N2O, 색] */
+const ROWS=[
+ ['IMO LCA 지침','MEPC.391(81) · AR5 · GWP100','ship',28,265,'#0B3D66'],
+ ['EU ETS · MRV 해운','AR5 · GWP100 · CH₄·N₂O 포함','ship',28,265,'#2E6FA8'],
+ ['UK ETS 해운','2026년 7월 시행 · AR5 · GWP100','ship',28,265,'#4F7FB5'],
+ ['FuelEU Maritime','2025년 시행 · RED II(AR4) · GWP100','ship',25,298,'#8FA3B8'],
+ ['한국 배출권거래제 제4차','2026~2030 · AR2 · GWP100','nat',21,310,'#C98A2E'],
+ ['한국 배출권거래제 제5차','2031년부터 · AR5 · GWP100','nat',28,265,'#E0A955'],
+ ['미국 EPA GHGRP','보고연도 2024부터 · AR5','nat',28,265,'#6E8FB0'],
+ ['호주 NGER','2020–21부터 · AR5','nat',28,265,'#6E8FB0'],
+ ['파리협정 국가 인벤토리','투명성체계 · AR5 · 중국 첫 BTR 포함','nat',28,265,'#6E8FB0'],
+ ['IPCC AR6','최신 과학 · GWP100 · 화석 메탄','sci',29.8,273,'#3A6DA6'],
+ ['IMO LCA 지침 (비교용)','AR5 · GWP20','sci',84,264,'#E0464E'],
+ ['IPCC AR6','GWP20 · 화석 메탄','sci',82.5,273,'#F08A8F']];
+const GN={ship:'해운 규제',nat:'국가 제도',sci:'과학 기준'};
+let gi=0,flt='all';
+const fmt=v=>v.toLocaleString('ko-KR',{maximumFractionDigits:1});
+function draw(){const a=parseFloat(document.getElementById('amt').value)||0,k=3+gi;
+ const rows=ROWS.filter(r=>flt==='all'||r[2]===flt),mx=Math.max(...ROWS.map(r=>r[k]));
+ let h='',last='';rows.forEach(r=>{if(r[2]!==last){h+=`<div class="grp-h">${GN[r[2]]}</div>`;last=r[2]}
+  h+=`<div class="br"><div class="l"><b>${r[0]}</b><small>${r[1]} · ×${r[k]}</small></div><div class="t"><i style="width:${r[k]/mx*100}%;background:${r[5]}"></i></div><div class="v">${fmt(a*r[k])} <small>tCO₂e</small></div></div>`});
+ document.getElementById('bars').innerHTML=h;
+ const vals=ROWS.map(r=>r[k]),lo=Math.min(...vals),hi=Math.max(...vals);
+ const lr=ROWS.find(r=>r[k]===lo),hr=ROWS.find(r=>r[k]===hi);
+ document.getElementById('gapline').innerHTML=`같은 ${fmt(a)}톤의 ${gi?'아산화질소':'메탄'}: 가장 낮게는 <b>${fmt(a*lo)} tCO₂e</b>(${lr[0]}), 가장 높게는 <b>${fmt(a*hi)} tCO₂e</b>(${hr[0]}${hr[1].includes('GWP20')?' · 20년 기준':''}). <b>${(hi/lo).toFixed(1)}배</b> 차이입니다.`}
+document.querySelectorAll('#gas button').forEach(b=>b.onclick=()=>{gi=+b.dataset.g;document.querySelectorAll('#gas button').forEach(x=>x.classList.toggle('on',x===b));draw()});
+document.querySelectorAll('#grp button').forEach(b=>b.onclick=()=>{flt=b.dataset.f;document.querySelectorAll('#grp button').forEach(x=>x.classList.toggle('on',x===b));draw()});
+document.getElementById('amt').oninput=draw;draw();
+/* 메탄 슬립 */
+let sp=3.1;
+function slip(){const l=parseFloat(document.getElementById('lng').value)||0,ch4=l*sp/100;
+ document.getElementById('slipout').innerHTML=`<div class="big">빠져나간 메탄<b>${fmt(ch4)} t</b></div>
+ <table><tr><td>IMO LCA · EU ETS · UK ETS (×28, 100년)</td><td>${fmt(ch4*28)} tCO₂e</td></tr>
+ <tr><td>FuelEU (×25, 100년)</td><td>${fmt(ch4*25)} tCO₂e</td></tr>
+ <tr><td>한국 배출권거래제 제4차 (×21, 100년)</td><td>${fmt(ch4*21)} tCO₂e</td></tr>
+ <tr><td>20년 기준 (×84, IMO 비교용)</td><td>${fmt(ch4*84)} tCO₂e</td></tr></table>
+ <p class="nt">슬립률은 연료 질량 대비 비율로 단순 계산했습니다. 같은 배라도 슬립 가정(${sp}%)과 GWP 기준을 함께 바꾸면 결과가 몇 배씩 달라집니다.</p>`}
+document.querySelectorAll('#slipsel button').forEach(b=>b.onclick=()=>{sp=+b.dataset.s;document.querySelectorAll('#slipsel button').forEach(x=>x.classList.toggle('on',x===b));slip()});
+document.getElementById('lng').oninput=slip;slip();
+/* 체류 곡선 */
+(function(){const W=900,H=300,L=50,R=20,T=16,B=36,Y=200,X=t=>L+t/Y*(W-L-R),V=v=>T+(1-v)*(H-T-B);
+ const co2=t=>0.2173+0.2240*Math.exp(-t/394.4)+0.2824*Math.exp(-t/36.54)+0.2763*Math.exp(-t/4.304);
+ const f={ch4:t=>Math.exp(-t/11.8),n2o:t=>Math.exp(-t/109),co2};const col={ch4:'#E0464E',n2o:'#4F7FB5',co2:'#0B3D66'};
+ let s='';[0,.25,.5,.75,1].forEach(v=>s+=`<line x1="${L}" x2="${W-R}" y1="${V(v)}" y2="${V(v)}" stroke="#E3EAF1"/><text x="${L-8}" y="${V(v)+4}" text-anchor="end" font-size="11" fill="#8FA3B8">${v*100}%</text>`);
+ [0,20,50,100,150,200].forEach(t=>s+=`<text x="${X(t)}" y="${H-12}" text-anchor="middle" font-size="11" fill="#8FA3B8">${t}년</text>`);
+ for(const k in f){let d='';for(let t=0;t<=Y;t+=1)d+=(t?'L':'M')+X(t).toFixed(1)+' '+V(f[k](t)).toFixed(1);s+=`<path d="${d}" fill="none" stroke="${col[k]}" stroke-width="2.6"/>`}
+ s+=`<line x1="${X(100)}" x2="${X(100)}" y1="${T}" y2="${H-B}" stroke="#0B3D66" stroke-dasharray="3 4" opacity=".5"/><text x="${X(100)+6}" y="${T+12}" font-size="11" fill="#0B3D66">GWP100 기준 시점</text><line x1="${X(20)}" x2="${X(20)}" y1="${T}" y2="${H-B}" stroke="#E0464E" stroke-dasharray="3 4" opacity=".5"/><text x="${X(20)+6}" y="${T+26}" font-size="11" fill="#E0464E">GWP20</text>`;
+ document.getElementById('dc').innerHTML=s})();
+</script>
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="/" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="/">Home</a></li><li><a href="/story">Story</a></li><li><a href="/policy">Policy</a></li><li><a href="/insight">Insight</a></li><li><a href="/project">Project</a></li><li><a href="/tool">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="/#s1">01 Regulation</a></li><li><a href="/#s2">02 Transition</a></li><li><a href="/#s3">03 Scale up</a></li><li><a href="/#s4">04 Governance</a></li><li><a href="/#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+<script src="i18n.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

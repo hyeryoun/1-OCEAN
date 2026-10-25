@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="#EEF4FA"/>
+<g fill="none" stroke="#2E6FA8" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round">
+<path d="M290 150 C390 150 400 250 470 250"/><path d="M290 250 H470"/><path d="M290 350 C390 350 400 250 470 250"/></g>
+<g font-family="Inter,Arial,sans-serif" font-weight="700" text-anchor="middle">
+<circle cx="250" cy="150" r="40" fill="#A7C8EB"/><text x="250" y="160" font-size="30" fill="#0B3D66">−</text>
+<circle cx="250" cy="250" r="30" fill="#A7C8EB"/><text x="250" y="260" font-size="26" fill="#0B3D66">−</text>
+<circle cx="250" cy="350" r="52" fill="#2E6FA8"/><text x="250" y="361" font-size="32" fill="#fff">+</text>
+<circle cx="555" cy="250" r="85" fill="#0B3D66"/><text x="555" y="248" font-size="34" fill="#fff">+</text><text x="555" y="282" font-size="18" fill="#A7C8EB" letter-spacing="3">POOL</text>
+</g></svg>

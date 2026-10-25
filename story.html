@@ -73,7 +73,8 @@
 }
 
 /* ── 1-OCEAN Story ── */
-.story-hero{padding:92px 0 10px;text-align:left}
+.story-hero{padding:56px 0 10px;text-align:left}
+.page-hero-oc .kr{max-width:none}
 .story-hero h1{font-family:'Playfair Display',serif;font-weight:400;font-size:clamp(44px,calc(5.8 * var(--vw)),82px);line-height:1.02;letter-spacing:-.02em;margin:0}
 .story-hero .kr{font-size:clamp(19px,calc(2 * var(--vw)),24px);color:var(--ocean-deep);margin-top:22px;letter-spacing:-.02em;word-break:keep-all;line-height:1.55}
 .story-hero .kicker{font-size:11px;letter-spacing:.3em;color:var(--ocean-blue);font-weight:500;margin-bottom:24px}
@@ -102,8 +103,8 @@
 .of{position:relative;margin-top:50px;background:#06223B;border-radius:18px;overflow:hidden}
 #ofcv{display:block;width:100%;aspect-ratio:920/560}
 .of-big{position:absolute;right:7%;top:50%;transform:translateY(-50%);text-align:right;opacity:0;pointer-events:none}
-.of-big b{display:block;font-family:'Playfair Display',serif;font-weight:400;font-size:clamp(48px,7vw,96px);line-height:1;color:#fff}
-.of-big span{display:block;margin-top:12px;font-family:'Playfair Display',serif;font-size:clamp(15px,1.6vw,20px);letter-spacing:.04em;color:#A7C8EB}
+.of-big b{display:block;font-family:'Playfair Display',serif;font-weight:400;font-size:calc(7 * var(--vw));line-height:1;color:#fff}
+.of-big span{display:block;margin-top:12px;font-family:'Playfair Display',serif;font-size:calc(1.6 * var(--vw));letter-spacing:.04em;color:#A7C8EB}
 .of-play{position:absolute;left:16px;bottom:14px;width:32px;height:32px;border-radius:50%;border:1px solid rgba(167,200,235,.4);background:rgba(6,34,59,.6);color:#CFE0F0;display:grid;place-items:center;cursor:pointer;opacity:.6;transition:opacity .2s}
 .of-play:hover,.of-play:focus-visible{opacity:1}
 .of-play .pl{display:none}.of-play.paused .pl{display:block}.of-play.paused .pz{display:none}
@@ -132,11 +133,15 @@
 </header>
 
 <main>
-<section class="story-hero">
+<section class="page-hero-oc">
   <div class="wrap">
     <p class="kicker">STORY</p>
     <h1>Seeing the ocean<br>as one system, one continent</h1>
-    <p class="kr" data-i="sy-kr">바다를 하나의 영토로 바라보면,<br>해운은 그 안에서 작동하는 하나의 국가 시스템이 됩니다.</p>
+    <p class="kr" data-i="sy-kr">바다를 하나의 영토로 바라보면, 해운은 그 안에서 작동하는 하나의 국가 시스템이 됩니다.</p>
+  </div>
+</section>
+<section class="story-hero">
+  <div class="wrap">
 
     <div class="of" id="of" role="img" aria-label="해류가 흐르는 지구본이 천천히 돌며 대륙 쪽에서 태평양과 남극 쪽 바다로 시점을 옮기고, 고래와 바다거북, 물고기 떼가 지나가며, 마지막에 바다가 지구 표면의 71%를 차지하는 모습이 드러나는 애니메이션">
       <canvas id="ofcv"></canvas>
@@ -297,7 +302,6 @@
       <div><h4>Five stages</h4><ul><li><a href="/#s1">01 Regulation</a></li><li><a href="/#s2">02 Transition</a></li><li><a href="/#s3">03 Scale up</a></li><li><a href="/#s4">04 Governance</a></li><li><a href="/#s5">05 Environment</a></li></ul></div>
       <div><h4>Contact</h4><ul>
         <li><a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></li>
-        <li>Hyeryoun Chi, Lead Researcher</li>
         <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
       </ul></div>
     </div>

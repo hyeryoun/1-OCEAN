@@ -59,7 +59,7 @@ document.querySelectorAll('#menu a').forEach(a =>
   window.addEventListener('resize',centerRoute);
 })();
 
-/* 모바일: 작은 도판(방사형 지도·FIG 지도)은 탭하면 크게 보기 */
+/* /* 모바일: 작은 도판(방사형 지도·FIG 지도)은 탭하면 크게 보기 */
 (function(){
   var mq = matchMedia('(max-width:760px)');
   var targets = document.querySelectorAll('.gsc-wrap, .fig');

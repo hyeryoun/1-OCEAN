@@ -114,6 +114,7 @@
   .topbar .wrap, header.nav .wrap, footer .wrap{max-width:1160px}
   .lca-hero{margin-top:0}
 </style>
+<script src="js/basis.js"></script>
 </head>
 <body>
 
@@ -137,16 +138,12 @@
   </div>
 </header>
 
-<header class="lca-hero">
+<header class="tool-top">
   <div class="wrap">
-    <div class="eyebrow" data-i="lc-eye">Tool · Marine Fuel LCA · Stage 02 전환</div>
-    <h1 data-i="lc-h1">선박연료 LCA · 같은 연료, 다른 숫자</h1>
-    <p data-i="lc-lede">Well-to-Wake 온실가스 집약도를 단계별로 분해하고 조정합니다. FuelEU Maritime 기본값을 바탕으로 하되, IMO LCA 지침(개정 중)의 GWP 체계와 비교할 수 있습니다.</p>
-    <div class="btnrow">
-      <button class="btn btn-gold" onclick="startTutorial()">튜토리얼 시작</button>
-      <button class="btn btn-ghost" onclick="resetFuel()">현재 연료 기본값 복원</button>
-      <a class="btn btn-ghost" href="/tool" style="text-decoration:none">← Tool 목록으로</a>
-    </div>
+    <p class="eyebrow"><span><a href="/tool">Tool</a> · Marine Fuel LCA Calculator · Stage 02 전환</span></p>
+    <h1>선박연료 LCA · 같은 연료, <em>다른 숫자</em></h1>
+    <p class="tl">Well-to-Wake 온실가스 집약도를 단계별로 분해하고 조정합니다. FuelEU Maritime 기본값을 바탕으로 하되, IMO LCA 지침(개정 중)의 GWP 체계와 비교할 수 있습니다.</p>
+    <div class="btnrow"><button type="button" class="tbtn pri" onclick="startTutorial()">튜토리얼 시작</button><button type="button" class="tbtn" onclick="resetFuel()">초기값 복원</button><a class="tbtn" href="/tool">← Tool 목록으로</a></div>
   </div>
 </header>
 
@@ -317,26 +314,28 @@
   <section id="sec-method">
     <span class="sec-tag">근거</span>
     <h2>방법론·출처</h2>
-    <details>
-      <summary>계산식</summary>
-      <div class="inner">
-        <li>WtW = WtT + TtW (gCO₂eq/MJ)</li>
-        <li>TtW = [ (1−s)·(C<sub>f,CO₂</sub> + C<sub>f,CH₄</sub>·GWP<sub>CH₄</sub> + C<sub>f,N₂O</sub>·GWP<sub>N₂O</sub>) + s·GWP<sub>CH₄</sub> ] ÷ LCV, s = 슬립 비율</li>
-        <li>CB = (목표 집약도 − 실적 집약도) × 사용 에너지(MJ)</li>
-        <li>RFNBO 보상계수: 2033년까지 해당 에너지를 2배로 계상(FuelEU 제5조). 본 툴은 단일 연료 가정에서 실적 집약도를 2로 나누는 방식으로 근사합니다.</li>
-      </div>
-    </details>
-    <details>
-      <summary>데이터 출처와 한계</summary>
-      <div class="inner">
-        <li>화석연료 LCV·WtT·배출계수: Regulation (EU) 2023/1805 (FuelEU Maritime) Annex II 기본값.</li>
-        <li>IMO 값 세트: LCV는 MEPC.364(79), LNG 메탄 슬립은 MEPC.391(81) 기본값(Otto 중속 3.5%, Otto 저속 1.7%, Diesel 저속 0.15%, LBSI 2.6%). IMO 화석연료 WtT 기본값은 아직 확정되지 않아 FuelEU 값을 씁니다 (2026 MEPC 84 기준).</li>
-        <li>GWP: AR4 (FuelEU·RED II 정합), AR5 (IMO LCA 지침 MEPC.376(80)·MEPC.391(81)), AR6 참고값.</li>
-        <li>IMO 기준선: IMO NZF 초안 (2025.4 MEPC 83 승인, 2025.10 채택 연기 · 미채택). GFI 기준 93.3 gCO₂eq/MJ (2008), ZNZ 문턱값 2034년까지 19.0, 2035년부터 14.0 gCO₂eq/MJ. 확정된 규정이 아니므로 채택 문서로 재확인 필요.</li>
-        <li>바이오·e-연료의 WtT는 예시값입니다. 실제 컴플라이언스에는 RED II 인증 실제값 또는 IMO FLC(연료 라이프사이클 라벨) 값을 사용해야 합니다.</li>
-        <li>WtT의 3단계 분해 비율은 설명용 예시 배분이며, 규정 기본값은 합계만 제공합니다.</li>
-      </div>
-    </details>
+    <div id="lca-basis"></div>
+    <script>
+    document.getElementById('lca-basis').innerHTML=BX.BOX({
+     refs:BX.REFS('원문',BX.S.feu,BX.L('364(79)'),BX.L('376(80)'),BX.L('391(81)'),BX.S.nzf),
+     eqs:BX.EQ('WtW','WtT + TtW','gCO₂e/MJ')
+      +BX.EQ('TtW',BX.FR('(1 − s) · C<sub>f,CO₂e</sub> + s · GWP<sub>CH₄</sub>','LCV'),BX.S.feu+' Annex I · '+BX.L('391(81)'))
+      +BX.EQ('C<sub>f,CO₂e</sub>','C<sub>f,CO₂</sub> + C<sub>f,CH₄</sub> · GWP<sub>CH₄</sub> + C<sub>f,N₂O</sub> · GWP<sub>N₂O</sub>',BX.S.feu+' Annex I')
+      +BX.EQ('GHGIE<sub>actual</sub>',BX.FR('WtW','RWD'),BX.S.feu+' Art. 5 · Annex I','RFNBO 보상계수 RWD = 2 (2033년까지). 단일 연료 가정에서 근사')
+      +BX.EQ('CB','(GHGIE<sub>target</sub> − GHGIE<sub>actual</sub>) · E',BX.S.feu+' Annex IV')
+      +BX.EQ('Penalty',BX.FR('|CB|','GHGIE<sub>actual</sub> · 41,000')+' · 2,400 EUR',BX.S.feu+' Annex IV','연속 n년째 미준수 시 × (1 + (n − 1) / 10)'),
+     defs:BX.DEFS([
+      ['WtT','생산·운송 단계','연료를 생산하고 선박 연료탱크까지 운송하는 단계의 배출. 화석연료는 FuelEU 기본값',BX.S.feu+' Annex II','IMO 화석연료 WtT 기본값은 아직 확정되지 않았습니다. 3단계 분해 비율은 설명용 예시입니다'],
+      ['TtW','연소 단계','선박에서 연료를 사용할 때의 배출',BX.S.feu+' · '+BX.L('391(81)')],
+      ['s','메탄 슬립','LNG 엔진에서 연소되지 않고 배출되는 메탄 비율',BX.L('391(81)'),'오토 중속 3.5% · 오토 저속 1.7% · 디젤 저속 0.15% · LBSI 2.6%'],
+      ['GWP','지구온난화지수','FuelEU는 AR4(CH₄ 25, N₂O 298), IMO LCA 지침은 AR5(CH₄ 28, N₂O 265)',BX.S.feu+' · '+BX.L('376(80)')],
+      ['LCV','저위발열량','연료 1g의 에너지(MJ/g)',BX.S.feu+' Annex II · '+BX.L('364(79)')],
+      ['C<sub>f</sub>','배출계수','연료 1g이 연소할 때 나오는 가스별 배출량(g/g)',BX.S.feu+' Annex II · '+BX.L('364(79)')],
+      ['E','사용 에너지','보고 범위 100% 기준 연간 에너지(MJ)'],
+      ['GFI','IMO 기준선','NZF 초안의 GFI 기준 93.3 gCO₂e/MJ(2008년). ZNZ 문턱값은 2034년까지 19.0, 2035년부터 14.0',BX.S.nzf]]),
+     warn:BX.WARN([['바이오·e-연료','WtT는 예시값입니다. 실제 컴플라이언스에는 RED II 인증 실제값 또는 IMO 연료 라이프사이클 라벨(FLC) 값을 사용해야 합니다'],
+      ['IMO NZF','2025년 10월 '+BX.S.es2+'에서 채택이 연기된 초안 수치입니다']])});
+    </script>
   </section>
 
 </main>
@@ -353,7 +352,6 @@
       <div><h4>Five stages</h4><ul><li><a href="/#s1">01 Regulation</a></li><li><a href="/#s2">02 Transition</a></li><li><a href="/#s3">03 Scale up</a></li><li><a href="/#s4">04 Governance</a></li><li><a href="/#s5">05 Environment</a></li></ul></div>
       <div><h4>Contact</h4><ul>
         <li><a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></li>
-        <li>Hyeryoun Chi, Lead Researcher</li>
         <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
       </ul></div>
     </div>

@@ -95,7 +95,7 @@ top2:'<a href="https://planit.institute/">← Back to planit.institute</a>',
 /* ── brief ── */
 'bf-eye':"Stage 02 · Green Shipping Council · Issue Brief",
 'bf-h1':"Issue brief · <em>comments welcome</em>",
-'bf-lede':"PLANiT drafts, and each working-group organisation comments in the right-hand panel. The collected comments shape the final report. Download the draft as Word or PDF with the buttons above.",
+'bf-lede':"Working-group organisations leave review comments in the right-hand panel. Their comments are combined into the draft, which becomes a final issue brief reflecting shared views. Download the draft as Word or PDF with the buttons above.",
 
 /* ── tool ── */
 'tl-eye':"Tool · Calculators",'tl-h1':"So the same calculation is <em>never repeated</em>.",
@@ -134,7 +134,7 @@ Object.assign(EN,{
 "in-d1h": "Measure", "in-d1": "We calculate regulatory costs, fuel transitions and fleet compliance with open models and data.",
 "in-d2h": "Connect", "in-d2": "We open the evidence so policy, industry and civil society can debate from the same numbers.",
 "in-d3h": "Widen", "in-d3": "We widen what is protected: from the climate to people and industry, the commons and ocean life.",
-"in-cta1": "See the five stages"
+"in-cta1": "Five-stage projects"
 });
 /* ── Home · 표지 슬라이드 ── */
 Object.assign(EN,{
@@ -183,7 +183,7 @@ Object.assign(EN,{
 
 /* ── 1-OCEAN · Story · Insight · Project · Tool ── */
 Object.assign(EN,{
-"sy-kr": "See the ocean as one territory,<br>and shipping becomes one national system working within it.",
+"sy-kr": "See the ocean as one territory, and shipping becomes one national system working within it.",
 "sy-p2": "When the Pacific, Atlantic, Indian, Southern and Arctic Oceans become one vast territory without borders, this nation covers <b>71%</b> of the Earth’s surface. About <b>90%</b> of world trade passes through it, and the ships crossing it emit about <b>1 billion tonnes</b> of CO₂ a year. That makes it roughly the world’s <b>6th</b> largest emitter.",
 "sy-p3": "So we can ask this nation the following questions.",
 "sy-qs": "Where are its laws made?<br>Along which routes are its roads connected?<br>Around which ports do its cities grow and move?<br>Where are its fuel stations concentrated, and where do supply blind spots form?<br>Which waters should be developed, and which left as protected areas?",
@@ -195,10 +195,11 @@ Object.assign(EN,{
 "sy-note": "The real ocean is split by asymmetries: flag and port states, developed and developing economies. Those asymmetries are what we study.",
 "sy-cta1": "See the five stages",
 "sy-cta2": "Read recent writing",
-"in2-kr": "Series, commentary and analysis, logged in order.",
+"pl2-kr": "Tracking the international regulation and policy that reshape shipping's route to decarbonisation.",
+"in2-kr": "We read the changes in maritime industry and policy, and share our analysis and perspective.",
 "in2-s-h": "The decarbonisation voyage of Korean shipping",
 "in2-cap": "Each dot is one piece of writing. Across: the year it addresses. Down: the five stages. Lines: what it builds on. Hover for lineage, click to open. ● series ■ op-ed ◆ analysis ▲ tool",
-"pj2-kr": "Every project belongs to one of the five stages.",
+"pj2-kr": "Research and collaboration for change in maritime industry and policy: the process and the results.",
 "pj2-gsc": "Who does what on the way to the first integrated commercial voyage, and how far each part has come. Click a group to see its tasks.",
 "pj2-gsc-h": "Green corridor ecosystem",
 "pj2-flow": "See it on one canvas",
@@ -472,6 +473,34 @@ var EN_TEXT={
 "첫 녹색 도로 · HERE": "First green road · HERE",
 "부산": "Busan",
 "케이프타운": "Cape Town",
+"튜토리얼 시작": "Start tutorial",
+"초기값 복원": "Reset to defaults",
+"← Tool 목록으로": "← Back to Tools",
+"개별 선박의 운항 탄소집약도(CII) 등급과 에너지효율설계지수(EEXI)를 산정합니다. 선종과 크기, 연료 사용량을 넣으면 규정 계수가 자동으로 적용되고, 결과마다 근거 조항이 붙습니다.": "Rate a ship's operational Carbon Intensity Indicator (CII) and its EEXI. Enter ship type, size and fuel use; the regulatory factors apply automatically and every result cites its source.",
+"EU ETS, FuelEU, IMO 넷제로 프레임워크 등 규제별 탄소 비용을 산정합니다. 연료, EU 과금 비중, 탄소 가격을 넣으면 연도별 비용과 누적 비용이 계산됩니다. IMO 넷제로 프레임워크는 미채택 초안이라 시나리오로만 켤 수 있습니다.": "Estimate carbon costs under EU ETS, FuelEU and the IMO Net-Zero Framework. Enter fuel, EU coverage and carbon price to see annual and cumulative costs. The IMO framework is an unadopted draft and can only be switched on as a scenario.",
+"IMO 데이터수집제도(DCS)의 공개 집계값(MEPC 연차 보고)으로 보는 국제 선대입니다. 아래 항로에서 연도를 끌면 전체 화면이 그 해로 이동합니다. 현재 수치는 자리표시용 예시이며, 매년 공개 보고서를 반입해 갱신하도록 설계되어 있습니다.": "The international fleet through IMO DCS public aggregates (annual MEPC reports). Drag the year along the route below to move the whole view. Current figures are placeholders, designed to be refreshed from each year's public report.",
+"Well-to-Wake 온실가스 집약도를 단계별로 분해하고 조정합니다. FuelEU Maritime 기본값을 바탕으로 하되, IMO LCA 지침(개정 중)의 GWP 체계와 비교할 수 있습니다.": "Break down and adjust Well-to-Wake GHG intensity step by step, starting from FuelEU Maritime defaults and comparing with the GWP system of the IMO LCA Guidelines (under revision).",
+"다섯 단계로 진행합니다. 선박 제원을 확인하고, 적용 규제를 파악하고, 조치를 조합하고, 비용을 비교한 뒤, 한 장의 결과 요약을 받으세요. 모든 값은 파란 글자를 고쳐 즉시 재계산됩니다.": "Five steps: confirm the ship's particulars, see which rules apply, combine measures, compare costs, and get a one-page summary. Edit any blue value to recalculate instantly.",
+
+"tl3-sub": "From a single ship's carbon compliance costs to global fleet data. Calculate, compare and analyse.",
+"선박의 탄소 규제 비용부터 글로벌 선대 데이터까지. 계산하고, 비교하고, 분석하세요.": "From a single ship's carbon compliance costs to global fleet data. Calculate, compare and analyse.",
+"개별 선박의 운항 탄소집약도(CII) 등급과 에너지효율설계지수(EEXI)를 산정합니다.": "Rate a ship's operational Carbon Intensity Indicator (CII) and its Energy Efficiency Existing Ship Index (EEXI).",
+"EU ETS, FuelEU, IMO 넷제로 프레임워크 등 규제별 탄소 비용을 산정합니다.": "Estimate carbon costs under each regulation: EU ETS, FuelEU and the IMO Net-Zero Framework.",
+"IMO DCS 데이터를 기반으로 전 세계 선대의 연료 사용량, 온실가스 배출량, CII 등급 분포의 연도별 변화를 한눈에 확인합니다.": "Year-by-year change in the world fleet's fuel use, GHG emissions and CII grade distribution, based on IMO DCS data.",
+"같은 연료라도 규제별 LCA 산정 기준에 따라 배출량 평가 결과가 달라집니다.": "The same fuel scores differently depending on each regulation's LCA method.",
+"동일한 온실가스 배출도 규제별 GWP 적용 기준에 따라 CO₂ 환산량이 달라집니다. 여기에 대기 중 체류 시간과 배출 지역에 따른 기후 영향까지 함께 비교합니다.": "The same GHG emission converts to different CO₂e depending on the GWP each regulation applies. We also compare atmospheric lifetime and climate impact by emission region.",
+"계산기": "Calculators",
+"대시보드": "Dashboards",
+"탄소 비용": "Carbon cost",
+"FuelEU 풀링": "FuelEU pooling",
+"여러 선박의 FuelEU 잉여와 부족을 한 풀로 묶어 상계했을 때 줄어드는 벌금을 산정합니다.": "Estimate the penalty saved by pooling FuelEU surpluses and deficits across several ships.",
+"FuelEU 풀링 · 함께 묶으면 얼마를 아끼나": "FuelEU pooling · how much a pool saves",
+"여러 선박의 FuelEU 컴플라이언스 밸런스를 한 풀로 묶어 잉여와 부족을 상계합니다. 선박별 잉여·부족, 풀 전체 합계, 풀링 전후 벌금 차이를 계산합니다.": "Pool the FuelEU compliance balances of several ships to offset surpluses against deficits. See each ship's balance, the pool total and the penalty before and after pooling.",
+"평가 연도": "Reporting year","풀에 넣을 선박": "Ships in the pool","+ 선박 추가": "+ Add ship","풀링 계산하기": "Calculate pool",
+"선박별 컴플라이언스 밸런스": "Compliance balance by ship","풀링 전후 비교": "Before and after pooling","계산 근거 보기": "Show calculation basis",
+"선박연료 LCA": "Marine fuel LCA",
+"준비 중": "Coming soon",
+
 "로스앤젤레스": "Los Angeles",
 "병목 지역 = 초크포인트": "Bottleneck = Chokepoint",
 "보호구역 = 해양보호구역": "Protected area = Marine protected area",
