@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1-OCEAN · Issue Brief</title>
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── 이슈 브리프 페이지 전용 ──────────────────────────
+   ✏️ 브리프 본문: <article id="brief"> 안의 섹션을 편집합니다.
+   ✏️ 기관 목록: 하단 <script>의 ORGS 배열을 편집합니다.
+   코멘트는 브라우저 localStorage에 저장되고, JSON 내보내기/불러오기로
+   여러 기관의 코멘트를 취합합니다.                            */
+
+.brief-hero{padding:56px 0 0}
+.brief-hero .lede{max-width:none}
+.actionbar{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+  margin-top:30px;padding:14px 18px;background:var(--card);border:1px solid var(--line);border-radius:12px;
+}
+.actionbar .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:flex;gap:18px;flex-wrap:wrap}
+.actionbar .meta b{color:var(--navy)}
+.actionbar .acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.actionbar label.inc{font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;margin-right:4px;cursor:pointer}
+.btn-sm{font-size:13px;padding:9px 18px}
+
+/* 본문 3/4 + 코멘트 1/4 */
+.brief-grid{display:grid;grid-template-columns:3fr 1fr;gap:40px;align-items:start;margin-top:40px}
+
+/* ── 브리프 문서 ── */
+article.doc{
+  background:var(--white);border:1px solid var(--line);border-radius:14px;
+  padding:52px 56px 60px;box-shadow:0 2px 16px rgba(12,53,106,.05);
+}
+.doc-kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;color:var(--teal);text-transform:uppercase}
+.doc-kicker::before{content:"◆ ";color:var(--gold)}
+article.doc h2.doc-title{font-size:clamp(22px,calc(2.6 * var(--vw)),30px);margin:12px 0 6px}
+.doc-meta{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;padding-bottom:22px;border-bottom:2px solid var(--navy);margin-bottom:30px}
+article.doc h3{
+  font-family:var(--serif);font-size:19px;color:var(--navy);font-weight:700;
+  margin:38px 0 12px;padding-top:26px;border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;word-break:keep-all;
+}
+article.doc h3:first-of-type{border-top:none;padding-top:0}
+article.doc p{margin-bottom:14px;word-break:keep-all;text-align:justify}
+article.doc li{text-align:justify}article.doc .doc-sub,article.doc .doc-meta,article.doc .qnote{text-align:left}
+article.doc .doc-sub{font-size:15px;color:var(--muted);margin:-4px 0 10px;word-break:keep-all}
+article.doc .keymsg{background:var(--navy);color:#fff;border-radius:12px;padding:22px 26px;margin:6px 0 26px}article.doc .keymsg p{color:#E4EDF6}article.doc .keymsg p:last-child{margin-bottom:0}article.doc .keymsg .kk{font-size:12px;letter-spacing:.2em;color:#9EC3E6;font-weight:700;margin-bottom:10px}
+article.doc .dh{font-size:16px;color:var(--navy);margin:26px 0 12px}
+article.doc .goals{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}article.doc .goals div{border:1px solid var(--line);border-radius:10px;padding:14px 16px;word-break:keep-all}article.doc .goals em{font-style:normal;color:var(--teal);font-weight:700;margin-right:6px}article.doc .goals b{color:var(--navy)}article.doc .goals span{display:block;font-size:14px;color:var(--muted);margin-top:6px;line-height:1.65}
+article.doc table.qt{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 10px}article.doc .qt th{white-space:nowrap;text-align:left;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1.5px solid var(--navy)}article.doc .qt td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;word-break:keep-all}article.doc .qt td:last-child{color:var(--navy);font-weight:700;white-space:nowrap}
+article.doc .qbox .qk{display:block;font-size:12px;letter-spacing:.15em;color:var(--teal);font-weight:700;margin-bottom:6px}article.doc .qbox .qq{display:block;font-size:17px;line-height:1.55}article.doc .qbox .qw{display:block;font-size:13px;color:var(--muted);margin:6px 0 10px}
+article.doc .qsub{margin:0 0 0 18px;font-size:14.5px;line-height:1.75}article.doc .qsub li{margin-bottom:4px}
+article.doc .tbd{color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:8px;padding:10px 14px;text-align:center}
+article.doc .qnote{font-size:14px;color:var(--muted)}
+
+article.doc ul{margin:0 0 14px 20px}
+article.doc li{margin-bottom:6px;word-break:keep-all}
+article.doc .qbox{background:var(--sky);border-left:4px solid var(--teal);border-radius:0 10px 10px 0;padding:16px 20px;margin:18px 0;word-break:keep-all}
+article.doc .qbox b{color:var(--navy)}
+.cmt-jump{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted);
+  background:none;border:1px solid var(--line);border-radius:999px;padding:3px 11px;cursor:pointer;
+  white-space:nowrap;transition:all .15s;
+}
+.cmt-jump:hover{color:var(--navy);border-color:var(--navy)}
+.cmt-badge{
+  display:inline-block;min-width:18px;text-align:center;font-family:var(--mono);font-size:10px;
+  background:var(--gold);color:var(--navy);border-radius:999px;padding:1px 6px;margin-left:6px;
+}
+.cmt-badge:empty{display:none}
+
+/* ── 코멘트 레일 ── */
+.rail{position:sticky;top:84px;display:flex;flex-direction:column;gap:16px;max-height:calc(100vh - 104px)}
+.rail-box{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:18px}
+.rail h4{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--teal);text-transform:uppercase;margin-bottom:12px}
+.rail h4::before{content:"◆ ";color:var(--gold)}
+.rail input,.rail select,.rail textarea{
+  width:100%;border:1px solid var(--line);border-radius:8px;background:var(--white);
+  font-family:var(--sans);font-size:13px;padding:8px 10px;margin-bottom:8px;color:var(--ink);
+}
+.rail textarea{min-height:84px;resize:vertical}
+.rail .send{width:100%}
+.rail-hint{font-size:11.5px;color:var(--muted);line-height:1.6;word-break:keep-all}
+.rail-io{display:flex;gap:8px}
+.rail-io .btn{flex:1;text-align:center;font-size:11.5px;padding:8px 6px}
+
+.cmt-list{overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:2px}
+.cmt{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  font-size:13px;line-height:1.65;word-break:keep-all;position:relative;
+}
+.cmt .who{font-weight:700;color:var(--navy);font-size:13px}
+.cmt .sec-chip{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--teal);
+  border:1px solid var(--teal);border-radius:999px;padding:1px 8px;margin-left:8px;vertical-align:1px;
+}
+.cmt .when{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:8px}
+.cmt .body{margin-top:6px;color:var(--ink)}
+.cmt .del{
+  position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:14px;line-height:1;padding:2px;
+}
+.cmt .del:hover{color:#B03A2E}
+.cmt .acts{margin-top:8px;display:flex;gap:10px}
+.cmt .reply-btn{background:none;border:0;padding:0;font:inherit;font-size:11.5px;color:var(--ocean-blue);cursor:pointer;font-weight:600}
+.cmt .replies{margin-top:10px;border-left:2px solid var(--line);padding-left:10px;display:flex;flex-direction:column;gap:8px}
+.cmt .crep{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.cmt .crep .who{font-size:12.5px}
+.cmt .rform{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.cmt .rform textarea{width:100%;min-height:56px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit;font-size:12.5px;resize:vertical}
+.cmt .rform .row{display:flex;gap:6px;justify-content:flex-end}
+.cmt .rform button{font:inherit;font-size:12px;border-radius:999px;padding:5px 12px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ocean-deep)}
+.cmt .rform button.go{background:var(--ocean-deep);border-color:var(--ocean-deep);color:#fff}
+.cmt.pending{opacity:.6}
+.rail-box :disabled{opacity:.45;cursor:not-allowed}
+.rail .modechip{font-size:9px;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:1px}.rail .modechip.on{color:var(--teal);border-color:var(--teal)}
+.rail .me{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}.rail .me b{color:var(--navy);word-break:break-all}.linkbtn{margin-left:auto;background:none;border:0;padding:0;font:inherit;font-size:11.5px;color:var(--ocean-blue);cursor:pointer;text-decoration:underline}
+.rail input+select,.rail select+input,.rail select+select,.rail input+input{margin-top:0}
+.cmt .hd{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.cmt .hd .tl{margin-left:auto;display:flex;gap:8px}
+.cmt .tl button{background:none;border:0;padding:0;font:inherit;font-size:11px;color:var(--muted);cursor:pointer}.cmt .tl button:hover{color:var(--navy)}.cmt .tl .t-del:hover{color:#B03A2E}
+.cmt .when{display:block;margin:2px 0 0}
+.cmt-empty{font-size:12.5px;color:var(--muted);text-align:center;padding:18px 6px;word-break:keep-all}
+
+/* 인쇄(PDF 저장): 본문만, 코멘트는 선택 시 부록으로 */
+.print-appendix{display:none}
+@media print{
+  .topbar,header.nav,.actionbar,.rail,footer,.cmt-jump,.cmt-badge,.brief-hero .lede{display:none!important}
+  body{background:#fff}
+  .brief-grid{display:block;margin-top:0}
+  article.doc{border:none;box-shadow:none;padding:0}
+  section{padding:20px 0}
+  body.print-with-comments .print-appendix{display:block;margin-top:30px;border-top:2px solid #0B3D66;padding-top:20px}
+  .print-appendix h3{font-family:var(--serif);color:var(--navy);font-size:17px;margin-bottom:12px}
+  .print-appendix .cmt{page-break-inside:avoid;margin-bottom:10px}
+}
+
+@media (max-width:860px){
+  .brief-grid{grid-template-columns:1fr}
+  .rail{position:static;max-height:none}
+  article.doc{padding:34px 26px 40px}
+}
+/* ── 브리프 머리: 로고 3개 + 오른쪽 그림 ── */
+article.doc{position:relative;overflow:hidden}
+.doc-head{position:relative;min-height:250px}
+.doc-head > *:not(.doc-art){position:relative;z-index:1;max-width:76%}
+.doc-art{position:absolute;z-index:0;top:-30px;right:-28px;width:198px;height:216px;
+  background:url(img/brief/cover-side.webp) no-repeat 50% 78%/cover;opacity:.92;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 38%),linear-gradient(to bottom,#000 70%,transparent 100%);
+  -webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent 0,#000 38%),linear-gradient(to bottom,#000 70%,transparent 100%);mask-composite:intersect}
+.doc-logos{display:flex;align-items:center;gap:22px;margin-bottom:26px;flex-wrap:wrap}
+.doc-logos img{height:24px;width:auto;display:block}
+.doc-logos img[alt="PLANiT"]{height:19px}
+.doc-logos img[alt="1-OCEAN"]{height:30px}
+@media (max-width:860px){.doc-head > *:not(.doc-art){max-width:100%}.doc-art{width:130px;height:140px;opacity:.5}}
+
+/* ── PDF 표지 (첨부 서식 · 표지 2) ── */
+.print-cover{display:none}
+@page{size:A4;margin:22mm 18mm 24mm}
+@page:first{margin:0}
+@media print{
+  .oc-head,.brief-hero,.doc-head{display:none!important}
+  .reveal{opacity:1!important;transform:none!important;transition:none!important}
+  .print-cover{display:block;position:relative;width:210mm;height:297mm;overflow:hidden;page-break-after:always;break-after:page;
+    background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:'Pretendard Variable',Pretendard,sans-serif;color:#0B3D66}
+  .pc-bg{position:absolute;left:0;bottom:0;width:100%;height:auto;display:block}
+  .pc-logos{position:absolute;top:13mm;left:22mm;display:flex;gap:7mm;align-items:center}
+  .pc-logos img{height:7mm;width:auto}
+  .pc-logos img.oc{height:9mm}
+  .pc-planit{position:absolute;top:14mm;right:22mm;height:6mm}
+  .pc-title{position:absolute;top:33mm;left:22mm;width:95mm;font-size:40pt;line-height:1.22;font-weight:500;letter-spacing:-.02em;margin:0}
+  .pc-title span{display:block}
+  .pc-title span.ac{color:#4E7DB7}
+  .pc-sub{position:absolute;top:92mm;left:23mm;width:80mm;font-size:12.5pt;line-height:1.5;color:#0B3D66;margin:0}
+  .pc-side{position:absolute;top:69mm;right:24mm;width:62mm;text-align:right}
+  .pc-org{font-size:10pt;line-height:1.6;color:#8BA0B5;margin:0}
+  .pc-rule{position:absolute;top:118mm;right:24mm;width:0;height:41mm;border-right:.6pt solid #4E7DB7}
+  .pc-date{position:absolute;top:104mm;right:28mm;text-align:right;font-size:11pt;line-height:1.6;color:#4E7DB7;margin:0}
+  article.doc h3{font-size:15pt;margin-top:22pt}
+  article.doc p,article.doc li{font-size:10pt;line-height:1.8}
+}
+</style>
+</head>
+<body>
+<div class="print-cover" id="print-cover" aria-hidden="true"></div>
+
+<header class="oc-head">
+  <div class="wrap">
+    <a class="logo logo-img" href="/" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-mark.png" width="751" height="146" alt="1-OCEAN"></a>
+    <span class="claim">A broader perspective<br>for a resilient ocean</span>
+    <nav class="menu" id="menu" aria-label="주 메뉴">
+      <a href="/">Home</a>
+      <a href="/story">Story</a>
+      <a href="/policy">Policy</a>
+      <a href="/insight">Insight</a>
+      <a class="active" aria-current="page" href="/project">Project</a>
+      <a href="/tool">Tool</a>
+    </nav>
+    <div class="langbtn" role="group" aria-label="언어 선택"><span data-l="ko" class="on" role="button" tabindex="0">KR</span><span data-l="en" role="button" tabindex="0">EN</span></div>
+    <button class="hamburger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="menu"
+      onclick="var m=document.getElementById('menu'),o=m.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="24" height="16" viewBox="0 0 24 16" fill="none"><path d="M0 1h24M0 8h24M8 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════ 브리프 히어로 + 액션바 ═══════════ -->
+<section class="brief-hero" style="padding-bottom:0">
+  <div class="wrap">
+    <p class="eyebrow" data-i="bf-eye">Stage 02 · Green Shipping Council · Issue Brief</p>
+    <h1 data-i="bf-h1">이슈 브리프 · <em>코멘트를 기다립니다</em></h1>
+    <p class="lede" data-i="bf-lede">
+이슈 브리프에서, 워킹 그룹의 참여 기관들은 오른쪽 패널에 검토 의견을 남깁니다. 각 기관의 의견을 종합해 초안에 반영하고, 이를 바탕으로 공동의 의견이 담긴 최종 이슈 브리프를 완성합니다. 초안은 상단 버튼을 통해 Word 또는 PDF로 다운로드할 수 있습니다.</p>
+
+    <div class="actionbar reveal">
+      <div class="meta">
+        <span>DRAFT <b id="m-ver">v0.2</b></span>
+        <span>UPDATED <b>2026.10.25</b></span>
+        <span>COMMENTS <b id="m-count">0</b></span>
+        <span>STATUS <b style="color:var(--gold)">OPEN FOR COMMENTS</b></span>
+        <span>ACCESS <b>PUBLIC · 공개</b></span>
+      </div>
+      <div class="acts">
+        <label class="inc"><input type="checkbox" id="inc-cmt"> 코멘트 포함</label>
+        <button class="btn btn-ghost btn-sm" id="btn-word">📄 Word로 내보내기</button>
+        <button class="btn btn-primary btn-sm" id="btn-pdf">🖨 PDF로 저장</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 본문 3/4 + 코멘트 1/4 ═══════════ -->
+<section style="padding-top:0">
+  <div class="wrap brief-grid">
+
+    <!-- ── 브리프 문서 ── -->
+    <article class="doc reveal" id="brief"
+      data-cover-lines="녹색항로의 첫걸음:|기술을 넘어,|연결의 문제로"
+      data-cover-sub="한국 조선·해운산업의 녹색항로 참여를 위한 산업·연구·시민사회의 공동 질문과 논의"
+      data-cover-org="PLANiT 이슈 브리프|하인리히뵐재단|Green Shipping Council"
+      data-cover-date="2026년 10월"
+      data-cover-author="PLANiT Institute">
+      <!-- ✏️ 표지(PDF·Word): 위 data-cover-* 값으로 만들어집니다.
+           lines = 제목 줄바꿈(| 로 구분, 가운데 줄은 강조색) · sub = 부제(비우면 생략)
+           org = 오른쪽 기관 표기(| 로 줄 구분) · date · author -->
+      <header class="doc-head">
+        <div class="doc-art" aria-hidden="true"></div>
+        <div class="doc-logos">
+          <img src="img/brief/logo-hbs.png" alt="Heinrich Böll Stiftung Seoul">
+          <img src="img/brief/logo-planit.png" alt="PLANiT">
+          <img src="img/brief/logo-1ocean.png" alt="1-OCEAN">
+        </div>
+        <p class="doc-kicker">PLANiT Issue Brief No.1</p>
+        <h2 class="doc-title">녹색항로의 첫걸음: 기술을 넘어, 연결의 문제로</h2>
+        <p class="doc-sub">한국 조선·해운산업의 녹색항로 참여를 위한 산업·연구·시민사회의 공동 질문과 논의</p>
+        <p class="doc-meta">GREEN SHIPPING COUNCIL · WORKING DRAFT v0.2 · 2026.10 · 작성 PLANiT · 배포: 공개</p>
+      </header>
+
+      <div class="keymsg">
+        <p class="kk">핵심 메시지</p>
+        <p>녹색항로는 친환경 선박과 연료 기술만으로 실현되지 않는다. 선박을 건조하는 조선소, 선박을 운항하는 해운사, 대체연료를 저장·공급하는 항만과 연료 공급자, 화물을 맡기는 화주, 기술을 검증하는 연구기관, 감축의 기준과 정책 방향을 제시하는 시민사회가 서로의 실행 조건을 연결해야 첫 항해가 가능하다.</p>
+        <p>본 이슈 브리프는 한국 조선·해운산업이 녹색항로에 참여하려면 무엇을 준비해야 하고, 서로 어떤 역할과 협력이 필요한지를 묻는다. 각 주체가 제시하는 가능성과 제약, 참여 조건을 교차 검토하고, 그 답이 맞닿는 지점에서 후속 협력의 과제를 찾는다.</p>
+      </div>
+
+      <h4 class="dh">이슈 브리프의 핵심 목적</h4>
+      <div class="goals">
+        <div><em>①</em><b>실행 가능성 검증</b><span>녹색항로의 기술적·경제적·제도적·운영적 실현 가능성과 선행 조건을 검토한다.</span></div>
+        <div><em>②</em><b>이해관계자의 관점과 조건 확인</b><span>각 주체가 인식하는 장애요인과 참여 조건, 필요한 지원을 구체화한다.</span></div>
+        <div><em>③</em><b>협력 구조와 역할 도출</b><span>기술개발, 선박 건조, 운항, 연료 공급, 화물, 정책 및 금융을 연결하기 위한 역할과 협력 조건을 모색한다.</span></div>
+        <div><em>④</em><b>실행의 출발점 마련</b><span>답변을 토대로 후속 연구, 기술 실증, 사업 기획, 정책 제안으로 발전시킬 우선 과제를 도출한다.</span></div>
+      </div>
+
+      <h4 class="dh">핵심 질문과 답변 기관</h4>
+      <table class="qt">
+        <tr><th>주제</th><th>답변 기관</th><th>목적</th></tr>
+        <tr><td>왜 참여해야 하는가</td><td>PE, SFOC, 해운사, 대형·중형조선소</td><td>②</td></tr>
+        <tr><td>기술과 산업은 어디까지 준비됐는가</td><td>KRISO, RIMS, 세종대학교, 대형·중형조선소</td><td>①</td></tr>
+        <tr><td>선박 한 척, 항로 하나가 사업이 되려면</td><td>해운사, 대형·중형조선소, 세종대학교, PE</td><td>①②</td></tr>
+        <tr><td>서로에게 무엇을 보장하고 위험을 어떻게 나눌 것인가</td><td>모든 참여 기관</td><td>③</td></tr>
+        <tr><td>무엇부터 시작할 것인가</td><td>모든 참여 기관</td><td>④</td></tr>
+      </table>
+
+      <h3 id="s1"><span>1. 왜 지금, 녹색항로를 함께 논의해야 하는가?</span><button class="cmt-jump" data-sec="§1">💬 코멘트<span class="cmt-badge" data-b="§1"></span></button></h3>
+      <p>2026년 3월 제정된 「녹색해운항로 구축 지원 특별법」은 한국의 녹색항로 추진에 제도적 출발점을 마련했다. 녹색선박과 환경친화적 항만을 연결하는 항로의 지정과 구축·운영을 지원할 법적 기반이 생긴 것이다. 그러나 법이 열어준 것은 추진의 가능성이지, 실제 선박이 운항할 수 있는 조건의 완성은 아니다.</p>
+      <p>밖에서의 압력은 이미 현실이다. EU는 2024년부터 해운을 배출권거래제(EU ETS)에 포함했고, 2025년부터 FuelEU Maritime으로 선박 연료의 온실가스 원단위를 규제하고 있다. 유럽을 오가는 한국 선사는 이미 비용을 내고 있다. IMO 넷제로 프레임워크는 2025년 10월 채택이 연기됐지만, 국제해운의 탈탄소 방향 자체는 바뀌지 않았다. 규제가 확정되기를 기다리는 동안 준비가 늦어지면, 그 비용은 결국 한국 조선·해운산업이 치르게 된다.</p>
+      <p>녹색항로(Green Shipping Corridor)는 이러한 전환을 특정 해상운송 경로에서 구체화하려는 협력 모델이다. 선박, 연료, 항만, 물류의 탈탄소화를 따로따로 추진하는 대신, 실제 운송이 이루어지는 항로를 중심으로 필요한 조건을 함께 검토하고 구축한다.</p>
+      <p>본 이슈 브리프는 특정 항로를 전제하지 않는다. 이번 단계에서는 한국 조선·해운산업이 참여할 수 있는 녹색항로의 실행 조건을 폭넓게 살펴본다.</p>
+      <p>이를 위해 Pacific Environment(PE), 기후솔루션(SFOC), 세종대학교, 선박해양플랜트연구소(KRISO), 중소조선연구원(RIMS), 대형·중형조선소 및 해운사의 관점과 경험을 모은다. 이번 논의는 모든 참여 기관의 합의를 전제로 하지 않는다. 각자의 답변으로 가능성과 한계, 서로에게 필요한 조건을 확인하고, 그 접점에서 다음 단계의 과제를 찾는다.</p>
+
+      <h3 id="s2"><span>2. 한국 조선·해운산업은 왜 녹색항로에 참여해야 하는가?</span><button class="cmt-jump" data-sec="§2">💬 코멘트<span class="cmt-badge" data-b="§2"></span></button></h3>
+      <p>녹색항로의 필요성과 산업계의 참여 동기는 반드시 일치하지 않는다. 온실가스 감축이라는 공통 목표가 선박 발주와 운항 결정으로 이어지려면, 참여 주체가 감당할 비용과 위험뿐 아니라 참여로 얻을 가치가 분명해야 한다.</p>
+      <p>녹색항로는 한국 조선·해운산업에 새로운 기회인가, 추가적인 부담인가? 환경적 필요성과 산업적 이해가 만나는 지점은 어디인가?</p>
+      <div class="qbox"><span class="qk">핵심 질문 1</span><b class="qq">한국 조선·해운산업은 왜 녹색항로에 참여해야 하며, 이를 통해 무엇을 기대할 수 있는가?</b><span class="qw">답변 대상: PE, SFOC, 해운사, 대형·중형조선소</span>
+        <ul class="qsub"><li><b>PE, SFOC:</b> 녹색항로가 실질적인 감축으로 인정받으려면 어떤 기준(연료의 전과정 배출, LNG 등 화석연료 고착 위험 등)을 충족해야 하는가?</li><li><b>해운사:</b> EU ETS·FuelEU 비용과 화주의 요구는 선대 전환 결정에 얼마나 영향을 주고 있는가?</li><li><b>조선소:</b> 녹색항로가 친환경 선박 수주와 기술 경쟁력에 어떤 기회가 되는가?</li></ul></div>
+      <p class="tbd">[기관별 답변 수렴 후 작성]</p>
+      <p class="qnote">이 질문은 녹색항로의 환경적 목표와 산업적 참여 동기를 함께 확인한다. 각 주체가 기대하는 가치와 참여를 결정하는 조건을 비교하여, 공통의 필요성과 서로 다른 이해관계를 살펴본다.</p>
+
+      <h3 id="s3"><span>3. 녹색항로를 실현할 기술과 산업적 준비는 어디까지 와 있는가?</span><button class="cmt-jump" data-sec="§3">💬 코멘트<span class="cmt-badge" data-b="§3"></span></button></h3>
+      <p>친환경 선박을 건조할 수 있다는 것과 그 선박을 녹색항로에 실제 투입할 수 있다는 것은 다른 문제다. 기술의 개발 수준뿐 아니라 선박의 종류와 규모, 대체연료의 특성, 안전성 검증, 실증 경험, 상용화 조건을 함께 살펴봐야 한다.</p>
+      <p>특히 대형선박과 중형선박은 기술 적용과 투자 여건이 다르다. 지금 쓸 수 있는 기술과 추가 검증이 필요한 기술을 구분하고, 연구개발의 성과가 실제 건조와 운항으로 이어지려면 무엇이 부족한지 확인해야 한다.</p>
+      <div class="qbox"><span class="qk">핵심 질문 2</span><b class="qq">현재 한국의 기술과 산업 여건에서 녹색항로는 어디까지 실현 가능하며, 무엇이 더 준비되어야 하는가?</b><span class="qw">답변 대상: KRISO, RIMS, 세종대학교, 대형·중형조선소</span>
+        <ul class="qsub"><li><b>조선소:</b> 연료별(암모니아, 메탄올, 수소 등) 선박 기술은 지금 수주할 수 있는 수준인가, 실증이 더 필요한 수준인가?</li><li><b>중형조선소, RIMS:</b> 중형선박과 중소조선소가 겪는 기술·인증·자금의 제약은 무엇인가?</li><li><b>KRISO, 세종대학교:</b> 상용화 전에 남은 안전성·성능 검증 과제는 무엇이며, 얼마나 걸리는가?</li></ul></div>
+      <p class="tbd">[기관별 답변 수렴 후 작성]</p>
+      <p class="qnote">이 질문은 기술개발, 실증, 건조, 상용화 사이의 간극을 파악한다. 대형·중형선박의 준비 수준과 산업적 제약을 구분하고, 실제 적용에 필요한 추가 연구와 검증 과제를 확인한다.</p>
+
+      <h3 id="s4"><span>4. 선박 한 척, 항로 하나가 사업이 되려면</span><button class="cmt-jump" data-sec="§4">💬 코멘트<span class="cmt-badge" data-b="§4"></span></button></h3>
+      <p>녹색항로의 실행 가능성은 해운사가 선박을 발주하고 지속적으로 운항할 수 있는지에서 검증된다.</p>
+      <p>대체연료의 가격과 공급 안정성, 선박 투자비, 출발항과 도착항의 벙커링 인프라, 화물 수요와 운임 구조는 서로 연결된 사업 조건이다. 특히 운항할 때마다 발생하는 연료비 격차는 일회성 투자 지원만으로 해결하기 어렵다.</p>
+      <div class="qbox"><span class="qk">핵심 질문 3</span><b class="qq">녹색항로에 실제 선박을 투입하고 지속적으로 운영하려면 어떤 조건이 충족되어야 하는가?</b><span class="qw">답변 대상: 해운사, 대형·중형조선소, 세종대학교, PE</span>
+        <ul class="qsub"><li><b>해운사:</b> 어떤 연료를, 기존 연료 대비 어느 정도의 비용 차이까지 감당할 수 있는가? 화주와는 어떤 계약 구조(장기 운송계약, 녹색 프리미엄 등)가 필요한가?</li><li><b>조선소:</b> 선가 상승분과 인도 시점은 해운사의 발주 결정에 어떤 영향을 주는가?</li><li><b>세종대학교, PE:</b> 선박 한 척과 항로 하나를 기준으로 사업성을 따질 때 가장 큰 변수는 무엇인가?</li></ul></div>
+      <p class="tbd">[기관별 답변 수렴 후 작성]</p>
+      <p class="qnote">이 질문은 선박의 기술적 준비가 실제 발주와 운항으로 이어지기 위한 조건을 확인한다. 선박 투자, 연료 조달, 항만 인프라, 화물 수요, 정책 지원을 중심으로 단일 사업 단위의 제약과 해결 과제를 살펴본다.</p>
+
+      <h3 id="s5"><span>5. 기술을 넘어, 무엇을 어떻게 연결해야 하는가?</span><button class="cmt-jump" data-sec="§5">💬 코멘트<span class="cmt-badge" data-b="§5"></span></button></h3>
+      <p>녹색항로를 가로막는 것은 개별 주체의 역량 부족만이 아니다. 각 주체가 다른 주체의 결정을 기다리는 상호 의존 구조가 더 큰 장애요인이 될 수 있다.</p>
+      <p>해운사는 화물 수요와 연료 공급이 확보되어야 발주를 결정하고, 조선소는 발주가 있어야 건조와 상용화에 나선다. 연료 공급자와 항만은 장기 수요가 확인되어야 생산·저장·벙커링 인프라에 투자하고, 금융기관은 이 조건들이 갖춰져야 위험을 평가할 수 있다. 선박은 연료를 기다리고, 연료는 선박을 기다리는 구조에서는 기술이 준비되어 있어도 첫 항해가 시작되지 않는다.</p>
+      <p>따라서 누가 먼저 투자할 것인가에 앞서, 각 주체가 실행을 결정할 수 있도록 서로 무엇을 보장하고 비용과 위험을 어떻게 나눌지를 논의해야 한다. 화물 계약, 선박 발주, 연료 공급계약, 항만 투자, 금융·정책 지원이 어떤 순서와 조건으로 맞물릴 수 있는지가 핵심이다.</p>
+      <p>연구기관의 기술 검증은 산업계의 투자 불확실성을 줄이고, 시민사회는 녹색항로가 실질적인 감축으로 이어지도록 연료와 감축 효과의 기준을 제시한다.</p>
+      <div class="qbox"><span class="qk">핵심 질문 4</span><b class="qq">녹색항로 실행을 위해 산업계·연구기관·시민사회는 서로에게 무엇을 요구하고, 어떤 역할을 함께 수행해야 하는가?</b><span class="qw">답변 대상: 모든 참여 기관</span>
+        <ul class="qsub"><li>우리 기관이 실행을 결정하려면 다른 주체에게 어떤 보장이 필요한가?</li><li>반대로 우리 기관은 다른 주체에게 무엇을 먼저 약속할 수 있는가?</li><li>항만, 연료 공급자, 화주, 금융기관, 정부에게 가장 필요한 역할은 무엇인가?</li></ul></div>
+      <p class="tbd">[기관별 답변 수렴 후 작성]</p>
+      <p class="qnote">이 질문은 본 이슈 브리프의 중심 질문이다. 각 주체가 할 수 있는 역할과 다른 주체에게 요구하는 조건을 교차 검토하고, 선박·연료·항만·화물·금융·정책을 연결하는 협력 구조와 남은 과제를 확인한다.</p>
+
+      <h3 id="s6"><span>6. 녹색항로의 첫걸음, 무엇부터 시작할 것인가?</span><button class="cmt-jump" data-sec="§6">💬 코멘트<span class="cmt-badge" data-b="§6"></span></button></h3>
+      <p>모든 조건을 한 번에 충족할 수는 없다. 그러나 모든 조건이 완성될 때까지 기다릴 필요도 없다. 중요한 것은 지금의 준비 수준에서 무엇을 먼저 확인하고, 어떤 주체가 함께 움직일 수 있는지를 구체화하는 일이다.</p>
+      <p>출발점은 기술과 운항 조건의 공동 검토일 수도, 특정 선박과 화물 수요의 확인일 수도, 연료 공급과 벙커링 가능성 조사, 기술 실증, 비용·위험 분담 구조의 검토일 수도 있다. 이번 논의에서는 우선순위를 미리 정하지 않는다.</p>
+      <div class="qbox"><span class="qk">핵심 질문 5</span><b class="qq">한국 조선·해운산업이 참여하는 녹색항로를 실현하기 위해 지금 가장 먼저 시작해야 할 일은 무엇인가?</b><span class="qw">답변 대상: 모든 참여 기관</span>
+        <ul class="qsub"><li>향후 1~2년 안에 시작할 수 있는 과제 하나를 꼽는다면 무엇인가?</li><li>그 과제를 함께할 주체는 누구이며, 우리 기관은 무엇을 맡을 수 있는가?</li></ul></div>
+      <p class="tbd">[기관별 답변 수렴 후 작성]</p>
+      <p class="qnote">이 질문은 참여 주체가 제안하는 우선 과제를 모으고, 실행 가능성, 협력 필요성, 후속 검토 사항을 종합한다. 이를 바탕으로 구체적인 항로와 사업 논의로 발전시킬 수 있는 초기 과제를 도출한다.</p>
+
+      <h3 id="s7"><span>맺음말 | 첫 항해의 조건을 찾아서</span><button class="cmt-jump" data-sec="맺음말">💬 코멘트<span class="cmt-badge" data-b="맺음말"></span></button></h3>
+      <p>녹색항로의 첫걸음은 모든 준비가 끝난 뒤에 시작되지 않는다. 서로의 가능성과 한계를 확인하고, 각자의 실행 조건이 어디에서 맞닿는지 찾아가는 과정에서 시작된다.</p>
+      <p>다섯 가지 질문은 완성된 답을 요구하지 않는다. 산업계, 연구기관, 시민사회가 서로 다른 관점에서 내놓은 답을 연결하고, 그 안에서 첫 항해의 공통 조건과 남은 과제를 찾기 위한 것이다.</p>
+      <p>기술의 가능성을 실제 항해로 바꾸는 것은 결국 연결이다. 그 연결을 어디에서, 누구와, 무엇부터 시작할 것인가. 이번 논의는 그 첫 번째 답을 찾아가는 과정이다.</p>
+
+      <!-- 인쇄용 코멘트 부록 (코멘트 포함 체크 시) -->
+      <div class="print-appendix" id="print-appendix"></div>
+    </article>
+
+    <!-- ── 코멘트 레일 (1/4) ── -->
+    <aside class="rail reveal">
+      <div class="rail-box" id="auth-box">
+        <h4>참여 기관 로그인 <span id="c-mode" class="modechip">연결 중</span></h4>
+        <div id="auth-out">
+          <p class="rail-hint" style="margin-bottom:10px">이메일로 받은 링크를 누르면 로그인됩니다. 비밀번호는 필요 없습니다.</p>
+          <input type="email" id="a-email" placeholder="이메일 주소" autocomplete="email">
+          <button class="btn btn-primary btn-sm send" id="a-send">로그인 링크 받기</button>
+          <p class="rail-hint" id="a-msg" style="margin-top:8px"></p>
+        </div>
+        <div id="auth-in" hidden>
+          <p class="rail-hint me"><b id="a-me"></b><span id="a-admin" hidden> · 관리자</span><button type="button" class="linkbtn" id="a-out">로그아웃</button></p>
+          <input type="text" id="c-name" placeholder="이름 (선택)">
+          <select id="c-org"></select>
+          <input type="text" id="c-org2" placeholder="기관명 직접 입력" hidden>
+          <select id="c-sec">
+            <option value="전체">대상: 브리프 전체</option>
+            <option value="§1">§1 왜 지금</option>
+            <option value="§2">§2 참여 이유 · 질문 1</option>
+            <option value="§3">§3 기술 준비 · 질문 2</option>
+            <option value="§4">§4 사업 조건 · 질문 3</option>
+            <option value="§5">§5 연결 · 질문 4</option>
+            <option value="§6">§6 첫걸음 · 질문 5</option>
+            <option value="맺음말">맺음말</option>
+          </select>
+          <textarea id="c-text" placeholder="코멘트를 입력하세요. 예: 질문 3의 세부 질문에 화주 관점을 추가하면…"></textarea>
+          <button class="btn btn-primary btn-sm send" id="c-send">코멘트 남기기</button>
+          <button class="btn btn-ghost btn-sm send" id="c-export" hidden style="margin-top:8px">↓ 코멘트 내보내기 (.csv)</button>
+        </div>
+      </div>
+
+      <div class="rail-box" style="flex:1;min-height:0;display:flex;flex-direction:column">
+        <h4>코멘트 <span id="c-count" style="color:var(--muted)">0</span></h4>
+        <div class="cmt-list" id="c-list"></div>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<footer class="oc-foot">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <a class="logo logo-img" href="/" aria-label="1-OCEAN 홈"><img src="img/logo-1ocean-white.png" width="751" height="217" alt="1-OCEAN · One ocean. One system."></a>
+        <p class="claim">A broader perspective<br>for a resilient ocean</p>
+      </div>
+      <div><h4>Site</h4><ul><li><a href="/">Home</a></li><li><a href="/story">Story</a></li><li><a href="/policy">Policy</a></li><li><a href="/insight">Insight</a></li><li><a href="/project">Project</a></li><li><a href="/tool">Tool</a></li></ul></div>
+      <div><h4>Five stages</h4><ul><li><a href="/#s1">01 Regulation</a></li><li><a href="/#s2">02 Transition</a></li><li><a href="/#s3">03 Scale up</a></li><li><a href="/#s4">04 Governance</a></li><li><a href="/#s5">05 Environment</a></li></ul></div>
+      <div><h4>Contact</h4><ul>
+        <li><a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></li>
+        <li><a href="https://planit.institute/" rel="noopener">planit.institute ↗</a></li>
+      </ul></div>
+    </div>
+    <div class="base">
+      <span>© 2026 1-OCEAN · CC BY-SA 4.0</span>
+      <span class="spons"><span class="lb">Supported by</span><img class="pl" src="img/sponsor-planit.png" alt="PLANiT Institute"><img class="hb" src="img/sponsor-hbs.png" alt="Heinrich Böll Stiftung Seoul"></span>
+      <span class="by">Independent research for 1-OCEAN</span>
+    </div>
+  </div>
+</footer>
+
+<script src="site.js"></script>
+<script src="i18n.js"></script>
+<script src="js/vendor/supabase-2.117.2.js"></script>
+<script>
+/* ═══════════ 코멘트 시스템 (Supabase) ═══════════
+   로그인: 이메일 링크 · 저장: brief_comments 표 · 권한: 본인 글만 수정·삭제, 관리자는 전체
+   ✏️ ORGS: 기관 목록. 자유롭게 편집하세요.                                   */
+const SB_URL='https://dosimijoqcuomqzuthxk.supabase.co';
+const SB_KEY='sb_publishable_6awTQqr1G2E3b7dPKSKDvA_BKSGR4Bz';
+const BRIEF_ID='brief-1';
+const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+
+const ORGS=['1-OCEAN','PLANiT','하인리히 뵐 재단','Pacific Environment','SFOC (기후솔루션)','세종대학교','KRISO (선박해양플랜트연구소)','RIMS (중소조선연구원)','대형조선소','중형조선소','해운사','기타 (직접 입력)'];
+document.getElementById('c-org').innerHTML='<option value="" disabled selected>기관 선택</option>'+ORGS.map(o=>`<option>${o}</option>`).join('');
+const $c=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fmtDate(iso){const d=new Date(iso);return isNaN(d)?'':`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+
+let COMMENTS=[], USER=null, ADMIN=false, OPEN={reply:null,edit:null}, loading=true;
+const toC=r=>({id:r.id,parent:r.parent||'',user_id:r.user_id,name:r.author_name||'',org:r.org,sec:r.sec,text:r.body,at:r.created_at,edited:r.updated_at});
+const mine=c=>USER&&(c.user_id===USER.id||ADMIN);
+
+function who(c){return `<span class="who">${esc(c.org)}${c.name?' · '+esc(c.name):''}</span>`}
+function tools(c){return mine(c)?`<button type="button" class="t-edit">수정</button><button type="button" class="t-del">삭제</button>`:''}
+function bodyOrEdit(c){
+  if(OPEN.edit===c.id)return `<div class="rform" data-mode="edit"><textarea>${esc(c.text)}</textarea><div class="row"><button type="button" class="cancel">취소</button><button type="button" class="go">저장</button></div></div>`;
+  return `<div class="body">${esc(c.text)}</div>`}
+function render(){
+  const list=$c('c-list');
+  const tops=COMMENTS.filter(c=>!c.parent),kids={};
+  COMMENTS.forEach(c=>{if(c.parent)(kids[c.parent]=kids[c.parent]||[]).push(c)});
+  if(!tops.length){list.innerHTML=`<p class="cmt-empty">${!sb?'코멘트 서버에 연결하지 못했습니다.':loading?'코멘트를 불러오는 중…':'아직 코멘트가 없습니다.<br>로그인 후 첫 코멘트를 남겨주세요.'}</p>`}
+  else list.innerHTML=tops.slice().reverse().map(c=>{const rs=(kids[c.id]||[]);
+    return `<div class="cmt" data-id="${esc(c.id)}">
+      <div class="hd">${who(c)}<span class="sec-chip">${esc(c.sec)}</span><span class="tl">${tools(c)}</span></div>
+      <span class="when">${fmtDate(c.at)}${c.edited?' · 수정됨':''}</span>
+      ${bodyOrEdit(c)}
+      ${rs.length?`<div class="replies">${rs.map(r=>`<div class="crep" data-id="${esc(r.id)}"><div class="hd">${who(r)}<span class="tl">${tools(r)}</span></div><span class="when">${fmtDate(r.at)}${r.edited?' · 수정됨':''}</span>${bodyOrEdit(r)}</div>`).join('')}</div>`:''}
+      ${OPEN.reply===c.id?`<div class="rform" data-mode="reply"><textarea placeholder="답글을 입력하세요"></textarea><div class="row"><button type="button" class="cancel">취소</button><button type="button" class="go">답글 등록</button></div></div>`
+        :USER?`<div class="acts"><button type="button" class="reply-btn">답글${rs.length?' <b>'+rs.length+'</b>':''}</button></div>`:''}
+    </div>`}).join('');
+  $c('c-count').textContent=COMMENTS.length;$c('m-count').textContent=COMMENTS.length;
+  document.querySelectorAll('.cmt-badge').forEach(b=>{const n=COMMENTS.filter(c=>c.sec===b.dataset.b).length;b.textContent=n||''});
+}
+
+async function load(){
+  if(!sb)return render();
+  const {data,error}=await sb.from('brief_comments').select('*').eq('brief',BRIEF_ID).order('created_at');
+  loading=false;
+  if(error){$c('c-list').innerHTML=`<p class="cmt-empty">코멘트를 불러오지 못했습니다.<br>${esc(error.message)}</p>`;return}
+  const keep=document.querySelector('.rform textarea');const kv=keep&&document.activeElement===keep?keep.value:null;
+  COMMENTS=data.map(toC);render();
+  if(kv!==null){const t=document.querySelector('.rform textarea');if(t){t.value=kv;t.focus()}}
+}
+
+/* ── 로그인 상태 ── */
+async function setUser(u){
+  USER=u||null;ADMIN=false;
+  $c('auth-out').hidden=!!USER;$c('auth-in').hidden=!USER;
+  if(USER){
+    $c('a-me').textContent=USER.email;
+    const {data}=await sb.rpc('brief_is_admin');ADMIN=!!data;$c('a-admin').hidden=!ADMIN;$c('c-export').hidden=!ADMIN;
+    const m=USER.user_metadata||{};
+    if(m.name)$c('c-name').value=m.name;
+    if(m.org){if(ORGS.includes(m.org))$c('c-org').value=m.org;else{$c('c-org').value='기타 (직접 입력)';$c('c-org2').hidden=false;$c('c-org2').value=m.org}}
+  }
+  render();
+}
+$c('c-org').addEventListener('change',e=>{$c('c-org2').hidden=e.target.value!=='기타 (직접 입력)'});
+
+/* 로그인 링크가 만료·재사용된 경우 이유를 보여줌 */
+(function(){
+  const h=new URLSearchParams((location.hash||'').replace(/^#/,'')),q=new URLSearchParams(location.search);
+  const code=h.get('error_code')||q.get('error_code'),desc=h.get('error_description')||q.get('error_description');
+  if(!code&&!desc)return;
+  const msg=code==='otp_expired'
+    ?'이 로그인 링크는 이미 사용됐거나 만료됐습니다. 링크는 한 번만, 받은 뒤 1시간 안에 쓸 수 있어요. 아래에서 새 링크를 받아 주세요.'
+    :'로그인하지 못했습니다: '+desc;
+  $c('a-msg').innerHTML='⚠ '+esc(msg);
+  history.replaceState(null,'',location.pathname);
+})();
+const authErr=m=>/rate limit/i.test(m)?'잠시 메일 발송 한도에 걸렸습니다. 조금 뒤 다시 시도해 주세요.':m;
+
+if(sb){
+  $c('c-mode').textContent='실시간';$c('c-mode').classList.add('on');
+  sb.auth.getSession().then(({data})=>setUser(data.session&&data.session.user));
+  sb.auth.onAuthStateChange((ev,session)=>{if(ev==='SIGNED_IN'||ev==='SIGNED_OUT'||ev==='USER_UPDATED')setUser(session&&session.user)});
+  load();
+  sb.channel('brief-comments').on('postgres_changes',{event:'*',schema:'public',table:'brief_comments'},()=>load()).subscribe();
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+}else{$c('c-mode').textContent='연결 실패';render()}
+
+$c('a-send').addEventListener('click',async()=>{
+  const email=$c('a-email').value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$c('a-msg').textContent='이메일 주소를 확인해 주세요.';return}
+  $c('a-send').disabled=true;$c('a-msg').textContent='보내는 중…';
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  $c('a-send').disabled=false;
+  $c('a-msg').innerHTML=error?'⚠ '+esc(authErr(error.message)):`<b>${esc(email)}</b>로 로그인 링크를 보냈습니다. 메일의 링크를 누르면 이 페이지로 돌아와 로그인됩니다.`;
+});
+$c('a-email').addEventListener('keydown',e=>{if(e.key==='Enter')$c('a-send').click()});
+$c('a-out').addEventListener('click',()=>sb.auth.signOut());
+
+function orgVal(){const o=$c('c-org').value;return o==='기타 (직접 입력)'?$c('c-org2').value.trim():o}
+$c('c-send').addEventListener('click',async()=>{
+  const org=orgVal(),body=$c('c-text').value.trim(),name=$c('c-name').value.trim();
+  if(!org){alert('기관을 선택해주세요.');return}
+  if(!body){alert('코멘트 내용을 입력해주세요.');return}
+  $c('c-send').disabled=true;
+  const {error}=await sb.from('brief_comments').insert({brief:BRIEF_ID,org,author_name:name,sec:$c('c-sec').value,body});
+  $c('c-send').disabled=false;
+  if(error){alert('등록에 실패했습니다: '+error.message);return}
+  $c('c-text').value='';
+  const m=USER.user_metadata||{};if(m.name!==name||m.org!==org)sb.auth.updateUser({data:{name,org}});
+  load();
+});
+
+$c('c-list').addEventListener('click',async e=>{
+  const box=e.target.closest('[data-id]');if(!box)return;const id=box.dataset.id,c=COMMENTS.find(x=>x.id===id);
+  const top=e.target.closest('.cmt').dataset.id;
+  if(e.target.closest('.reply-btn')){OPEN={reply:top,edit:null};render();const t=document.querySelector('.rform textarea');t&&t.focus();return}
+  if(e.target.closest('.t-edit')){OPEN={reply:null,edit:id};render();const t=document.querySelector('.rform textarea');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}return}
+  if(e.target.closest('.t-del')){
+    if(!confirm(c&&!c.parent&&COMMENTS.some(x=>x.parent===id)?'이 코멘트와 답글을 모두 삭제할까요?':'이 코멘트를 삭제할까요?'))return;
+    const {error}=await sb.from('brief_comments').delete().eq('id',id);if(error)alert('삭제에 실패했습니다: '+error.message);load();return}
+  const f=e.target.closest('.rform');if(!f)return;
+  if(e.target.closest('.cancel')){OPEN={reply:null,edit:null};render();return}
+  if(e.target.closest('.go')){
+    const text=f.querySelector('textarea').value.trim();if(!text)return;e.target.disabled=true;
+    let r;
+    if(f.dataset.mode==='edit')r=await sb.from('brief_comments').update({body:text}).eq('id',OPEN.edit);
+    else{const p=COMMENTS.find(x=>x.id===top);const org=orgVal()||(USER.user_metadata||{}).org;
+      if(!org){alert('먼저 위에서 기관을 선택해주세요.');e.target.disabled=false;return}
+      r=await sb.from('brief_comments').insert({brief:BRIEF_ID,parent:top,org,author_name:$c('c-name').value.trim(),sec:p?p.sec:'전체',body:text})}
+    if(r.error){alert('저장에 실패했습니다: '+r.error.message);e.target.disabled=false;return}
+    OPEN={reply:null,edit:null};load();
+  }
+});
+
+/* 관리자: CSV 내보내기 (엑셀에서 바로 열림) */
+$c('c-export').addEventListener('click',()=>{
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const byId=Object.fromEntries(COMMENTS.map(c=>[c.id,c]));
+  const rows=[['구분','섹션','기관','이름','내용','작성','수정','원 코멘트']].concat(COMMENTS.map(c=>[c.parent?'답글':'코멘트',c.sec,c.org,c.name,c.text,fmtDate(c.at),c.edited?fmtDate(c.edited):'',c.parent&&byId[c.parent]?byId[c.parent].text.slice(0,40):'']));
+  const blob=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`brief-comments-${fmtDate(new Date().toISOString()).slice(0,10).replaceAll('.','')}.csv`;a.click();URL.revokeObjectURL(a.href);
+});
+
+/* ═══════════ Word / PDF 내보내기 ═══════════
+   표지 서식: 첨부 PPT '표지 2'(전면 그림 · 왼쪽 위 로고 · 오른쪽 위 PLANiT · 큰 제목 · 오른쪽 기관 표기 · 날짜/저자)
+   내지 서식: 머리말(제목 | 이슈 브리프) · 꼬리말(쪽 번호 · PLANiT) */
+function coverData(){
+  const d=document.getElementById('brief').dataset;
+  const title=document.querySelector('#brief .doc-title').textContent.trim();
+  const kicker=document.querySelector('#brief .doc-kicker').textContent.trim();
+  const lines=(d.coverLines||title).split('|').map(x=>x.trim()).filter(Boolean);
+  return {title,kicker,lines,sub:(d.coverSub||'').trim(),org:(d.coverOrg||'').split('|').map(x=>x.trim()).filter(Boolean),date:d.coverDate||'',author:d.coverAuthor||''};
+}
+function buildPrintCover(){
+  const c=coverData();
+  const mid=c.lines.length>=3?1:-1;
+  document.getElementById('print-cover').innerHTML=
+    `<img class="pc-bg" src="img/brief/cover.jpg" alt="">
+     <div class="pc-logos"><img src="img/brief/logo-hbs.png" alt=""><img class="oc" src="img/brief/logo-1ocean.png" alt=""></div>
+     <img class="pc-planit" src="img/brief/logo-planit.png" alt="">
+     <h1 class="pc-title">${c.lines.map((l,i)=>`<span${i===mid?' class="ac"':''}>${esc(l)}</span>`).join('')}</h1>
+     ${c.sub?`<p class="pc-sub">${esc(c.sub)}</p>`:''}
+     <div class="pc-side"><p class="pc-org">${c.org.map(esc).join('<br>')}</p></div>
+     <p class="pc-date">${esc(c.date)}<br>${esc(c.author)}</p>`;
+  /* 내지 머리말·꼬리말 (Chrome 인쇄의 @page 여백 상자) */
+  let st=document.getElementById('pc-pagebox');
+  if(!st){st=document.createElement('style');st.id='pc-pagebox';document.head.appendChild(st)}
+  const q=t=>'"'+String(t).replace(/["\\]/g,'\\$&')+'"';
+  st.textContent=`@page{
+    @top-left{content:${q(c.title+'   |   '+c.kicker)};font-family:'Pretendard Variable',Pretendard,sans-serif;font-size:8pt;color:#8BA0B5;vertical-align:bottom;padding-bottom:4mm}
+    @bottom-left{content:counter(page);font-family:'Pretendard Variable',Pretendard,sans-serif;font-size:8pt;color:#5B7690;border-top:.6pt solid #DCE7F0;vertical-align:top;padding-top:3mm}
+    @bottom-right{content:"PLANiT";font-family:'Pretendard Variable',Pretendard,sans-serif;font-weight:700;font-size:9pt;color:#111;border-top:.6pt solid #DCE7F0;vertical-align:top;padding-top:3mm}
+  }
+  @page:first{@top-left{content:none}@bottom-left{content:none;border:0}@bottom-right{content:none;border:0}}`;
+}
+function briefHTML(withComments){
+  const clone=document.getElementById('brief').cloneNode(true);
+  clone.querySelectorAll('.cmt-jump,.print-appendix,.doc-head').forEach(el=>el.remove());
+  let cmts='';
+  if(withComments&&COMMENTS.length){
+    cmts='<h3 style="border-top:2px solid #0B3D66;padding-top:16pt;margin-top:24pt">부록 · 취합 코멘트 ('+COMMENTS.length+'건)</h3>'
+      +COMMENTS.map(c=>`<p style="margin:0 0 4pt"><b>${esc(c.org)}${c.name?' · '+esc(c.name):''}</b> <span style="color:#3A6DA6">[${esc(c.sec)}]</span> <span style="color:#5B6F84;font-size:9pt">${fmtDate(c.at)}</span></p><p style="margin:0 0 12pt;padding-left:10pt;border-left:2pt solid #A7C8EB">${esc(c.text)}</p>`).join('');
+  }
+  return clone.innerHTML+cmts;
+}
+/* Word(.docx): 첨부 서식의 표지 + 머리말·꼬리말. js/docx.umd.js 를 처음 누를 때 불러옵니다 */
+function loadDocx(){return window.docx?Promise.resolve(window.docx):new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='js/docx.umd.js';sc.onload=()=>ok(window.docx);sc.onerror=no;document.head.appendChild(sc)})}
+async function imgBuf(u){const r=await fetch(u);if(!r.ok)throw new Error(u);return new Uint8Array(await r.arrayBuffer())}
+function runsOf(node,D,base){
+  const out=[];
+  const parts=[];
+  const walk=(n,bold)=>{
+    if(n.nodeType===3){const t=n.textContent.replace(/\s+/g,' ');if(t)parts.push({t,bold});return}
+    if(n.nodeType!==1)return;
+    const b=bold||n.tagName==='B'||n.tagName==='STRONG';
+    if(n.tagName==='BR'){parts.push({br:1});return}
+    n.childNodes.forEach(c=>walk(c,b));
+  };
+  walk(node,false);
+  if(parts.length&&parts[0].t)parts[0].t=parts[0].t.replace(/^\s+/,'');
+  const L=parts[parts.length-1];if(L&&L.t)L.t=L.t.replace(/\s+$/,'');
+  parts.forEach(x=>{if(x.br)out.push(new D.TextRun({break:1}));else if(x.t)out.push(new D.TextRun({text:x.t,bold:x.bold,...base}))});
+  return out;
+}
+async function buildDocx(withC){
+  const D=await loadDocx();
+  const c=coverData();const mid=c.lines.length>=3?1:-1;
+  const [cov,hbs,oc,pl]=await Promise.all(['cover.jpg','logo-hbs.png','logo-1ocean.png','logo-planit.png'].map(n=>imgBuf('img/brief/'+n)));
+  const NAVY='0B3D66',BLUE='4E7DB7',GRAY='8BA0B5',FONT='Malgun Gothic';
+  const NB={top:{style:D.BorderStyle.NONE,size:0,color:'FFFFFF'},bottom:{style:D.BorderStyle.NONE,size:0,color:'FFFFFF'},left:{style:D.BorderStyle.NONE,size:0,color:'FFFFFF'},right:{style:D.BorderStyle.NONE,size:0,color:'FFFFFF'}};
+  const PX=9525;
+  /* 표지 */
+  const cover=[
+    new D.Paragraph({children:[new D.ImageRun({data:cov,transformation:{width:794,height:1113},floating:{horizontalPosition:{relative:D.HorizontalPositionRelativeFrom.PAGE,offset:0},verticalPosition:{relative:D.VerticalPositionRelativeFrom.PAGE,offset:10*PX},behindDocument:true,allowOverlap:true}})]}),
+    new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},borders:{...NB,insideHorizontal:NB.top,insideVertical:NB.top},rows:[new D.TableRow({children:[
+      new D.TableCell({borders:NB,children:[new D.Paragraph({children:[new D.ImageRun({data:hbs,transformation:{width:122,height:27}}),new D.TextRun({text:'      '}),new D.ImageRun({data:oc,transformation:{width:104,height:35}})]})]}),
+      new D.TableCell({borders:NB,children:[new D.Paragraph({alignment:D.AlignmentType.RIGHT,children:[new D.ImageRun({data:pl,transformation:{width:90,height:22}})]})]})
+    ]})]}),
+    new D.Paragraph({spacing:{before:900},children:[]}),
+    new D.Table({width:{size:100,type:D.WidthType.PERCENTAGE},borders:{...NB,insideHorizontal:NB.top,insideVertical:NB.top},rows:[new D.TableRow({children:[
+      new D.TableCell({borders:NB,width:{size:62,type:D.WidthType.PERCENTAGE},children:[
+        ...c.lines.map((l,i)=>new D.Paragraph({spacing:{after:0,line:1000,lineRule:D.LineRuleType.EXACT},children:[new D.TextRun({text:l,size:80,color:i===mid?BLUE:NAVY,font:FONT})]})),
+        ...(c.sub?[new D.Paragraph({spacing:{before:280},children:[new D.TextRun({text:c.sub,size:25,color:NAVY,font:FONT})]})]:[])]}),
+      new D.TableCell({borders:NB,width:{size:38,type:D.WidthType.PERCENTAGE},verticalAlign:D.VerticalAlign.BOTTOM,children:[
+        new D.Paragraph({alignment:D.AlignmentType.RIGHT,children:c.org.flatMap((o,i)=>[...(i?[new D.TextRun({break:1})]:[]),new D.TextRun({text:o,size:20,color:GRAY,font:FONT})])})]})
+    ]})]}),
+    new D.Paragraph({spacing:{before:400},alignment:D.AlignmentType.RIGHT,border:{right:{style:D.BorderStyle.SINGLE,size:6,color:BLUE,space:8}},children:[new D.TextRun({text:c.date,size:22,color:BLUE,font:FONT}),new D.TextRun({break:1}),new D.TextRun({text:c.author,size:22,color:BLUE,font:FONT})]})
+  ];
+  /* 본문 */
+  const body=[];const base={font:FONT,size:20,color:'14232E'};
+  const clone=document.getElementById('brief').cloneNode(true);
+  clone.querySelectorAll('.cmt-jump,.print-appendix,.doc-head').forEach(el=>el.remove());
+  clone.childNodes.forEach(n=>{
+    if(n.nodeType!==1)return;
+    if(n.tagName==='H3'){body.push(new D.Paragraph({spacing:{before:360,after:160},keepNext:true,children:[new D.TextRun({text:n.textContent.trim(),bold:true,size:30,color:NAVY,font:FONT})]}));return}
+    if(n.tagName==='UL'){n.querySelectorAll(':scope > li').forEach(li=>body.push(new D.Paragraph({bullet:{level:0},spacing:{after:80,line:340},children:runsOf(li,D,base)})));return}
+    if(n.classList.contains('qbox')){body.push(new D.Paragraph({spacing:{before:120,after:120,line:320},shading:{type:D.ShadingType.CLEAR,fill:'EEF5FB',color:'auto'},border:{left:{style:D.BorderStyle.SINGLE,size:18,color:BLUE,space:8}},indent:{left:160},children:runsOf(n,D,base)}));return}
+    if(n.tagName==='P'||n.tagName==='DIV'){const r=runsOf(n,D,base);if(r.length)body.push(new D.Paragraph({spacing:{after:160,line:340},children:r}))}
+  });
+  if(withC&&COMMENTS.length){
+    body.push(new D.Paragraph({spacing:{before:480,after:200},border:{top:{style:D.BorderStyle.SINGLE,size:12,color:NAVY,space:8}},children:[new D.TextRun({text:`부록 · 취합 코멘트 (${COMMENTS.length}건)`,bold:true,size:28,color:NAVY,font:FONT})]}));
+    COMMENTS.forEach(x=>{
+      body.push(new D.Paragraph({spacing:{after:40},children:[new D.TextRun({text:x.org+(x.name?' · '+x.name:''),bold:true,...base}),new D.TextRun({text:'  ['+x.sec+']  ',color:BLUE,font:FONT,size:18}),new D.TextRun({text:fmtDate(x.at),color:GRAY,font:FONT,size:16})]}));
+      body.push(new D.Paragraph({spacing:{after:200},indent:{left:200},border:{left:{style:D.BorderStyle.SINGLE,size:8,color:'A7C8EB',space:6}},children:[new D.TextRun({text:x.text,...base})]}));
+    });
+  }
+  const A4={width:11906,height:16838};
+  const doc=new D.Document({
+    creator:'PLANiT',title:c.title,
+    styles:{default:{document:{run:{font:FONT,size:20}}}},
+    sections:[
+      {properties:{page:{size:A4,margin:{top:850,right:1000,bottom:600,left:1000}}},children:cover},
+      {properties:{type:D.SectionType.NEXT_PAGE,page:{size:A4,margin:{top:1280,right:1020,bottom:1280,left:1020,header:600,footer:600}}},
+       headers:{default:new D.Header({children:[new D.Paragraph({children:[new D.TextRun({text:c.title+'   |   '+c.kicker,size:16,color:GRAY,font:FONT})]})]})},
+       footers:{default:new D.Footer({children:[new D.Paragraph({border:{top:{style:D.BorderStyle.SINGLE,size:6,color:'DCE7F0',space:6}},tabStops:[{type:D.TabStopType.RIGHT,position:9860}],children:[new D.TextRun({children:[D.PageNumber.CURRENT],size:16,color:'5B7690',font:FONT}),new D.TextRun({text:'\tPLANiT',bold:true,size:18,color:'111111',font:FONT})]})]})},
+       children:body}
+    ]});
+  return D.Packer.toBlob(doc);
+}
+document.getElementById('btn-word').addEventListener('click',async e=>{
+  const btn=e.currentTarget;const label=btn.textContent;btn.disabled=true;btn.textContent='만드는 중…';
+  try{
+    const blob=await buildDocx(document.getElementById('inc-cmt').checked);
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='PLANiT_이슈브리프_녹색항로_v0.1.docx';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+  }catch(err){alert('Word 파일을 만들지 못했습니다. 사이트 주소(https)로 열어 다시 시도해 주세요.');console.error(err)}
+  finally{btn.disabled=false;btn.textContent=label}
+});
+document.getElementById('btn-pdf').addEventListener('click',()=>{
+  const withC=document.getElementById('inc-cmt').checked;
+  document.body.classList.toggle('print-with-comments',withC);
+  const app=document.getElementById('print-appendix');
+  app.innerHTML=withC&&COMMENTS.length
+    ?'<h3>부록 · 취합 코멘트 ('+COMMENTS.length+'건)</h3>'+COMMENTS.map(c=>`<div class="cmt"><span class="who">${esc(c.org)}${c.name?' · '+esc(c.name):''}</span><span class="sec-chip">${esc(c.sec)}</span><span class="when">${fmtDate(c.at)}</span><div class="body">${esc(c.text)}</div></div>`).join('')
+    :'';
+  buildPrintCover();
+  coverReady().then(()=>window.print());
+});
+window.addEventListener('beforeprint',buildPrintCover);
+/* 표지 그림을 미리 받아 두어 인쇄할 때 빠지지 않게 합니다 */
+const COVER_IMGS=['img/brief/cover.jpg','img/brief/logo-hbs.png','img/brief/logo-1ocean.png','img/brief/logo-planit.png'].map(u=>{const i=new Image();i.src=u;return i});
+function coverReady(){return Promise.all(COVER_IMGS.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r}))).then(()=>new Promise(r=>setTimeout(r,150)))}
+</script>
+</body>
+</html>
