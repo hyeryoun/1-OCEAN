@@ -95,7 +95,7 @@ top2:'<a href="https://planit.institute/">← Back to planit.institute</a>',
 /* ── brief ── */
 'bf-eye':"Stage 02 · Green Shipping Council · Issue Brief",
 'bf-h1':"Issue brief · <em>comments welcome</em>",
-'bf-lede':"Working-group organisations leave review comments in the right-hand panel. Their comments are combined into the draft, which becomes a final issue brief reflecting shared views. Download the draft as Word or PDF with the buttons above.",
+'bf-lede':"Working-group organisations leave review comments in the right-hand panel. Their comments are combined into the draft, which becomes a final issue brief reflecting shared views. Download the draft as a PDF with the button above.",
 
 /* ── tool ── */
 'tl-eye':"Tool · Calculators",'tl-h1':"So the same calculation is <em>never repeated</em>.",
