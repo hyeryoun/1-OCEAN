@@ -87,6 +87,18 @@ article.doc .qbox b{color:var(--navy)}
 .rail textarea{min-height:84px;resize:vertical}
 .rail .send{width:100%}
 .rail-hint{font-size:11.5px;color:var(--muted);line-height:1.6;word-break:keep-all}
+.consent{margin:14px 0 4px;font-size:12px;color:var(--ink,#0B3D66);border-top:1px solid var(--line,#DCE7F0);padding-top:12px}
+.consent-h{margin:0 0 4px;font-size:12.5px;font-weight:700;color:#0B3D66}
+.consent-s{margin:0 0 9px;font-size:11.5px;line-height:1.55;color:var(--muted,#5B7690);word-break:keep-all}
+.consent-chk{display:flex;gap:7px;align-items:flex-start;cursor:pointer;line-height:1.45;word-break:keep-all}
+.consent-chk input{margin-top:2px;flex:none;width:15px;height:15px;accent-color:#0B3D66}
+.consent-chk b{color:#B23A2E;font-weight:600}
+.consent-d{margin:8px 0 10px}
+.consent-d summary{cursor:pointer;color:#0B3D66;font-size:11.5px;list-style:none;display:inline;text-decoration:underline;text-underline-offset:3px}
+.consent-d summary::-webkit-details-marker{display:none}
+.consent-d dl{margin:8px 0 0;display:block;font-size:11.5px;line-height:1.5;color:var(--muted,#5B7690);background:#F4F8FC;border-radius:8px;padding:10px 12px}
+.consent-d dt{font-weight:600;color:#0B3D66;margin-top:7px}.consent-d dt:first-child{margin-top:0}.consent-d dd{margin:1px 0 0;word-break:keep-all}
+#a-send:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .rail-io{display:flex;gap:8px}
 .rail-io .btn{flex:1;text-align:center;font-size:11.5px;padding:8px 6px}
 
@@ -233,7 +245,6 @@ article.doc{position:relative;overflow:hidden}
       </div>
       <div class="acts">
         <label class="inc"><input type="checkbox" id="inc-cmt"> 코멘트 포함</label>
-        <button class="btn btn-ghost btn-sm" id="btn-word">📄 Word로 내보내기</button>
         <button class="btn btn-primary btn-sm" id="btn-pdf">🖨 PDF로 저장</button>
       </div>
     </div>
@@ -356,7 +367,21 @@ article.doc{position:relative;overflow:hidden}
         <div id="auth-out">
           <p class="rail-hint" style="margin-bottom:10px">이메일로 받은 링크를 누르면 로그인됩니다. 비밀번호는 필요 없습니다.</p>
           <input type="email" id="a-email" placeholder="이메일 주소" autocomplete="email">
-          <button class="btn btn-primary btn-sm send" id="a-send">로그인 링크 받기</button>
+          <div class="consent">
+            <p class="consent-h">개인정보 수집 및 이용 동의</p>
+            <p class="consent-s">로그인 링크 발송 및 참여 기관 담당자 인증을 위해 이메일 주소를 수집·이용합니다.</p>
+            <label class="consent-chk"><input type="checkbox" id="a-consent"> <span><b>[필수]</b> 개인정보 수집·이용에 동의합니다.</span></label>
+            <details class="consent-d"><summary>개인정보 수집·이용 안내 전문 보기</summary>
+              <dl>
+                <dt>수집 항목</dt><dd>이메일 주소, 코멘트 작성 시 기관명·이름(선택)</dd>
+                <dt>이용 목적</dt><dd>이슈 브리프 로그인, 코멘트 작성자 표시, 기관별 의견 취합</dd>
+                <dt>보유 기간</dt><dd>의견 수렴 종료 후 1년. 동의를 철회하면 즉시 삭제합니다</dd>
+                <dt>동의 거부</dt><dd>동의하지 않을 수 있습니다. 이 경우 로그인과 코멘트 작성은 할 수 없지만 브리프 열람과 PDF 저장은 가능합니다</dd>
+                <dt>문의·철회</dt><dd>contact@1-ocean.com</dd>
+              </dl>
+            </details>
+          </div>
+          <button class="btn btn-primary btn-sm send" id="a-send" disabled>로그인 링크 받기</button>
           <p class="rail-hint" id="a-msg" style="margin-top:8px"></p>
         </div>
         <div id="auth-in" hidden>
@@ -503,11 +528,13 @@ if(sb){
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 }else{$c('c-mode').textContent='연결 실패';render()}
 
+$c('a-consent').addEventListener('change',e=>{$c('a-send').disabled=!e.target.checked;if(e.target.checked&&/동의/.test($c('a-msg').textContent))$c('a-msg').textContent=''});
 $c('a-send').addEventListener('click',async()=>{
+  if(!$c('a-consent').checked){$c('a-msg').textContent='개인정보 수집·이용에 동의해야 로그인 링크를 받을 수 있습니다.';return}
   const email=$c('a-email').value.trim();
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$c('a-msg').textContent='이메일 주소를 확인해 주세요.';return}
   $c('a-send').disabled=true;$c('a-msg').textContent='보내는 중…';
-  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname}});
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,data:{privacy_consent_at:new Date().toISOString(),privacy_consent_ver:'2026-10'}}});
   $c('a-send').disabled=false;
   $c('a-msg').innerHTML=error?'⚠ '+esc(authErr(error.message)):`<b>${esc(email)}</b>로 로그인 링크를 보냈습니다. 메일의 링크를 누르면 이 페이지로 돌아와 로그인됩니다.`;
 });
@@ -721,7 +748,7 @@ async function buildDocx(withC){
     ]});
   return D.Packer.toBlob(doc);
 }
-document.getElementById('btn-word').addEventListener('click',async e=>{
+document.getElementById('btn-word')&&document.getElementById('btn-word').addEventListener('click',async e=>{
   const btn=e.currentTarget;const label=btn.textContent;btn.disabled=true;btn.textContent='만드는 중…';
   try{
     const blob=await buildDocx(document.getElementById('inc-cmt').checked);

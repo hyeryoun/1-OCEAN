@@ -2697,7 +2697,25 @@ var EN_TEXT={
 "@ 등급": "Grade @",
 "이 배 CII #": "This ship CII #",
 "연간 CO₂ 배출량 #톤으로, C등급 유지 한도(#톤) 를 약": "annual CO₂ is # t, exceeding the grade C limit (# t) by about",
-"연간 CO₂ 배출량 #톤으로, C등급 유지 한도(#톤)를 약": "annual CO₂ is # t, exceeding the grade C limit (# t) by about"
+"연간 CO₂ 배출량 #톤으로, C등급 유지 한도(#톤)를 약": "annual CO₂ is # t, exceeding the grade C limit (# t) by about",
+/* ── 브리프 개인정보 동의 ── */
+"[필수]": "[Required]",
+"개인정보 수집·이용에 동의합니다": "I agree to the collection and use of my personal data",
+"내용 보기": "Details",
+"수집 항목": "Data collected",
+"이메일 주소, 코멘트 작성 시 기관명·이름(선택)": "Email address; organisation and name (optional) when you comment",
+"이용 목적": "Purpose",
+"이슈 브리프 로그인, 코멘트 작성자 표시, 기관별 의견 취합": "Signing in to the issue brief, showing who wrote each comment, and collating views by organisation",
+"보유 기간": "Retention",
+"의견 수렴 종료 후 1년. 동의를 철회하면 즉시 삭제합니다": "One year after the consultation closes. Deleted immediately if you withdraw consent",
+"동의 거부": "Declining",
+"동의하지 않을 수 있습니다. 이 경우 로그인과 코멘트 작성은 할 수 없지만 브리프 열람과 PDF 저장은 가능합니다": "You may decline. You then cannot sign in or comment, but you can still read the brief and save it as PDF",
+"문의·철회": "Contact · withdrawal",
+"개인정보 수집·이용에 동의해야 로그인 링크를 받을 수 있습니다.": "Please agree to the collection and use of personal data to receive a login link.",
+"개인정보 수집 및 이용 동의": "Consent to the collection and use of personal data",
+"로그인 링크 발송 및 참여 기관 담당자 인증을 위해 이메일 주소를 수집·이용합니다.": "We collect and use your email address to send the login link and verify participating organisations' contacts.",
+"개인정보 수집·이용에 동의합니다.": "I agree to the collection and use of my personal data.",
+"개인정보 수집·이용 안내 전문 보기": "Read the full privacy notice"
 };
 
 /* ═══ 문장 단위 번역 (data-i 가 없는 곳 · 스크립트가 그리는 표·지도·패널 포함) ═══
