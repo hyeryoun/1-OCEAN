@@ -2715,7 +2715,8 @@ var EN_TEXT={
 "개인정보 수집 및 이용 동의": "Consent to the collection and use of personal data",
 "로그인 링크 발송 및 참여 기관 담당자 인증을 위해 이메일 주소를 수집·이용합니다.": "We collect and use your email address to send the login link and verify participating organisations' contacts.",
 "개인정보 수집·이용에 동의합니다.": "I agree to the collection and use of my personal data.",
-"개인정보 수집·이용 안내 전문 보기": "Read the full privacy notice"
+"개인정보 수집·이용 안내 전문 보기": "Read the full privacy notice",
+"녹색해운항로 기획 진행 중": "Green shipping corridor planning underway"
 };
 
 /* ═══ 문장 단위 번역 (data-i 가 없는 곳 · 스크립트가 그리는 표·지도·패널 포함) ═══

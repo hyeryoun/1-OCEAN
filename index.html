@@ -167,7 +167,7 @@ g[data-wg]:has(.g-hit:focus-visible) .g-fan{opacity:.85}
 /* 슬라이드·숫자: 흰 바탕 */
 .hero-oc.slides.compact{background:#fff}
 .hero-oc.slides.compact::after{display:none}
-/* Around the table + Setting sail: 한 장처럼 같은 바탕, 경계 없이 */
+/* Around the table + What we’re working on: 한 장처럼 같은 바탕, 경계 없이 */
 .sec.wg{background:var(--light);border-top:1px solid var(--line);padding-bottom:40px}
 .sec.ongoing{background:var(--light);padding-top:40px}
 .sec.ongoing .sec-top{padding-top:24px}
@@ -178,6 +178,8 @@ g[data-wg]:has(.g-hit:focus-visible) .g-fan{opacity:.85}
 .panel-oc:focus{outline:none}
 @media (max-width:860px){.cols3.done{grid-template-columns:1fr}}
 @media (min-width:861px){.sec-top .sec-sub{text-align:right}}
+/* 'What we’re working on'은 한 줄 유지 · 오른쪽 소개문과 나란히 놓이도록 이 제목만 살짝 작게 */
+@media (min-width:861px){#og-h{font-size:49px;white-space:nowrap}}
 @media (min-width:861px){.intro .body .ln,.sec-top .sec-sub .ln{white-space:nowrap}.sec-top .sec-sub{max-width:none}}
 </style>
 </head>
@@ -322,8 +324,8 @@ g[data-wg]:has(.g-hit:focus-visible) .g-fan{opacity:.85}
   <div class="wrap">
     <div class="sec-top">
       <div>
-        <h2 class="sec-h" id="og-h">Setting sail</h2>
-        <p class="sec-kr" data-i="h-og-kr">녹색항로 생태계 지도</p>
+        <h2 class="sec-h" id="og-h">What we’re working on</h2>
+        <p class="sec-kr" data-i="h-og-kr">녹색해운항로 기획 진행 중</p>
       </div>
       <p class="sec-sub" data-i="h-og-sub"><span class="ln">0에서 1로. 세계 최초의 녹색해운항로법 제정은 끝이 아니라 시작입니다.</span><br><span class="ln">이제 법과 제도를 넘어, 한국의 항로 위에 첫 무탄소 상업 운항을 실현할 차례입니다.</span><br><span class="ln">첫 배는 단순한 운항의 성공이 아닙니다. 앞으로 이어질 모든 녹색해운의 새로운 기준을 세우는 일입니다.</span></p>
     </div>
