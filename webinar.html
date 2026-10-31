@@ -35,6 +35,7 @@
 .wb-sec{padding:64px 0}
 .wb-sec+.wb-sec{border-top:1px solid var(--line)}
 /* Q&A */
+.qa-h{margin-bottom:22px}
 .qa-list{border-top:1.5px solid var(--ocean-deep)}
 .qa{border-bottom:1px solid var(--line)}
 .qa summary{list-style:none;display:grid;grid-template-columns:130px minmax(0,1fr) auto;gap:20px;align-items:center;padding:18px 4px;cursor:pointer}
@@ -45,9 +46,8 @@
 .qa .tog::after{content:'';width:7px;height:7px;border-right:1.6px solid var(--ocean-deep);border-bottom:1.6px solid var(--ocean-deep);transform:rotate(45deg);margin:-3px 6px 0 6px}
 .qa[open] .tog::after{transform:rotate(-135deg);margin-top:4px}
 .qa .t-close{display:none}.qa[open] .t-open{display:none}.qa[open] .t-close{display:inline}
-.qa .ans{margin:0 0 18px 150px;background:#F4F8FC;border-radius:12px;padding:16px 18px}
+.qa .ans{margin:0 0 18px 150px;background:#F4F8FC;border-radius:12px;padding:16px 18px 8px}
 .qa .ans p{margin:0 0 10px;font-size:14.5px;line-height:1.85;color:var(--ink);word-break:keep-all}
-.qa .ans .by{margin:4px 0 0;font-size:12px;color:var(--muted)}
 .qa-more{margin-top:22px;font-size:13.5px;color:var(--muted)}
 .qa-more a{font-weight:700;color:var(--ocean-deep);margin-left:6px}
 @media (max-width:760px){.qa summary{grid-template-columns:1fr auto;gap:6px 12px}.qa .tg{grid-column:1/-1}.qa .ans{margin-left:0}}
@@ -253,9 +253,7 @@
 
 <!-- ✏️ Q&A: 아래 스크립트의 QA 배열에서 질문·답변을 고칩니다 (발표 번호 id로 연결) -->
 <section class="wb-sec" id="qa"><div class="wrap">
-  <p class="wb-k">Q&amp;A</p>
-  <h2 class="wb-h">발표자에게 묻다</h2>
-  <p class="wb-sub">발표마다 남은 질문 하나를 발표자에게 직접 묻고, 답을 받았습니다.</p>
+  <h2 class="wb-h qa-h">Q&amp;A</h2>
   <div class="qa-list" id="qa-list"></div>
   <p class="qa-more">더 궁금한 점은 메일로 남겨 주세요. <a href="mailto:contact@1-ocean.com">contact@1-ocean.com</a></p>
 </div></section>
@@ -412,7 +410,7 @@ const QA = [
 ];
 document.getElementById('qa-list').innerHTML = QA.map(x => { const k = TALKS.find(t => t.id === x.id); return `
   <details class="qa"><summary><span class="tg">${k.no} ${k.en}</span><span class="qq">${x.q}</span><span class="tog"><span class="t-open">답변 보기</span><span class="t-close">답변 닫기</span></span></summary>
-    <div class="ans">${x.a.map(p => `<p>${p}</p>`).join('')}<p class="by who">${who(k)}</p></div></details>`; }).join('');
+    <div class="ans">${x.a.map(p => `<p>${p}</p>`).join('')}</div></details>`; }).join('');
 const ICON_OPEN = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v7M3 5.5 6 8.5l3-3M1.5 10.5h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_LOCK = '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5.5" width="8" height="5.5" rx="1.2" fill="currentColor"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
 grid.innerHTML = TALKS.map((k, i) => `
