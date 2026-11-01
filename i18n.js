@@ -2810,7 +2810,7 @@ Object.assign(EN_TEXT, {
   "같은 메탄, 다른 기후 영향": "Same methane, different climate impact",
   "메탄 1톤을 태우면 CO₂ 2.75톤이지만, 그대로 내보내면 29.8 tCO₂eq입니다. 같은 양이라도 영향이 약 10.8배 차이 납니다.": "Burning one tonne of methane produces 2.75 tonnes of CO₂, but venting it equals 29.8 tCO₂eq. The same amount has roughly 10.8 times the impact.",
   "건조 중 하루 2~4톤": "2–4 tonnes a day during construction",
-  "재액화 설비가 없는 컨테이너선·벌크선 등은 진수 후 시운전 기간에 하루 약 2~4톤의 BOG를 배출합니다. 재액화 설비가 있는 LNG 운반선은 해당되지 않습니다.": "Container ships, bulk carriers and other vessels without reliquefaction plants vent about 2–4 tonnes of BOG a day during trials after launch. LNG carriers with reliquefaction plants are not affected.",
+  "LNG 이중연료추진선박의(운반선 제외) 건조 과정은 2~4ton/day 의 CH4 대기 배출을 야기 할 수 있습니다. 선박의 시운전을 위해 수급된 LNG 연료가 연료탱크 내 기화하고(BOG 발생), 육상 접안된 상태에서는 충분한 BOG 소모가 불가하기 때문입니다. 이는 건조 이후 정상 운항 중인 선박이 항만 접안 중에도 야기 될 수 있는 문제 입니다.": "Building an LNG dual-fuel ship (excluding LNG carriers) can release 2–4 tonnes of CH4 a day to the atmosphere. The LNG bunkered for sea trials evaporates in the fuel tank (generating BOG), and while the ship is moored alongside, that BOG cannot be consumed sufficiently. The same problem can arise when ships in normal service, after delivery, are berthed in port.",
   "작은 비중, 그래도 다룰 문제": "A small share, but still worth addressing",
   "20년 운항 배출 대비 건조 중 메탄 배출은 약 0.22%로 작지만, 현재 규제 틀에서는 이를 관찰하거나 줄이려는 논의가 없습니다.": "Methane vented during construction is only about 0.22% of 20 years of operating emissions, yet the current framework has no discussion on monitoring or reducing it.",
   "BOG를 도시가스로": "Turning BOG into city gas",
