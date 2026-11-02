@@ -231,6 +231,12 @@ g[data-wg]:has(.g-hit:focus-visible) .g-fan{opacity:.85}
 .brief-cta .tx{flex:1}
 .brief-cta .ic{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#fff;color:var(--ocean-deep);font-size:18px}
 @media (max-width:860px){.brief-cta{min-width:0;width:100%}}
+
+/* 녹색항로 페이지: 구역마다 배경을 번갈아 (히어로 하늘색 → 지도 흰색 → 구조도 하늘색 → 캔버스 흰색) */
+#gsc-block section.alt{border-top:1px solid var(--line)}
+#gscmap{background:#fff}
+#canvas,#canvas+section{background:#EEF5FB}
+#canvas+section+section{background:#fff}
 </style>
 </head>
 <body>
