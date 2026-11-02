@@ -2913,6 +2913,11 @@ Object.assign(EN_TEXT, {
   "03 규제": "03 Rules",
   "04 산업": "04 Industry",
   "05 정책": "05 Policy",
+  /* 녹색항로 별도 페이지 */
+  "녹색항로의 실현 조건": "Conditions for green corridors",
+  "녹색항로를 선언에서 운항으로. 첫 무탄소 상업 운항까지 누가 무엇을 해야 하는지, 생태계 지도와 한 장 캔버스로 봅니다.": "From declaration to operation. An ecosystem map and a one-page canvas of who must do what before the first zero-emission commercial voyage.",
+  "← 전체 프로젝트": "← All projects",
+  "생태계 지도 · 한 장 캔버스 보기": "View ecosystem map · one-page canvas",
   /* 웨비나 Q&A · IMO 근거 자료 */
   "발표자에게 묻다": "Asking the speakers",
   "발표마다 남은 질문 하나를 발표자에게 직접 묻고, 답을 받았습니다.": "For each talk, we put one remaining question directly to the speaker and received their answer.",
